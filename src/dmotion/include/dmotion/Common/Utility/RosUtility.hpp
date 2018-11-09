@@ -63,7 +63,7 @@ namespace Motion
                 m_joint_msg.name.push_back(p.first);
                 m_joint_msg.position.push_back(p.second);
             }
-        }
+        
 
         void updateJointValues()
         {

@@ -35,6 +35,19 @@ int main(int argc, char ** argv)
         updateJointValuesIO(io,fucking);
       }
     }
+    // ServoIO m_servo_io;
+    //
+    // while(ros::ok()){
+    //   for(int i = 0; i < 75; i++){
+    //     fucking[11] = fucking[11] - 0.01;
+    //     updateJointValuesIO(io,fucking);
+    //   }
+    //
+    //   for(int i = 0; i < 75; i++){
+    //     fucking[11] = fucking[11] + 0.01;
+    //     updateJointValuesIO(io,fucking);
+    //   }
+    // }
 
 }
 

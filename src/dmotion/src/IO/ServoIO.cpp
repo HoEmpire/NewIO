@@ -5,8 +5,11 @@
 
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
-#define Testing_Mode 1
 using namespace dynamixel;
+#define SAFE_MODE true //if true, then if will move slower to avoid unexpected damadges
+#define PORT_NAME "/dev/ttyUSB0"
+#define BAUDRATE  1000000
+#define PROTOCOL_VERSION 2.0
 
 namespace Motion
 {
@@ -18,38 +21,10 @@ ServoIO::ServoIO()
     ROS_DEBUG("ServoIO::ServoIO: init ServoIO instance");
 
     // init port
-    m_servo_port = IOManager3::initPort(parameters.io.servo_port_name,
-                                        parameters.io.servo_baudrate);
+    m_servo_port = IOManager3::initPort(PORT_NAME, BAUDRATE);
 
     // init protocol handler
-    m_servo_protocol = PacketHandler::getPacketHandler(parameters.io.servo_protocol_version);
-
-    // construct robot joint bases
-    for (auto& pair:parameters.io.joint_cfg)
-    {
-        m_joints.insert(
-            std::make_pair(pair.first, Joint(pair.second))
-        );
-    }
-
-    if (parameters.global.io_debug)
-    {
-        for (auto& joint:m_joints)
-        {
-            ROS_DEBUG_STREAM("ServoIO::ServoIO:" << std::endl
-                            << joint.first << ' '
-                            << joint.second.cfg.id << ' '
-                            << joint.second.cfg.cw << ' '
-                            << joint.second.cfg.factor << ' '
-                            << joint.second.cfg.id << ' '
-                            << joint.second.cfg.init << ' '
-                            << joint.second.cfg.max_pos << ' '
-                            << joint.second.cfg.min_pos << ' '
-                            << joint.second.cfg.resolution
-                            );
-        }
-    }
-
+    m_servo_protocol = PacketHandler::getPacketHandler(PROTOCOL_VERSION);
     m_pos_writer = new GroupSyncWrite(m_servo_port, m_servo_protocol, ADDR_GOAL_POSITION, LENGTH_POSITION);
     m_pos_reader = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_CURR_POSITION, LENGTH_POSITION);
 }
@@ -58,6 +33,20 @@ ServoIO::~ServoIO()
 {
     ROS_DEBUG("ServoIO:~ServoIO: destruct ServoIO instance");
     m_servo_port->closePort();
+}
+
+void ServoIO::addJoint(std::string name, Joint Joints_cfg)
+{
+    std::map<std::string, Joint>::iterator it = m_joints.begin();
+    if(it == m_joints.end()){
+      m_joints.insert(std::pair<std::string, Joint>(name, Joints_cfg));
+      std::cout << "INFO:add " << name << " success!" <<std::endl;
+    }
+    else{
+      std::cout << "WARNING:" << name << " already exists" << std::endl;
+      std::cout << "WARNING:ADD NEW JOINT FAILED!" << std::endl;
+    }
+
 }
 
 void ServoIO::initServoPositions()
@@ -75,7 +64,7 @@ void ServoIO::initServoPositions()
         timer::delay_ms(20);
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 1);
         timer::delay_ms(20);
-        m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, parameters.io.servo_init_speed);
+        m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, 50);//init safety
 
         goal_position_[0] = DXL_LOBYTE(DXL_LOWORD(_cfg.init));
         goal_position_[1] = DXL_HIBYTE(DXL_LOWORD(_cfg.init));
@@ -89,33 +78,6 @@ void ServoIO::initServoPositions()
             {
                 ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add goal position param error");
             }
-
-            // arm not included
-            if (parameters.global.using_head_data)
-            {
-                if (joint.first.find("head") != std::string::npos)
-                {
-                    state = m_pos_reader->addParam(_cfg.id);
-                }
-                if (!state)
-                {
-                    ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add present position param error");
-                }
-            }
-
-            if (parameters.global.using_odometry)
-            {
-                if (joint.first.find("hip") != std::string::npos
-                    || joint.first.find("ankle") != std::string::npos
-                    || joint.first.find("knee") != std::string::npos)
-                {
-                    state = m_pos_reader->addParam(_cfg.id);
-                }
-                if (!state)
-                {
-                    ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add present position param error");
-                }
-            }
         }
         else
         {
@@ -127,7 +89,7 @@ void ServoIO::initServoPositions()
         }
     }
 
-    // set velocity to max
+    // turn off led
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
@@ -150,12 +112,13 @@ void ServoIO::sendServoPositions()
     if (!m_servo_inited)
     {
         // if servo init done, just reset speed
+        // power safety
         if (init_ticks > parameters.io.servo_init_ticks)
         {
-            if (Testing_Mode)// TODO pyx 测试模式
-              setServoSpeed(50);
+            if (SAFE_MODE)// TODO pyx 测试模式
+              setAllServoSpeed(50);
             else
-              setServoSpeed();
+              setAllServoSpeed();
 
             init_ticks = 0;
             m_servo_inited = true;
@@ -191,56 +154,54 @@ void ServoIO::readServoPositions()
 
     for (auto& joint:m_joints)
     {
-        if (parameters.global.using_head_data
-            && joint.first.find("head") != std::string::npos)
+        const JointConfig& _cfg = joint.second.cfg;
+
+        if (!m_pos_reader->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
         {
-            Joint& _j = joint.second;
-            const JointConfig& _cfg = _j.cfg;
-
-            if (!m_pos_reader->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
-            {
-                ROS_WARN("ServoIO::readServoPositions: get current joint value error");
-            }
-            else
-            {
-                _j.real_pos = (static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
-                std::cout << _cfg.id << ' ' << _j.real_pos << std::endl;
-            }
+            ROS_WARN("ServoIO::readServoPositions: get current joint value error");
         }
-        if (parameters.global.using_odometry &&
-            (joint.first.find("hip") != std::string::npos
-            || joint.first.find("knee") != std::string::npos
-            || joint.first.find("ankle") != std::string::npos
-            ))
+        else
         {
-            Joint& _j = joint.second;
-            const JointConfig& _cfg = _j.cfg;
-
-            if (!m_pos_reader->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
-            {
-                ROS_WARN("ServoIO::readServoPositions: get current joint value error");
-            }
-            else
-            {
-                _j.real_pos = (static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
-                std::cout << _cfg.id << ' ' << _j.real_pos << std::endl;
-            }
+            joint.second.real_pos = (static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
+            std::cout << "ServoName：" << joint.first << ' | ' << "pos:"<< joint.second.real_pos << std::endl;
         }
-
     }
-        // if (joint.first.find("arm") != std::string::npos)
-        //     continue;
 }
 
-void ServoIO::setServoSpeed(const int speed)
+void ServoIO::setAllServoSpeed(const int speed)
 {
-    ROS_DEBUG_STREAM("ServoIO::setServoSpeed: set servo speed to " << speed);
+    ROS_DEBUG_STREAM("ServoIO::setAllServoSpeed: set servo speed to " << speed);
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
 
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, speed);
     }
+
+
+}
+
+void ServoIO::setSingleServoSpeed(int speed, std::string name)
+{
+    ROS_DEBUG_STREAM("ServoIO::setSingleServoSpeed: set servo speed to " << speed);
+
+    std::map<std::string, Joint>::iterator it = m_joints.begin();
+    if(it != m_joints.end())
+    {
+        std::cout << "INFO:find " << name << " success!" <<std::endl;
+        const JointConfig& _cfg = (*it).second.cfg;
+        m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, speed);
+    }
+    else
+    {
+        std::cout << "WARNING:" << name << " not found!" << std::endl;
+    }
+}
+
+void ServoIO::setSingleServoSpeed(int speed, int servo_id)
+{
+    ROS_DEBUG_STREAM("ServoIO::setSingleServoSpeed: set servo speed to " << speed);
+    m_servo_protocol->write4ByteTxOnly(m_servo_port, servo_id, ADDR_PROFILE_VELOCITY, speed);
 }
 
 void ServoIO::setServoPIMode(std::vector<int> servo_id, const int P, const int I)

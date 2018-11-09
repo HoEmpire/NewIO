@@ -19,9 +19,7 @@ IOManager3::IOManager3()
     : m_power_state(OFF)
 {
     ROS_DEBUG("IOManager3::IOManager3: Construct IOManager3 instance");
-
-    // set port pointer to feet io
-
+    initZJUJoint();
     m_servo_io.initServoPositions();
 }
 
@@ -39,6 +37,35 @@ dynamixel::PortHandler* IOManager3::initPort(const std::string portname, const i
         //std::abort();
     }
     return port_;
+}
+
+void IOManager3::initZJUJoint()
+{
+    // construct robot joint bases
+    for (auto& pair:parameters.io.joint_cfg)
+    {
+        m_servo_io.m_joints.insert(
+            std::make_pair(pair.first, Joint(pair.second))
+        );
+    }
+
+    if (parameters.global.io_debug)
+    {
+        for (auto& joint:m_servo_io.m_joints)
+        {
+            ROS_DEBUG_STREAM("ServoIO::ServoIO:" << std::endl
+                            << joint.first << ' '
+                            << joint.second.cfg.id << ' '
+                            << joint.second.cfg.cw << ' '
+                            << joint.second.cfg.factor << ' '
+                            << joint.second.cfg.id << ' '
+                            << joint.second.cfg.init << ' '
+                            << joint.second.cfg.max_pos << ' '
+                            << joint.second.cfg.min_pos << ' '
+                            << joint.second.cfg.resolution
+                            );
+        }
+    }
 }
 
 void IOManager3::spinOnce()
@@ -89,19 +116,6 @@ const bool IOManager3::getJointValue(const std::string joint_name, float& value)
     return true;
 }
 
-void IOManager3::remapJointValues()
-{
-    for (int i = 1; i != parameters.io.joint_number; i ++)
-    {
-        _mapOneJoint(i);
-    }
-}
-
-inline void IOManager3::_mapOneJoint(const int id)
-{
-    // m_servo_io.m_servo_desired_pos[id] = parameters.io.joint_init_values[id] + parameters.io.joint_cw[id]*static_cast<int>(m_joint_values[id]/M_PI/2.0*parameters.io.joint_resolution[id]);
-}
-
 void IOManager3::remapServoValues()
 {
     // static int count = 0;
@@ -118,7 +132,6 @@ void IOManager3::remapServoValues()
     m_curr_joints[9] = (m_servo_io.m_servo_present_pos[9] - parameters.io.joint_init_values[9])*parameters.io.joint_cw[9]*2.0/parameters.io.joint_resolution[9]*M_PI;
     m_curr_joints[10] = (m_servo_io.m_servo_present_pos[10] - parameters.io.joint_init_values[10])*parameters.io.joint_cw[10]*2.0/parameters.io.joint_resolution[10]*M_PI;
     m_curr_joints[11] = (m_servo_io.m_servo_present_pos[11] - parameters.io.joint_init_values[11])*parameters.io.joint_cw[11]*2.0/parameters.io.joint_resolution[11]*M_PI;
-
 }
 
 void IOManager3::setServoPI(const std::vector<int> servo_id, const int p, const int i)

@@ -13,6 +13,7 @@ namespace Motion
 class IOManager3
 {
 public:
+    friend class ServoIO;
     static dynamixel::PortHandler*
     initPort(const std::string portname, const int baudrate, const bool block = false);
 
@@ -33,6 +34,8 @@ public:
     IOManager3();
 
     virtual ~IOManager3();
+
+    void initZJUJoint();
 
     void spinOnce();
 
@@ -61,8 +64,6 @@ private:
     dynamixel::PortHandler* _initPort(const std::string portname, const int baudrate);
 
     void _checkPower();
-
-    inline void _mapOneJoint(const int id);
 
 private:
     ServoIO m_servo_io;

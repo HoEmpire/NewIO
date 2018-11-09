@@ -6,10 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/tim/NewIO/src/dmotion/include/dmotion/Common/EigenTypes.h
-Eigen/Dense
--
-
 /home/tim/NewIO/src/dmotion/include/dmotion/Common/Parameters.h
 Type.h
 /home/tim/NewIO/src/dmotion/include/dmotion/Common/Type.h
@@ -21,8 +17,6 @@ ros/ros.h
 -
 
 /home/tim/NewIO/src/dmotion/include/dmotion/Common/Type.h
-EigenTypes.h
-/home/tim/NewIO/src/dmotion/include/dmotion/Common/EigenTypes.h
 string
 -
 vector
@@ -34,20 +28,6 @@ ros/ros.h
 
 /home/tim/NewIO/src/dmotion/include/dmotion/Common/Utility/Math.hpp
 Eigen/Dense
--
-
-/home/tim/NewIO/src/dmotion/include/dmotion/Common/Utility/RosUtility.hpp
-string
--
-vector
--
-map
--
-ros/ros.h
--
-sensor_msgs/JointState.h
--
-std_msgs/Float64.h
 -
 
 /home/tim/NewIO/src/dmotion/include/dmotion/Common/Utility/Timer.hpp
@@ -63,8 +43,8 @@ Log.h
 /home/tim/NewIO/src/dmotion/include/dmotion/Common/Utility/Log.h
 Math.hpp
 /home/tim/NewIO/src/dmotion/include/dmotion/Common/Utility/Math.hpp
-RosUtility.hpp
-/home/tim/NewIO/src/dmotion/include/dmotion/Common/Utility/RosUtility.hpp
+iostream
+-
 
 /home/tim/NewIO/src/dmotion/include/dmotion/IO/FeetSensorIO.h
 dmotion/Common/Type.h
@@ -522,10 +502,6 @@ cstddef
 memory
 -
 
-/opt/ros/kinetic/include/ros/message_operations.h
-ostream
--
-
 /opt/ros/kinetic/include/ros/message_traits.h
 message_forward.h
 /opt/ros/kinetic/include/ros/message_forward.h
@@ -959,56 +935,6 @@ ros/forwards.h
 /opt/ros/kinetic/include/ros/ros/forwards.h
 
 /opt/ros/kinetic/include/rosconsole/macros_generated.h
-
-/opt/ros/kinetic/include/sensor_msgs/JointState.h
-string
--
-vector
--
-map
--
-ros/types.h
--
-ros/serialization.h
--
-ros/builtin_message_traits.h
--
-ros/message_operations.h
--
-std_msgs/Header.h
--
-
-/opt/ros/kinetic/include/std_msgs/Float64.h
-string
--
-vector
--
-map
--
-ros/types.h
--
-ros/serialization.h
--
-ros/builtin_message_traits.h
--
-ros/message_operations.h
--
-
-/opt/ros/kinetic/include/std_msgs/Header.h
-string
--
-vector
--
-map
--
-ros/types.h
--
-ros/serialization.h
--
-ros/builtin_message_traits.h
--
-ros/message_operations.h
--
 
 /opt/ros/kinetic/include/xmlrpcpp/XmlRpcDecl.h
 ros/macros.h

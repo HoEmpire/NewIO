@@ -1,10 +1,8 @@
 #pragma once
 
-#include "EigenTypes.h"
-
 #include <string>
 #include <vector>
-
+#define M_PI 3.1415926
 namespace Motion
 {
 typedef struct
@@ -45,10 +43,10 @@ struct PressureData
 
 struct JointConfig
 {
-  JointConfig(const int id_, 
-              const int cw_, 
-              const int resolution_, 
-              const int init_, 
+  JointConfig(const int id_,
+              const int cw_,
+              const int resolution_,
+              const int init_,
               const int max_pos_,
               const int min_pos_)
     : id(id_), cw(cw_), resolution(resolution_),
@@ -77,7 +75,7 @@ struct Joint
     explicit Joint(const JointConfig& cfg_)
       : cfg(cfg_), goal_pos(0), real_pos(0)
     {
-        
+
     }
 
     void setGoalPos(const float position)
@@ -89,19 +87,12 @@ struct Joint
     {
         real_pos = position;
     }
-    
+
     const JointConfig& cfg;
     float goal_pos;
     float real_pos;
 };
 
-struct WholeBodyTransform
-{
-  Isometry3<float> right_leg = Isometry3<float>::Identity();
-  Isometry3<float> left_leg = Isometry3<float>::Identity();
-  Isometry3<float> right_hand, left_hand;
-  Isometry3<float> head;
-};
 
 enum ActionCommand
 {
@@ -121,29 +112,7 @@ enum PowerState
   REOPEN
 };
 
-// static const std::string
-// getActionCommandName(const ActionCommand cmd)
-// {
-//     switch (cmd)
-//     {
-//         case STANDUP:
-//             return "standup";
-//         case CROUNCH:
-//             return "crounch";
-//         case KICK:
-//             return "kick";
-//         case WALK:
-//             return "walk";
-//         case SETUPBACK:
-//             return "setupback";
-//         case SETUPFRONT:
-//             return "setupfront";
-//         case GOALIE:
-//             return "goalie";
-//         default:
-//             return "nontype";
-//     }
-// }
+
 
 enum RoboState
 {
