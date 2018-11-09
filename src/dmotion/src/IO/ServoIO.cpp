@@ -18,7 +18,7 @@ ServoIO::ServoIO()
     : m_writer_inited(false)
     , m_servo_inited(false)
 {
-    ROS_DEBUG("ServoIO::ServoIO: init ServoIO instance");
+    INFO("ServoIO::ServoIO: init ServoIO instance");
 
     // init port
     m_servo_port = IOManager3::initPort(PORT_NAME, BAUDRATE);
@@ -31,7 +31,7 @@ ServoIO::ServoIO()
 
 ServoIO::~ServoIO()
 {
-    ROS_DEBUG("ServoIO:~ServoIO: destruct ServoIO instance");
+    INFO("ServoIO:~ServoIO: destruct ServoIO instance");
     m_servo_port->closePort();
 }
 
@@ -51,7 +51,7 @@ void ServoIO::addJoint(std::string name, Joint Joints_cfg)
 
 void ServoIO::initServoPositions()
 {
-    ROS_DEBUG("ServoIO::initServoPositions: init all servos");
+    INFO("ServoIO::initServoPositions: init all servos");
     for (auto& joint:m_joints)
     {
         static uint8_t goal_position_[4];
@@ -107,7 +107,7 @@ void ServoIO::sendServoPositions()
     static int goal_position_;
     static int init_ticks = 0;
 
-    ROS_DEBUG("ServoIO::sendServoPositions: send servo positions");
+    INFO("ServoIO::sendServoPositions: send servo positions");
 
     if (!m_servo_inited)
     {
@@ -149,7 +149,7 @@ void ServoIO::sendServoPositions()
 
 void ServoIO::readServoPositions()
 {
-    ROS_DEBUG("ServoIO::readServoPositions: read servo positions");
+    INFO("ServoIO::readServoPositions: read servo positions");
     m_pos_reader->txRxPacket();
 
     for (auto& joint:m_joints)
@@ -170,7 +170,7 @@ void ServoIO::readServoPositions()
 
 void ServoIO::setAllServoSpeed(const int speed)
 {
-    ROS_DEBUG_STREAM("ServoIO::setAllServoSpeed: set servo speed to " << speed);
+    std::cout << "ServoIO::setAllServoSpeed: set servo speed to " << speed << std::endl;
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
@@ -183,7 +183,7 @@ void ServoIO::setAllServoSpeed(const int speed)
 
 void ServoIO::setSingleServoSpeed(int speed, std::string name)
 {
-    ROS_DEBUG_STREAM("ServoIO::setSingleServoSpeed: set servo speed to " << speed);
+    std::cout << "ServoIO::setSingleServoSpeed: set servo speed to " << speed << std::endl;
 
     std::map<std::string, Joint>::iterator it = m_joints.begin();
     if(it != m_joints.end())
@@ -200,7 +200,7 @@ void ServoIO::setSingleServoSpeed(int speed, std::string name)
 
 void ServoIO::setSingleServoSpeed(int speed, int servo_id)
 {
-    ROS_DEBUG_STREAM("ServoIO::setSingleServoSpeed: set servo speed to " << speed);
+    std::cout << "ServoIO::setSingleServoSpeed: set servo speed to " << speed << std::endl;
     m_servo_protocol->write4ByteTxOnly(m_servo_port, servo_id, ADDR_PROFILE_VELOCITY, speed);
 }
 
@@ -208,7 +208,7 @@ void ServoIO::setServoPIMode(std::vector<int> servo_id, const int P, const int I
 {
     static uint8_t pi_buffer[4];
 
-    ROS_DEBUG_STREAM("ServoIO::setServoPIMode: set servo P : " << P << " set servo I " << I);
+    std::cout << "ServoIO::setServoPIMode: set servo P : " << P << " set servo I " << I << std::endl;
 
     dynamixel::GroupSyncWrite writer_(m_servo_port, m_servo_protocol, ADDR_PI, LENGTH_PI);
 
