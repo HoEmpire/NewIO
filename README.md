@@ -19,6 +19,7 @@ New version of IO for dancing cock
 ## Run a test
 + make changes in src/dmotion/test/test_servo.cpp
 + Then use roslaunch to test
++ make sure you have the authority of the USB port
  ``` cpp
   roslaunch dmotion test_servo.launch
  ```
