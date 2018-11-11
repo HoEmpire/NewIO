@@ -8,23 +8,6 @@
           cwd="node"
           args="">
 
-        <!--Set log level-->
-        <!-- <env name="ROSCONSOLE_CONFIG_FILE" value="$(find dlaunch)/drosconsole.conf"/> -->
-
-        <!--Private parameters-->
-        <!-- <param name="RobotId" value="$(env ZJUDANCER_ROBOTID)" />
-
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/motion.yml"/>
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/motor.yml"/>
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/pvhipY.yml"/>
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/kick.yml"/>
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/sidekick.yml"/>
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/fastkick.yml"/>
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/goalie.yml"/>
-        <rosparam command="load" file="$(find dconfig)/$(env ZJUDANCER_ROBOTID)/dmotion/setup.yml"/> -->
-
-        <!-- <param name="RobotId" value="$(env ZJUDANCER_ROBOTID)" /> -->
-
         <rosparam command="load" file="$(find dconfig)/test/dmotion/motion.yml"/>
         <rosparam command="load" file="$(find dconfig)/test/dmotion/motor.yml"/>
         <rosparam command="load" file="$(find dconfig)/test/dmotion/pvhipY.yml"/>
@@ -34,9 +17,7 @@
         <rosparam command="load" file="$(find dconfig)/test/dmotion/goalie.yml"/>
         <rosparam command="load" file="$(find dconfig)/test/dmotion/setup.yml"/>
 
-
     </node>
-
     <!--Global parameters-->
     <rosparam command="load" file="$(find dconfig)/global.yml"/>
 </launch>

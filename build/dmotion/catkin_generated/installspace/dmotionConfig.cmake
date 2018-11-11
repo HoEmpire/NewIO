@@ -99,7 +99,7 @@ if(NOT "include " STREQUAL " ")
   elseif(NOT " " STREQUAL " ")
     set(_report "Check the website '' for information and consider reporting the problem.")
   else()
-    set(_report "Report the problem to the maintainer 'Wenxing Mei <mwx36mwx@gmail.com>' and request to fix the problem.")
+    set(_report "Report the problem to the maintainer 'Yuxiang Peng <pyx@gg.gg>' and request to fix the problem.")
   endif()
   foreach(idir ${_include_dirs})
     if(IS_ABSOLUTE ${idir} AND IS_DIRECTORY ${idir})
@@ -129,7 +129,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/tim/NewIO/install/lib;/home/tim/ZJUDANCER20180910/dancer-workspace/workspaces/core/devel/lib;/home/tim/LearnEigen/devel/lib;/opt/ros/kinetic/lib)
+    foreach(path /home/tim/NewIO/install/lib;/home/tim/NewIO/devel/lib;/home/tim/ZJUDANCER20180910/dancer-workspace/workspaces/core/devel/lib;/home/tim/LearnEigen/devel/lib;/opt/ros/kinetic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)

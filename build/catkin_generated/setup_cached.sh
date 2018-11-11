@@ -7,9 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export CMAKE_PREFIX_PATH="/home/tim/NewIO/devel:$CMAKE_PREFIX_PATH"
-export LD_LIBRARY_PATH="/home/tim/NewIO/devel/lib:$LD_LIBRARY_PATH"
-export PKG_CONFIG_PATH="/home/tim/NewIO/devel/lib/pkgconfig:$PKG_CONFIG_PATH"
 export PWD="/home/tim/NewIO/build"
-export ROSLISP_PACKAGE_DIRECTORIES="/home/tim/NewIO/devel/share/common-lisp:$ROSLISP_PACKAGE_DIRECTORIES"
-export ROS_PACKAGE_PATH="/home/tim/NewIO/src:$ROS_PACKAGE_PATH"

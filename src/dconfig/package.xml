@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package>
+  <name>dconfig</name>
+  <version>0.0.0</version>
+  <description>The config package</description>
+  <maintainer email="pyx@todo.todo">pyx</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

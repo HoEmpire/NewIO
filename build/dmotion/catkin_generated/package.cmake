@@ -1,6 +1,6 @@
 set(_CATKIN_CURRENT_PACKAGE "dmotion")
 set(dmotion_VERSION "0.0.0")
-set(dmotion_MAINTAINER "Wenxing Mei <mwx36mwx@gmail.com>")
+set(dmotion_MAINTAINER "Yuxiang Peng <pyx@gg.gg>")
 set(dmotion_PACKAGE_FORMAT "1")
 set(dmotion_BUILD_DEPENDS )
 set(dmotion_BUILD_EXPORT_DEPENDS "message_runtime" "geometry_msgs" "dcommon")

@@ -286,11 +286,23 @@ _gtest_SOURCES:FILEPATH=/usr/src/gtest/src/gtest.cc
 //The directory containing a CMake configuration file for catkin.
 catkin_DIR:PATH=/opt/ros/kinetic/share/catkin/cmake
 
+//Value Computed by CMake
+config_BINARY_DIR:STATIC=/home/tim/NewIO/build/config
+
+//Value Computed by CMake
+config_SOURCE_DIR:STATIC=/home/tim/NewIO/src/config
+
 //The directory containing a CMake configuration file for cpp_common.
 cpp_common_DIR:PATH=/opt/ros/kinetic/share/cpp_common/cmake
 
+//Value Computed by CMake
+dconfig_BINARY_DIR:STATIC=/home/tim/NewIO/build/dconfig
+
 //The directory containing a CMake configuration file for dconfig.
 dconfig_DIR:PATH=/home/tim/ZJUDANCER20180910/dancer-workspace/workspaces/core/devel/share/dconfig/cmake
+
+//Value Computed by CMake
+dconfig_SOURCE_DIR:STATIC=/home/tim/NewIO/src/dconfig
 
 //Value Computed by CMake
 dmotion_BINARY_DIR:STATIC=/home/tim/NewIO/build/dmotion
@@ -494,7 +506,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=7
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

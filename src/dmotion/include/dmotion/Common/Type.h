@@ -52,12 +52,14 @@ struct JointConfig
     : id(id_), cw(cw_), resolution(resolution_),
      init(init_), max_pos(max_pos_), min_pos(min_pos_)
   {
-      factor = static_cast<float>(resolution)/M_PI/2.0*cw;
+      factor = static_cast<float>(resolution)/360.0*cw;
+      init = init * factor * cw;
   }
 
   void setFactor()
   {
-    factor = static_cast<float>(resolution)/M_PI/2.0*cw;
+    factor = static_cast<float>(resolution)/360.0*cw;
+      init = init * factor * cw;
   }
 
   int id;

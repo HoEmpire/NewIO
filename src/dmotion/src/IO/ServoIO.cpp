@@ -6,10 +6,13 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
 using namespace dynamixel;
-#define SAFE_MODE true //if true, then if will move slower to avoid unexpected damadges
+#define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
 #define PORT_NAME "/dev/ttyUSB0"
 #define BAUDRATE  1000000
 #define PROTOCOL_VERSION 2.0
+#define INIT_TICKS 100
+#define INIT_VELLOCITY 50
+#define SAFE_MODE_SPEED 50
 
 namespace Motion
 {
@@ -38,6 +41,7 @@ ServoIO::~ServoIO()
 void ServoIO::addJoint(std::string name, Joint Joints_cfg)
 {
     std::map<std::string, Joint>::iterator it = m_joints.begin();
+    it = m_joints.find(name);
     if(it == m_joints.end()){
       m_joints.insert(std::pair<std::string, Joint>(name, Joints_cfg));
       std::cout << "INFO:add " << name << " success!" <<std::endl;
@@ -64,7 +68,7 @@ void ServoIO::initServoPositions()
         timer::delay_ms(20);
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 1);
         timer::delay_ms(20);
-        m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, 50);//init safety
+        m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, INIT_VELLOCITY);//init safety
 
         goal_position_[0] = DXL_LOBYTE(DXL_LOWORD(_cfg.init));
         goal_position_[1] = DXL_HIBYTE(DXL_LOWORD(_cfg.init));
@@ -87,7 +91,17 @@ void ServoIO::initServoPositions()
                 ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " change goal position param error");
             }
         }
+
+        bool state = m_pos_reader->addParam(_cfg.id);
+        if (!state)
+        {
+            ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add read position param error");
+        }
+
+
     }
+
+    m_pos_writer->txPacket();
 
     // turn off led
     for (auto& joint:m_joints)
@@ -97,8 +111,23 @@ void ServoIO::initServoPositions()
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 0);
     }
 
+//    m_pos_writer->txPacket();
+
     m_writer_inited = true;
     m_servo_inited = false;
+}
+
+void ServoIO::TorqueOff()
+{
+    INFO("turn off the torque of the servos!");
+    for (auto& joint:m_joints)
+    {
+        const JointConfig& _cfg = joint.second.cfg;
+        m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_TORQUE_ENABLE, 0);
+    }
+    sleep(2);
+    INFO("torque off ist schon gemacht!");
+
 }
 
 void ServoIO::sendServoPositions()
@@ -113,10 +142,10 @@ void ServoIO::sendServoPositions()
     {
         // if servo init done, just reset speed
         // power safety
-        if (init_ticks > parameters.io.servo_init_ticks)
+        if (init_ticks > INIT_TICKS)
         {
             if (SAFE_MODE)// TODO pyx 测试模式
-              setAllServoSpeed(50);
+              setAllServoSpeed(SAFE_MODE_SPEED);
             else
               setAllServoSpeed();
 
@@ -135,6 +164,7 @@ void ServoIO::sendServoPositions()
         const JointConfig& _cfg = _j.cfg;
 
         goal_position_ = _cfg.init + static_cast<int>(_j.goal_pos*_cfg.factor);
+        std::cout << "goal:" << goal_position_ << std::endl;
 
         goal_position_buffer[0] = DXL_LOBYTE(DXL_LOWORD(goal_position_));
         goal_position_buffer[1] = DXL_HIBYTE(DXL_LOWORD(goal_position_));
@@ -158,12 +188,12 @@ void ServoIO::readServoPositions()
 
         if (!m_pos_reader->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
         {
-            ROS_WARN("ServoIO::readServoPositions: get current joint value error");
+           INFO ("ServoIO::readServoPositions: get current joint value error");
         }
         else
         {
             joint.second.real_pos = (static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
-            std::cout << "ServoName：" << joint.first << ' | ' << "pos:"<< joint.second.real_pos << std::endl;
+            std::cout << "ServoName：" << joint.first.c_str() << " | "  << "pos:"<< joint.second.real_pos << std::endl;
         }
     }
 }
@@ -177,19 +207,18 @@ void ServoIO::setAllServoSpeed(const int speed)
 
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, speed);
     }
-
-
 }
 
-void ServoIO::setSingleServoSpeed(int speed, std::string name)
+void ServoIO::setSingleServoSpeed(std::string name, int speed)
 {
     std::cout << "ServoIO::setSingleServoSpeed: set servo speed to " << speed << std::endl;
 
     std::map<std::string, Joint>::iterator it = m_joints.begin();
+    it = m_joints.find(name);
     if(it != m_joints.end())
     {
-        std::cout << "INFO:find " << name << " success!" <<std::endl;
         const JointConfig& _cfg = (*it).second.cfg;
+        std::cout << "INFO:find " << name << " success!" << " | id::" << _cfg.id <<std::endl;
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, speed);
     }
     else
@@ -198,11 +227,30 @@ void ServoIO::setSingleServoSpeed(int speed, std::string name)
     }
 }
 
-void ServoIO::setSingleServoSpeed(int speed, int servo_id)
+void ServoIO::setSingleServoSpeed(int servo_id,  int speed)
 {
     std::cout << "ServoIO::setSingleServoSpeed: set servo speed to " << speed << std::endl;
     m_servo_protocol->write4ByteTxOnly(m_servo_port, servo_id, ADDR_PROFILE_VELOCITY, speed);
 }
+
+void ServoIO::setSingleServoPosition(std::string name, int position)
+{
+    std::cout << "ServoIO::setSingleServoSpeed: set goal postion of | " << name << " | " << std::endl;
+
+    std::map<std::string, Joint>::iterator it = m_joints.begin();
+    it = m_joints.find(name);
+    if(it != m_joints.end())
+    {
+        const JointConfig& _cfg = (*it).second.cfg;
+        std::cout << "INFO:find " << name << " success!" << " | id::" << _cfg.id <<std::endl;
+        (*it).second.goal_pos = position;
+    }
+    else
+    {
+        std::cout << "WARNING:" << name << " not found!" << std::endl;
+    }
+}
+
 
 void ServoIO::setServoPIMode(std::vector<int> servo_id, const int P, const int I)
 {

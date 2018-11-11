@@ -48,6 +48,12 @@ public:
     ///        joints_cfg.cfg.init_             init positions
     ///        joints_cfg.cfg.max_pos_          Maximum position
     ///        joints_cfg.cfg.min_pos_          minimum positions
+    /// @example
+    ///        Motion::ServoIO servo;
+    ///                                        [ id | cw | resolution | init_position |  max_pos |  min_pos ]
+    ///        struct Motion::JointConfig  _cfg(14,  -1,     4096,         203,          4096,        0);
+    ///        struct Motion::Joint  joints_cfg(_cfg);
+    ///        servo.addJoint("name", joints_cfg);
     ////////////////////////////////////////////////////////////////////////////////
     void addJoint(std::string name, Joint Joints_cfg);
 
@@ -55,6 +61,11 @@ public:
     /// @brief init Servo to init position
     ////////////////////////////////////////////////////////////////////////////////
     void initServoPositions();
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief turn off all the torque
+    ////////////////////////////////////////////////////////////////////////////////
+    void TorqueOff();
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief Send whohle set of position data
@@ -76,18 +87,26 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief Set the profile speed of a single servo based on name
     ///        default means the max speed
-    /// @param speed      Profile speed of the servo | range:0 ~ 32767 | unit:0.229 [rev/min]
     /// @param name       name of the servo
+    /// @param speed      Profile speed of the servo | range:0 ~ 32767 | unit:0.229 [rev/min]
     ////////////////////////////////////////////////////////////////////////////////
-    void setSingleServoSpeed(int speed, std::string name);
+    void setSingleServoSpeed(std::string name, int speed);
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief Set the profile speed of a single servo based on id
     ///        default means the max speed
-    /// @param speed      Profile speed of the servo | range:0 ~ 32767 | unit:0.229 [rev/min]
     /// @param servo_id   id of the servo
+    /// @param speed      Profile speed of the servo | range:0 ~ 32767 | unit:0.229 [rev/min]
     ////////////////////////////////////////////////////////////////////////////////
-    void setSingleServoSpeed(int speed, int servo_id);
+    void setSingleServoSpeed(int servo_id, int speed);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief Set the profile speed of a single servo based on name
+    ///        default means the max speed
+    /// @param name       name of the servo
+    /// @param position   set goal position of the servo | range:0 ~ 4096 | unit:360/4096 |(1°/11.37)|()
+    ////////////////////////////////////////////////////////////////////////////////
+    void setSingleServoPosition(std::string name, int position);
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief Set the PI parameters of the servo controller

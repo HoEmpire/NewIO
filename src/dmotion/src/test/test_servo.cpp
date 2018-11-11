@@ -14,40 +14,64 @@ int main(int argc, char ** argv)
     parameters.init(&nh);
     Motion::IOManager3 io;
 
-    //以下代码作为测试使用
-    //功能为旋转来回旋转末端
-    ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
-    std::vector<double> fucking(12,0);
-    fucking[11] = 0.75;
-    for(int i = 0; i < 12; i++ ){
-      std::cout << "第" << i << "个:" << fucking[i] << std::endl;
-    }
-    sleep(1);
-
-    while(ros::ok()){
-      for(int i = 0; i < 75; i++){
-        fucking[11] = fucking[11] - 0.01;
-        updateJointValuesIO(io,fucking);
-      }
-
-      for(int i = 0; i < 75; i++){
-        fucking[11] = fucking[11] + 0.01;
-        updateJointValuesIO(io,fucking);
-      }
-    }
-    // ServoIO m_servo_io;
+    // 以下代码作为测试使用
+    // 功能为旋转来回旋转末端
+    // ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
+    // std::vector<double> fucking(12,0);
+    // fucking[11] = 0;
+    // for(int i = 0; i < 12; i++ ){
+    //   std::cout << "第" << i << "个:" << fucking[i] << std::endl;
+    // }
+    // sleep(1);
     //
     // while(ros::ok()){
-    //   for(int i = 0; i < 75; i++){
-    //     fucking[11] = fucking[11] - 0.01;
+    //   for(int i = 0; i < 23; i++){
+    //     fucking[11] = fucking[11] - 1;
     //     updateJointValuesIO(io,fucking);
     //   }
     //
-    //   for(int i = 0; i < 75; i++){
-    //     fucking[11] = fucking[11] + 0.01;
+    //   for(int i = 0; i < 23; i++){
+    //     fucking[11] = fucking[11] + 1;
     //     updateJointValuesIO(io,fucking);
     //   }
     // }
+
+
+    Motion::ServoIO servo_test;
+    struct Motion::JointConfig _cfg1(14,-1,4096,203,4096,0);
+    struct Motion::Joint joints_cfg1(_cfg1);
+    servo_test.addJoint("gg", joints_cfg1);
+    struct Motion::JointConfig _cfg2(13,-1,4096,156,4096,0);
+    struct Motion::Joint joints_cfg2(_cfg2);
+    servo_test.addJoint("tt", joints_cfg2);
+    servo_test.initServoPositions();
+    sleep(2);
+    servo_test.TorqueOff();
+    while(ros::ok()){
+      // for(int i = 0; i < 23; i++){
+      //    servo_test.setSingleServoPosition("gg", i);
+      //    servo_test.sendServoPositions();
+      //    timer::delay_ms(20);
+      //    servo_test.readServoPositions();
+      // }
+      //
+      // for(int i = 23; i > 0; i--){
+      //    servo_test.setSingleServoPosition("gg", i);
+      //    servo_test.sendServoPositions();
+      //    timer::delay_ms(20);
+      //    servo_test.readServoPositions();
+      // }
+      servo_test.readServoPositions();
+      timer::delay_ms(10);
+    }
+    //
+    //
+    INFO("FUCKING NEXT!");
+    // servo_test.setSingleServoPosition("gg", -1);
+    // servo_test.sendServoPositions();
+    //
+    // sleep(5);
+    // INFO("FUCKING!");
 
 }
 

@@ -74,7 +74,7 @@ void Parameters::update()
     {
         for(int i = 0; i < io.joint_number; i++)
         {
-            io.joint_init_values[i] = std::round(joint_init_float[i]/360.0*io.joint_resolution[i]);
+            io.joint_init_values[i] = std::round(joint_init_float[i]);
             auto iter = io.joint_cfg.find(io.joint_name[i]);
             if (iter == io.joint_cfg.end())
             {
@@ -107,7 +107,7 @@ void Parameters::update()
     {
         for(int i = 0; i < io.joint_number; i++)
         {
-            io.joint_init_values[i] = std::round(joint_init_float[i]/360.0*io.joint_resolution[i]);
+            io.joint_init_values[i] = std::round(joint_init_float[i]);
             io.joint_cfg.insert(
                 std::make_pair(
                     io.joint_name[i],
