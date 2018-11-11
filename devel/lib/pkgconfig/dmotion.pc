@@ -1,8 +1,0 @@
-prefix=/home/tim/NewIO/devel
-
-Name: dmotion
-Description: Description of dmotion
-Version: 0.0.0
-Cflags: -I/home/tim/NewIO/src/dmotion/include
-Libs: -L/home/tim/NewIO/devel/lib 
-Requires: 

@@ -1,2 +1,0 @@
-dconfig:dmotion
--DCATKIN_DEVEL_PREFIX=/home/tim/NewIO/devel -DCMAKE_INSTALL_PREFIX=/home/tim/NewIO/install -G Unix Makefiles
