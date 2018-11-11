@@ -18,7 +18,7 @@ public:
 
     virtual void remapJointValues() = 0;
 
-    void setJointvalues(const std::vector<float>& joint_values)
+    void setSingleJointValues(const std::vector<float>& joint_values)
     {
         assert(static_cast<int>(joint_values.size()) == parameters.io.joint_number);
         assert(static_cast<int>(m_joint_values.size()) == parameters.io.joint_number);
@@ -33,9 +33,9 @@ public:
         return tmp;
     }
 
-    virtual const std::vector<float>& getJointValues()
+    virtual const std::vector<float>& getSingleJointValues()
     {
-        std::cout << "getJointValues not override.." << std::endl;
+        std::cout << "getSingleJointValues not override.." << std::endl;
         std::vector<float> values;
         return values;
     }

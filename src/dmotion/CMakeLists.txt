@@ -31,8 +31,9 @@ include_directories(
 add_subdirectory(src/IO)
 add_subdirectory(src/Common)
 add_subdirectory(src/test)
-
+add_subdirectory(src/InverseKinematics)
+add_subdirectory(src/ThreeInterpolation)
 
 
 add_executable(test_servo src/test/test_servo.cpp)
-target_link_libraries(test_servo ${catkin_LIBRARIES} dmotion_io dmotion_common)
+target_link_libraries(test_servo ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)

@@ -43,7 +43,7 @@ public:
 
     void remapServoValues();
 
-    void setJointValue(const std::string name, const float value);
+    void setSingleJointValue(const std::string name, const float value);
 
 
     const IMUData& getIMUData()
@@ -57,12 +57,12 @@ public:
         return m_feet_io.m_data;
     }
 
-    const std::vector<float>& getJointValues()
+    const std::vector<float>& getSingleJointValues()
     {
         return m_curr_joints;
     }
 
-    const bool getJointValue(const std::string joint_name, float& value);
+    const bool getSingleJointValue(const std::string joint_name, float& value);
 
     const PowerState getPowerState() const
     {

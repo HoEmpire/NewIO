@@ -34,7 +34,8 @@ dynamixel::PortHandler* IOManager3::initPort(const std::string portname, const i
     if (!port_->setBaudRate(baudrate,block))
     {
         ROS_FATAL("IOManager3::_initPort: could not change baudrate");
-        //std::abort();
+        ROS_FATAL("IOManager3::_initPort: are you stupid enough, dass du unfaehig zu eroeffnenung des Port bist?");
+        std::abort();
     }
     return port_;
 }
@@ -88,50 +89,49 @@ void IOManager3::spinOnce()
       m_sync_time = std::chrono::system_clock::now();//这句话的位置 TODO pyx after
 }
 
-
-void IOManager3::setJointValue(const std::string name, const float value)
+void IOManager3::setAllJointValue(const std::vector<double>& values_)
 {
-    auto _joint = m_servo_io.m_joints.find(name);
-    if (_joint == m_servo_io.m_joints.end())
-    {
-        ROS_FATAL("joint not existing... check joint name");
-        return;
-    }
+    m_servo_io.setSingleServoPosition("right_hip_yaw", values_[0]);
+    m_servo_io.setSingleServoPosition("right_hip_roll", values_[1]);
+    m_servo_io.setSingleServoPosition("right_hip_pitch", values_[2]);
+    m_servo_io.setSingleServoPosition("right_knee", values_[3]);
+    m_servo_io.setSingleServoPosition("right_ankle_pitch", values_[4]);
+    m_servo_io.setSingleServoPosition("right_ankle_roll", values_[5]);
 
-    _joint->second.goal_pos = value;
+    m_servo_io.setSingleServoPosition("left_hip_yaw", values_[6]);
+    m_servo_io.setSingleServoPosition("left_hip_roll", values_[7]);
+    m_servo_io.setSingleServoPosition("left_hip_pitch", values_[8]);
+    m_servo_io.setSingleServoPosition("left_knee", values_[9]);
+    m_servo_io.setSingleServoPosition("left_ankle_pitch", values_[10]);
+    m_servo_io.setSingleServoPosition("left_ankle_roll", values_[11]);
 
-    ROS_DEBUG_STREAM("IOManager3::setJointValue: joint name: " << name << " values: " << value);
+    m_servo_io.setSingleServoPosition("right_arm_upper", values_[12]);
+    m_servo_io.setSingleServoPosition("right_arm_lower", values_[13]);
+    m_servo_io.setSingleServoPosition("left_arm_upper", values_[14]);
+    m_servo_io.setSingleServoPosition("left_arm_lower", values_[15]);
 }
 
-const bool IOManager3::getJointValue(const std::string joint_name, float& value)
+void IOManager3::setSingleJointValue(const std::string name, const double values_)
 {
-    auto _joint = m_servo_io.m_joints.find(joint_name);
-    if (_joint == m_servo_io.m_joints.end())
-    {
-        ROS_FATAL("joint not existing... check joint name");
-        return false;
-    }
-    value = _joint->second.real_pos;
-
-    return true;
+    m_servo_io.setSingleServoPosition(name, values_);
 }
 
-void IOManager3::remapServoValues()
+void IOManager3::readJointValue()
 {
-    // static int count = 0;
-    m_curr_joints[2] = (m_servo_io.m_servo_present_pos[0] - parameters.io.joint_init_values[0])*parameters.io.joint_cw[0]*2.0/parameters.io.joint_resolution[0]*M_PI;
-    m_curr_joints[1] = (m_servo_io.m_servo_present_pos[1] - parameters.io.joint_init_values[1])*parameters.io.joint_cw[1]*2.0/parameters.io.joint_resolution[1]*M_PI;
-    m_curr_joints[0] = (m_servo_io.m_servo_present_pos[2] - parameters.io.joint_init_values[2])*parameters.io.joint_cw[2]*2.0/parameters.io.joint_resolution[2]*M_PI;
-    m_curr_joints[3] = (m_servo_io.m_servo_present_pos[3] - parameters.io.joint_init_values[3])*parameters.io.joint_cw[3]*2.0/parameters.io.joint_resolution[3]*M_PI;
-    m_curr_joints[4] = (m_servo_io.m_servo_present_pos[4] - parameters.io.joint_init_values[4])*parameters.io.joint_cw[4]*2.0/parameters.io.joint_resolution[4]*M_PI;
-    m_curr_joints[5] = (m_servo_io.m_servo_present_pos[5] - parameters.io.joint_init_values[5])*parameters.io.joint_cw[5]*2.0/parameters.io.joint_resolution[5]*M_PI;
+    m_servo_io.readServoPositions();
+}
 
-    m_curr_joints[8] = (m_servo_io.m_servo_present_pos[6] - parameters.io.joint_init_values[6])*parameters.io.joint_cw[6]*2.0/parameters.io.joint_resolution[6]*M_PI;
-    m_curr_joints[7] = (m_servo_io.m_servo_present_pos[7] - parameters.io.joint_init_values[7])*parameters.io.joint_cw[7]*2.0/parameters.io.joint_resolution[7]*M_PI;
-    m_curr_joints[6] = (m_servo_io.m_servo_present_pos[8] - parameters.io.joint_init_values[8])*parameters.io.joint_cw[8]*2.0/parameters.io.joint_resolution[8]*M_PI;
-    m_curr_joints[9] = (m_servo_io.m_servo_present_pos[9] - parameters.io.joint_init_values[9])*parameters.io.joint_cw[9]*2.0/parameters.io.joint_resolution[9]*M_PI;
-    m_curr_joints[10] = (m_servo_io.m_servo_present_pos[10] - parameters.io.joint_init_values[10])*parameters.io.joint_cw[10]*2.0/parameters.io.joint_resolution[10]*M_PI;
-    m_curr_joints[11] = (m_servo_io.m_servo_present_pos[11] - parameters.io.joint_init_values[11])*parameters.io.joint_cw[11]*2.0/parameters.io.joint_resolution[11]*M_PI;
+void IOManager3::reverseMotion()
+{
+    m_servo_io.TorqueOff();
+    while(ros::ok()){
+        std::cout << "Press any key to get a set of current joint value!(or press ESC to quit!)" << std::endl;
+        char input;
+        std::cin >> input;
+        if (input == 27)
+          break;
+        readJointValue();
+    }
 }
 
 void IOManager3::setServoPI(const std::vector<int> servo_id, const int p, const int i)

@@ -3,6 +3,7 @@
 #include "dynamixel_sdk/port_handler.h"
 #include "dynamixel_sdk/group_sync_write.h"
 #include "dynamixel_sdk/group_sync_read.h"
+#include "dynamixel_sdk/group_bulk_read.h"
 
 #include "dmotion/Common/Type.h"
 
@@ -78,6 +79,11 @@ public:
     void readServoPositions();
 
     ////////////////////////////////////////////////////////////////////////////////
+    /// @brief Read whole set of position data(bad version)
+    ////////////////////////////////////////////////////////////////////////////////
+    void readServoPositionsBad();
+
+    ////////////////////////////////////////////////////////////////////////////////
     /// @brief Set the profile speed of all the servo in m_joints
     ///        default means the max speed
     /// @param speed Profile speed of the servo | range:0 ~ 32767
@@ -104,9 +110,9 @@ public:
     /// @brief Set the profile speed of a single servo based on name
     ///        default means the max speed
     /// @param name       name of the servo
-    /// @param position   set goal position of the servo | range:0 ~ 4096 | unit:360/4096 |(1°/11.37)|()
+    /// @param position   set goal position of the servo | range:0 ~ 360°
     ////////////////////////////////////////////////////////////////////////////////
-    void setSingleServoPosition(std::string name, int position);
+    void setSingleServoPosition(std::string name, double position);
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief Set the PI parameters of the servo controller

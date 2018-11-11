@@ -179,7 +179,7 @@ void IOManager2::spinOnce()
     }
 }
 
-void IOManager2::setJointValue(const std::string name, const float value)
+void IOManager2::setSingleJointValue(const std::string name, const float value)
 {
     auto _joint = m_servo_io.m_joints.find(name);
     if (_joint == m_servo_io.m_joints.end())
@@ -190,10 +190,10 @@ void IOManager2::setJointValue(const std::string name, const float value)
 
     _joint->second.goal_pos = value;
 
-    ROS_DEBUG_STREAM("IOManager2::setJointValue: joint name: " << name << " values: " << value);
+    ROS_DEBUG_STREAM("IOManager2::setSingleJointValue: joint name: " << name << " values: " << value);
 }
 
-const bool IOManager2::getJointValue(const std::string joint_name, float& value)
+const bool IOManager2::getSingleJointValue(const std::string joint_name, float& value)
 {
     auto _joint = m_servo_io.m_joints.find(joint_name);
     if (_joint == m_servo_io.m_joints.end())
