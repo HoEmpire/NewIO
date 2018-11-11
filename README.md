@@ -1,7 +1,7 @@
 # NewIO
 New version of IO for dancing cock
 ## Pre-Requirement 
-+ ROS is a must for IOManagerment.**BUT** ist nicht notwendig fuer ServoIO.
++ ROS is a must for IOManagerment.**BUT** ist nicht notwendig fuer ServoIO, which means you can make some change of the files then use cmake instead to build files.
 
 ## How to build 
 + This is a ROS workspace use the following code to build
