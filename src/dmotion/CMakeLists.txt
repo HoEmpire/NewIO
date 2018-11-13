@@ -5,11 +5,8 @@ add_definitions(-std=c++11 -Wall -O2)
 find_package(catkin REQUIRED
     COMPONENTS
     roscpp
-    dconfig
    )
 
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(OpenCV 3 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package(

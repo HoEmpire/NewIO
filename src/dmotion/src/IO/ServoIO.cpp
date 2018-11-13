@@ -205,7 +205,7 @@ void ServoIO::readServoPositions()
 void ServoIO::readServoPositionsBad()
 {
     INFO("ServoIO::readServoPositions: read servo positions");
-    m_pos_reader->txRxPacket();
+    m_pos_reader->txRxPacket(); 
     //timer::delay_ms(100);
     for (auto& joint:m_joints)
     {
