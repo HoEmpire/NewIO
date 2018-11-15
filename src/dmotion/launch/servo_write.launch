@@ -1,0 +1,11 @@
+<launch>
+    <node pkg="dmotion"
+          name="servo_write"
+          type="servo_write"
+          output="screen"
+          respawn="false"
+          required="true"
+          cwd="node"
+          args="">
+    </node>
+</launch>

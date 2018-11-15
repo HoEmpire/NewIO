@@ -1,0 +1,11 @@
+<launch>
+    <node pkg="dmotion"
+          name="servo_read"
+          type="servo_read"
+          output="screen"
+          respawn="false"
+          required="true"
+          cwd="node"
+          args="">
+    </node>
+</launch>

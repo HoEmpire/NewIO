@@ -1,6 +1,6 @@
 #include "dmotion/IO/ServoIO.h"
 
-#include "dmotion/IO/IOManager2.h"
+//#include "dmotion/IO/IOManager2.h"
 #include "dmotion/IO/IOManager3.h"
 
 #include "dmotion/Common/Utility/Utility.h"
@@ -69,6 +69,10 @@ void ServoIO::initServoPositions()
         timer::delay_ms(20);
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 1);
         timer::delay_ms(20);
+        // m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_RETURN_DELAY, 10);
+        // timer::delay_ms(20);
+        // m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_RETURN_LEVEL, 1);
+        // timer::delay_ms(20);
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, INIT_VELLOCITY);//init safety
 
         goal_position_[0] = DXL_LOBYTE(DXL_LOWORD(_cfg.init));
@@ -184,12 +188,24 @@ void ServoIO::sendServoPositions()
 void ServoIO::readServoPositions()
 {
     INFO("ServoIO::readServoPositions: read servo positions");
-    m_pos_reader->txRxPacket();
+    //m_pos_reader->txRxPacket();
     //timer::delay_ms(100);
+    //
+    auto dxl_comm_result = m_pos_reader->txRxPacket();
+
+    int cunt = 0;
+    while (dxl_comm_result != COMM_SUCCESS && cunt < 100)
+    {
+      INFO("fucking reading error");
+      //INFO(dpacketHandler->getTxRxResult(dxl_comm_result));
+      dxl_comm_result = m_pos_reader->txRxPacket();
+      cunt ++;
+    }
+
+
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
-
         if (!m_pos_reader->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
         {
            INFO ("ServoIO::readServoPositions: get current joint value error");
@@ -205,7 +221,7 @@ void ServoIO::readServoPositions()
 void ServoIO::readServoPositionsBad()
 {
     INFO("ServoIO::readServoPositions: read servo positions");
-    m_pos_reader->txRxPacket(); 
+    m_pos_reader->txRxPacket();
     //timer::delay_ms(100);
     for (auto& joint:m_joints)
     {

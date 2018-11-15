@@ -7,8 +7,7 @@
 
 using namespace dynamixel;
 
-// #define WAIT_MODE 1
-// TODO(hhy) some hard code...
+#define LEG_ONLY true //ONLY USE LEGS OF ZJU DANCER
 
 #define DATA_FREQUENCY 10.0    // 100hz data stream
 
@@ -45,9 +44,15 @@ void IOManager3::initZJUJoint()
     // construct robot joint bases
     for (auto& pair:parameters.io.joint_cfg)
     {
-        m_servo_io.m_joints.insert(
-            std::make_pair(pair.first, Joint(pair.second))
-        );
+      if(LEG_ONLY){
+        if(!(pair.first ==  "right_arm_upper" || pair.first ==  "right_arm_lower" ||
+             pair.first ==  "left_arm_upper" || pair.first ==  "left_arm_lower"||
+             pair.first ==  "head_pitch" || pair.first ==  "head_yaw"))
+                 m_servo_io.m_joints.insert(std::make_pair(pair.first, Joint(pair.second)));
+      }
+      else
+          m_servo_io.m_joints.insert(std::make_pair(pair.first, Joint(pair.second)));
+
     }
 
     if (parameters.global.io_debug)
@@ -105,10 +110,12 @@ void IOManager3::setAllJointValue(const std::vector<double>& values_)
     m_servo_io.setSingleServoPosition("left_ankle_pitch", values_[10]);
     m_servo_io.setSingleServoPosition("left_ankle_roll", values_[11]);
 
-    m_servo_io.setSingleServoPosition("right_arm_upper", values_[12]);
-    m_servo_io.setSingleServoPosition("right_arm_lower", values_[13]);
-    m_servo_io.setSingleServoPosition("left_arm_upper", values_[14]);
-    m_servo_io.setSingleServoPosition("left_arm_lower", values_[15]);
+    if(!LEG_ONLY){
+      m_servo_io.setSingleServoPosition("right_arm_upper", values_[12]);
+      m_servo_io.setSingleServoPosition("right_arm_lower", values_[13]);
+      m_servo_io.setSingleServoPosition("left_arm_upper", values_[14]);
+      m_servo_io.setSingleServoPosition("left_arm_lower", values_[15]);
+    }
 }
 
 void IOManager3::setSingleJointValue(const std::string name, const double values_)
@@ -125,10 +132,10 @@ void IOManager3::reverseMotion()
 {
     m_servo_io.TorqueOff();
     while(ros::ok()){
-        std::cout << "Press any key to get a set of current joint value!(or press ESC to quit!)" << std::endl;
+        std::cout << "Press F to get a set of current joint value!(or press OTHERS to quit!)" << std::endl;
         char input;
         std::cin >> input;
-        if (input == 27)
+        if (input != 'f')
           break;
         readJointValue();
     }

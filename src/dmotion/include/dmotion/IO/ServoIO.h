@@ -20,6 +20,7 @@ public:
         ADDR_TORQUE_ENABLE = 64,
         ADDR_LED = 65,
         ADDR_RETURN_LEVEL = 68,
+        ADDR_RETURN_DELAY = 9,
         ADDR_GOAL_POSITION = 116,
         ADDR_PROFILE_VELOCITY = 112,
         ADDR_CURR_POSITION = 132,
