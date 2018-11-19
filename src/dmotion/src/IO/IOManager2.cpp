@@ -8,6 +8,7 @@
 using namespace dynamixel;
 
 // #define WAIT_MODE 1
+
 // TODO(hhy) some hard code...
 
 #define DATA_FREQUENCY 10.0    // 100hz data stream
@@ -51,7 +52,7 @@ dynamixel::PortHandler* IOManager2::initPort(const std::string portname, const i
     if (!port_->setBaudRate(baudrate,block))
     {
         ROS_FATAL("IOManager2::_initPort: could not change baudrate");
-        //std::abort();
+        std::abort();
     }
 
     // open imu port
@@ -117,7 +118,6 @@ void IOManager2::spinOnce()
 
             // t.tic();
             // if not true means lower board power off
-
             if (!m_imu_reader.readIMUData())
             {
                 if (imu_failures++ > 10)
@@ -132,7 +132,6 @@ void IOManager2::spinOnce()
                 imu_failures = 0;
                 m_sync_time = m_imu_reader.getSyncTimePoint();
             }
-
         }
         // double duration1 = t.toc();
         // std::cout << "imu reader takes time " << duration1 << std::endl;
@@ -171,7 +170,7 @@ void IOManager2::spinOnce()
 
             return;
         }
-        timer::delay_ms(500);//TODO make it bigger pyx
+        timer::delay_ms(500);
     }
     else
     {
@@ -179,32 +178,32 @@ void IOManager2::spinOnce()
     }
 }
 
-void IOManager2::setSingleJointValue(const std::string name, const float value)
-{
-    auto _joint = m_servo_io.m_joints.find(name);
-    if (_joint == m_servo_io.m_joints.end())
-    {
-        ROS_FATAL("joint not existing... check joint name");
-        return;
-    }
-
-    _joint->second.goal_pos = value;
-
-    ROS_DEBUG_STREAM("IOManager2::setSingleJointValue: joint name: " << name << " values: " << value);
-}
-
-const bool IOManager2::getSingleJointValue(const std::string joint_name, float& value)
-{
-    auto _joint = m_servo_io.m_joints.find(joint_name);
-    if (_joint == m_servo_io.m_joints.end())
-    {
-        ROS_FATAL("joint not existing... check joint name");
-        return false;
-    }
-    value = _joint->second.real_pos;
-
-    return true;
-}
+// void IOManager2::setJointValue(const std::string name, const float value)
+// {
+//     auto _joint = m_servo_io.m_joints.find(name);
+//     if (_joint == m_servo_io.m_joints.end())
+//     {
+//         ROS_FATAL("joint not existing... check joint name");
+//         return;
+//     }
+//
+//     _joint->second.goal_pos = value;
+//
+//     ROS_DEBUG_STREAM("IOManager2::setJointValue: joint name: " << name << " values: " << value);
+// }
+//
+// const bool IOManager2::getJointValue(const std::string joint_name, float& value)
+// {
+//     auto _joint = m_servo_io.m_joints.find(joint_name);
+//     if (_joint == m_servo_io.m_joints.end())
+//     {
+//         ROS_FATAL("joint not existing... check joint name");
+//         return false;
+//     }
+//     value = _joint->second.real_pos;
+//
+//     return true;
+// }
 
 void IOManager2::remapJointValues()
 {

@@ -11,8 +11,8 @@ namespace Motion
 class FeetSensorIO
 {
 public:
-    friend class IOManager2;
     friend class IOManager3;
+    friend class IOManager2;
 
     FeetSensorIO();
 

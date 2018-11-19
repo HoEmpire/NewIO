@@ -10,7 +10,7 @@ int main(int argc, char ** argv)
     Motion::ServoIO servo_test;
 
     INFO("FUCKTION WELL!");
-    
+
     struct Motion::JointConfig _cfg12(14,-1,4096,203,4096,0);
     struct Motion::Joint joints_cfg12(_cfg12);
     servo_test.addJoint("left_ankle_roll", joints_cfg12);

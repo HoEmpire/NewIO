@@ -191,7 +191,7 @@ void ServoIO::readServoPositions()
     //m_pos_reader->txRxPacket();
     //timer::delay_ms(100);
     //
-    auto dxl_comm_result = m_pos_reader->txRxPacket();
+    auto dxl_comm_result = m_pos_reader->rxPacket();
 
     int cunt = 0;
     while (dxl_comm_result != COMM_SUCCESS && cunt < 100)

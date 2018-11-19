@@ -90,6 +90,13 @@ public:
         return m_power_state;
     }
 
+    const PressureData& getPressureData() const
+    {
+        return m_feet_io.m_data;
+    }
+
+
+
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief             set the PI of the joint
     /// @param values_     values of the joints(in degree)
@@ -105,6 +112,7 @@ private:
 
 private:
     ServoIO m_servo_io;
+    FeetSensorIO m_feet_io;
 
     std::chrono::time_point<std::chrono::system_clock> m_sync_time;
 

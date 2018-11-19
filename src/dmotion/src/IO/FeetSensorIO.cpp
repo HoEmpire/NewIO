@@ -1,6 +1,10 @@
 #include "dmotion/IO/FeetSensorIO.h"
 
 #include "dmotion/Common/Utility/Utility.h"
+#include "dmotion/IO/IOManager3.h"
+
+#define PORT_NAME "/dev/ttyUSB0"
+#define BAUDRATE  1000000
 
 namespace Motion
 {
@@ -20,6 +24,7 @@ FeetSensorIO::FeetSensorIO()
     m_tx_packet[5] = 0x01;
     m_tx_packet[6] = 0x02;
     m_tx_packet[7] = 0xE1;
+    m_port = IOManager3::initPort(PORT_NAME, BAUDRATE);
 }
 
 FeetSensorIO::FeetSensorIO(dynamixel::PortHandler* port)
@@ -65,24 +70,31 @@ bool FeetSensorIO::readPressureData()
 {
     // clear port and send command
     m_port->clearPort();
-    m_port->writePort(m_tx_packet.data(), m_tx_len);
-    
+    bool gg = m_port->writePort(m_tx_packet.data(), m_tx_len);
+    if(!gg){
+      INFO("发值失败");
+      std::abort();
+    }
+    else
+      INFO("发值成功");
+
     // reading left data
     if ( !readSinglePackage(true) )
     {
-        return false;
+        INFO("左脚草拟吗");
+        //return false;
     }
-        
+
     // reading right data
     if ( !readSinglePackage(false) )
-    {   
+    {
+        INFO("右脚草拟吗");
         return false;
     }
     ROS_DEBUG_STREAM("FeetSensorIO::readPressureData: data reading success" << std::endl
                     << "Left Feet " << m_data.left[0] << ' ' << m_data.left[1] << ' ' << m_data.left[2] << ' ' << m_data.left[3]
                     << "Right Feet " << m_data.right[0] << ' ' << m_data.right[1] << ' ' << m_data.right[2] << ' ' << m_data.right[3]
                     );
-
     return true;
 }
 
@@ -91,20 +103,32 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
     static int count = 0;
     assert(static_cast<int>(m_tx_packet.size()) == m_tx_len);
 
-    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
+    //bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
+    bool com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
+
+    // while (!com_res_){
+    //   com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
+    //   INFO("shit!");
+    // }
+    if (!com_res_){
+      INFO("读值失败!");
+      com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
+      //std::abort();
+    }
+
 
     if (com_res_)
     {
         uint8_t check_sum_ = 0;
-        
+
         for (int i = 2; i != 22; i++)
             check_sum_ += m_rx_packet[i];
-        
-        if (m_rx_packet[0] != 0xff || 
+
+        if (m_rx_packet[0] != 0xff ||
             m_rx_packet[1] != 0xff ||
-            m_rx_packet[3] != 0x12 || 
-            m_rx_packet[4] != 0x00 
-            || check_sum_ != 0xff 
+            m_rx_packet[3] != 0x12 ||
+            m_rx_packet[4] != 0x00
+            || check_sum_ != 0xff
             || (isLeft && m_rx_packet[2] != 0x18)
             || (!isLeft && m_rx_packet[2] != 0x19)
             )
@@ -115,7 +139,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
             m_port->clearPort();
             return false;
         }
-        
+
         remapPressureData(isLeft);
         return true;
     }
