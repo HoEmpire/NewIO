@@ -35,29 +35,29 @@ using namespace std;
 //
 // }
 
-int main(int argc, char ** argv)
-{
-      ros::init(argc, argv, "testing");
-      ros::NodeHandle nh("~");
-      parameters.init(&nh);
-      Motion::IOManager3 io;
-      std::vector<double> fucking(16);
-      ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
-      int cunt = 0;
-      double zeit = 0;
-      //read constantly
-      io.ServoPowerOff();
-      while(ros::ok()){
-        timer a;
-        io.readJointValue();
-        zeit = a.toc();
-        cout << "***********************************" << endl;
-        cout << "[read time]:" << zeit << endl << endl;
-        cout << "***********************************" << endl;
-        sleep(1);
-      }
-
-}
+// int main(int argc, char ** argv)
+// {
+//       ros::init(argc, argv, "testing");
+//       ros::NodeHandle nh("~");
+//       parameters.init(&nh);
+//       Motion::IOManager3 io;
+//       std::vector<double> fucking(16);
+//       ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
+//       int cunt = 0;
+//       double zeit = 0;
+//       //read constantly
+//       io.ServoPowerOff();
+//       while(ros::ok()){
+//         timer a;
+//         io.readJointValue();
+//         zeit = a.toc();
+//         cout << "***********************************" << endl;
+//         cout << "[read time]:" << zeit << endl << endl;
+//         cout << "***********************************" << endl;
+//         sleep(1);
+//       }
+//
+// }
 
 
 // int main(int argc, char ** argv)
@@ -128,3 +128,45 @@ int main(int argc, char ** argv)
 //       //sleep(1);
 //     }
 // }
+
+int main(int argc, char ** argv)
+{
+      ros::init(argc, argv, "testing");
+      ros::NodeHandle nh("~");
+      parameters.init(&nh);
+      Motion::IOManager3 io;
+      std::vector<double> fucking(16,0);
+      ROS_INFO("!!!!!!!!!!!!!!!!！FUCK!!!!!!!!!!!!!!!!");
+      timer a;
+      double zeit;
+      while(ros::ok()){
+        ROS_INFO("gg!!!!!!!");
+        for(int i = 0; i < 50; i++){
+           for(int j = 0; j < 12; j++)
+                fucking[j] = fucking[j] - 0.1;
+          io.setAllJointValue(fucking);
+          a.tic();
+          io.spinOnce();
+          io.readJointValue();
+          zeit = a.toc();
+          cout << "***********************************" << endl;
+          cout << "[read time]:" << zeit << endl << endl;
+          cout << "***********************************" << endl;
+        }
+
+        for(int i = 0; i < 50; i++){
+          for(int j = 0; j < 12; j++)
+               fucking[j] = fucking[j] + 0.1;
+          io.setAllJointValue(fucking);
+          a.tic();
+          io.spinOnce();
+          io.readJointValue();
+          zeit = a.toc();
+          cout << "***********************************" << endl;
+          cout << "[read time]:" << zeit << endl << endl;
+          cout << "***********************************" << endl;
+        }
+
+      }
+
+}

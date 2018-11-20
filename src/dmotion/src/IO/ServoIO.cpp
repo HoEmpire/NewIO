@@ -194,7 +194,7 @@ void ServoIO::readServoPositions()
     auto dxl_comm_result = m_pos_reader->txRxPacket();
 
     int cunt = 0;
-    while (dxl_comm_result != COMM_SUCCESS && cunt < 100)
+    while (dxl_comm_result != COMM_SUCCESS && cunt < 5)
     {
       INFO("fucking reading error");
       //INFO(dpacketHandler->getTxRxResult(dxl_comm_result
