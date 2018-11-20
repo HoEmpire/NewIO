@@ -191,13 +191,13 @@ void ServoIO::readServoPositions()
     //m_pos_reader->txRxPacket();
     //timer::delay_ms(100);
     //
-    auto dxl_comm_result = m_pos_reader->rxPacket();
+    auto dxl_comm_result = m_pos_reader->txRxPacket();
 
     int cunt = 0;
     while (dxl_comm_result != COMM_SUCCESS && cunt < 100)
     {
       INFO("fucking reading error");
-      //INFO(dpacketHandler->getTxRxResult(dxl_comm_result));
+      //INFO(dpacketHandler->getTxRxResult(dxl_comm_result
       dxl_comm_result = m_pos_reader->txRxPacket();
       cunt ++;
     }
@@ -213,7 +213,11 @@ void ServoIO::readServoPositions()
         else
         {
             joint.second.real_pos = (static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
-            std::cout << "ServoName：" << joint.first.c_str() << " | "  << "pos:"<< joint.second.real_pos << std::endl;
+            std::cout.setf(std::ios::left);
+            std::cout << std::setprecision (2);
+            std::cout.setf(std::ios::fixed,std::ios::floatfield);
+            std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
+                      << " | " << "pos:" << joint.second.real_pos << std::endl;
         }
     }
 }

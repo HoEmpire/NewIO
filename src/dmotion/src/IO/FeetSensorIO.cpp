@@ -1,4 +1,4 @@
-#include "dmotion/IO/FeetSensorIO.h"
+  #include "dmotion/IO/FeetSensorIO.h"
 
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/IO/IOManager3.h"
@@ -70,25 +70,26 @@ bool FeetSensorIO::readPressureData()
 {
     // clear port and send command
     m_port->clearPort();
-    bool gg = m_port->writePort(m_tx_packet.data(), m_tx_len);
-    if(!gg){
-      INFO("发值失败");
-      std::abort();
-    }
-    else
-      INFO("发值成功");
+    // bool gg = m_port->writePort(m_tx_packet.data(), m_tx_len);
+    m_port->writePort(m_tx_packet.data(), m_tx_len);
+    // if(!gg){
+    //   INFO("发值失败");
+    //   std::abort();
+    // }
+    // else
+    //   INFO("发值成功");
 
     // reading left data
     if ( !readSinglePackage(true) )
     {
-        INFO("左脚草拟吗");
+        INFO("左脚失败");
         //return false;
     }
 
     // reading right data
     if ( !readSinglePackage(false) )
     {
-        INFO("右脚草拟吗");
+        INFO("右脚失败");
         return false;
     }
     ROS_DEBUG_STREAM("FeetSensorIO::readPressureData: data reading success" << std::endl
@@ -103,8 +104,8 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
     static int count = 0;
     assert(static_cast<int>(m_tx_packet.size()) == m_tx_len);
 
-    //bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
-    bool com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
+    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
+    //bool com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
 
     // while (!com_res_){
     //   com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);

@@ -146,4 +146,9 @@ void IOManager3::setServoPI(const std::vector<int> servo_id, const int p, const 
     m_servo_io.setServoPIMode(servo_id, p, i);
 }
 
+void IOManager3::ServoPowerOff()
+{
+    m_servo_io.TorqueOff();
+}
+
 }
