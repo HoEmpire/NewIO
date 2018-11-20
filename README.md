@@ -15,8 +15,8 @@ New version of IO for dancing cock
 + Servo Read and Write all work well after test.
 + IMU and Footsensor ist not yet erledigt(finished).
 + Read the description function of the code in  
- + src/dmotion/include/dmotion/IO/SeroIO.h  
- + src/dmotion/include/dmotion/IO/IOManager.h
+  + src/dmotion/include/dmotion/IO/SeroIO.h  
+  + src/dmotion/include/dmotion/IO/IOManager.h
 + example show how to use ServoIO and IOManager to read and write Servo 
 
 ## Run a test
