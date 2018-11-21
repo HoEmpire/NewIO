@@ -46,3 +46,6 @@ target_link_libraries(servo_write ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
 add_executable(IOManager_read_write example/IOManager_read_write/IOManager_read_write.cpp)
 target_link_libraries(IOManager_read_write ${catkin_LIBRARIES} dmotion_io dmotion_common)
+
+add_executable(make_a_circle example/test/circle.cpp)
+target_link_libraries(make_a_circle ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
