@@ -50,7 +50,7 @@ bool IMUReader::checkPower()
 
 void IMUReader::clearPort()
 {
-    m_imu_port->clearPort();    
+    m_imu_port->clearPort();
 }
 
 std::chrono::time_point<std::chrono::system_clock>
@@ -61,7 +61,7 @@ IMUReader::getSyncTimePoint() const
 
 bool IMUReader::readIMUData(int waiting_ticks)
 {
-    static int failure_ = 0;
+    //static int failure_ = 0;
     uint8_t recBuffer[28];
     char type;
     bool readRes_;
@@ -69,7 +69,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
 
     while (true)
     {
-        // if cannot get complete packet for some time 
+        // if cannot get complete packet for some time
         // lower board might not on power...
         if (ticks_failing_++ > waiting_ticks)    //TODO() hardcode
         {
@@ -78,14 +78,14 @@ bool IMUReader::readIMUData(int waiting_ticks)
             ROS_WARN("IMUReader::readIMUData: IMU Reading failure...going to exit....");
             return false;
         }
-      
+
         // step 1. receive head
  #ifdef IMU_BLOCK
         // std::cout << "fuck imu block" << std::endl;
         readRes_ = m_imu_port->readPort(recBuffer, 1);
  #else
         readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
- #endif 
+ #endif
         if ( !readRes_ || recBuffer[0] != (uint8_t)0xee)
         {
             // ROS_INFO("not cool...");
@@ -99,7 +99,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
         readRes_ = m_imu_port->readPort(recBuffer, 1);
  #else
         readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
- #endif 
+ #endif
         if ( !readRes_ || recBuffer[0] != (uint8_t)0xee)
         {
             // ROS_INFO_STREAM("not head " << int(recBuffer[0]));
@@ -112,7 +112,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
         readRes_ = m_imu_port->readPort(recBuffer, 1);
  #else
         readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
- #endif 
+ #endif
 
         type = recBuffer[0];
         if ((type & 0x00) != 0)
@@ -121,7 +121,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
         }
         if (!readRes_ || (type & 0x10) == 0 || (type & 0x40) == 0)
             continue;
-        
+
         // step 3. gypo type
         if ((type & 0x10) != 0)
         {
@@ -137,7 +137,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
             {
                 ROS_WARN("IMUReader::readIMUData: read imu packet incomplete...");
                 continue;
-            }  
+            }
 #endif
             // checksum
             for (int i = 0; i < 13; i++)
@@ -156,17 +156,17 @@ bool IMUReader::readIMUData(int waiting_ticks)
         if ((type & 0x40) != 0)
         {
             uint8_t checksum = 0;
-#ifdef IMU_BLOCK            
+#ifdef IMU_BLOCK
             if(!m_imu_port->readPort(recBuffer, 9))
             {
                 ROS_WARN("IMUReader::readIMUData: read end buffer incomplete...");
-                continue;                
+                continue;
             }
 #else
             if(!m_imu_port->readData1Byte(recBuffer, 9, 3.0))
             {
                 ROS_WARN("IMUReader::readIMUData: read end buffer incomplete...");
-                continue;                
+                continue;
             }
 #endif
             // checksum
@@ -186,8 +186,8 @@ bool IMUReader::readIMUData(int waiting_ticks)
         readRes_ = m_imu_port->readPort(recBuffer, 1);
  #else
         readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
- #endif 
-            
+ #endif
+
         break;
     }
 

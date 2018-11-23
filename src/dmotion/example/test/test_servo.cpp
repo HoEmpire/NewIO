@@ -11,29 +11,29 @@
 #include <iostream>
 #include <unistd.h>
 using namespace std;
-// int main(int argc, char ** argv)
-// {
-//     ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
-//     ros::init(argc, argv, "testing");
-//     ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
-//     ros::NodeHandle nh("~");
-//     ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
-//     parameters.init(&nh);
-//     ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
-//     Motion::IOManager3 io;
-//     Motion::ServoIO m_servo_io;
-//     Motion::FeetSensorIO m_feet_io;
-//   //  m_feet_io.setPort(m_servo_io.getPortHandler());
-//     while(ros::ok()){
-//     //  m_servo_io.sendServoPositions();
-//       if (!m_feet_io.readPressureData())
-//       {
-//           ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
-//       }
-//       sleep(1);
-//     }
-//
-// }
+int main(int argc, char ** argv)
+{
+    ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
+    ros::init(argc, argv, "testing");
+    ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
+    ros::NodeHandle nh("~");
+    ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
+    parameters.init(&nh);
+    ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
+    //Motion::IOManager3 io;
+    //Motion::ServoIO m_servo_io;
+    Motion::FeetSensorIO m_feet_io;
+  //  m_feet_io.setPort(m_servo_io.getPortHandler());
+    while(ros::ok()){
+    //  m_servo_io.sendServoPositions();
+      if (!m_feet_io.readPressureData())
+      {
+          ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
+      }
+      sleep(1);
+    }
+
+}
 
 // int main(int argc, char ** argv)
 // {
@@ -129,44 +129,44 @@ using namespace std;
 //     }
 // }
 
-int main(int argc, char ** argv)
-{
-      ros::init(argc, argv, "testing");
-      ros::NodeHandle nh("~");
-      parameters.init(&nh);
-      Motion::IOManager3 io;
-      std::vector<double> fucking(16,0);
-      ROS_INFO("!!!!!!!!!!!!!!!!！FUCK!!!!!!!!!!!!!!!!");
-      timer a;
-      double zeit;
-      while(ros::ok()){
-        ROS_INFO("gg!!!!!!!");
-        for(int i = 0; i < 50; i++){
-           for(int j = 0; j < 12; j++)
-                fucking[j] = fucking[j] - 0.1;
-          io.setAllJointValue(fucking);
-          a.tic();
-          io.spinOnce();
-          io.readJointValue();
-          zeit = a.toc();
-          cout << "***********************************" << endl;
-          cout << "[read time]:" << zeit << endl << endl;
-          cout << "***********************************" << endl;
-        }
-
-        for(int i = 0; i < 50; i++){
-          for(int j = 0; j < 12; j++)
-               fucking[j] = fucking[j] + 0.1;
-          io.setAllJointValue(fucking);
-          a.tic();
-          io.spinOnce();
-          io.readJointValue();
-          zeit = a.toc();
-          cout << "***********************************" << endl;
-          cout << "[read time]:" << zeit << endl << endl;
-          cout << "***********************************" << endl;
-        }
-
-      }
-
-}
+// int main(int argc, char ** argv)
+// {
+//       ros::init(argc, argv, "testing");
+//       ros::NodeHandle nh("~");
+//       parameters.init(&nh);
+//       Motion::IOManager3 io;
+//       std::vector<double> fucking(16,0);
+//       ROS_INFO("!!!!!!!!!!!!!!!!！FUCK!!!!!!!!!!!!!!!!");
+//       timer a;
+//       double zeit;
+//       while(ros::ok()){
+//         ROS_INFO("gg!!!!!!!");
+//         for(int i = 0; i < 50; i++){
+//            for(int j = 0; j < 12; j++)
+//                 fucking[j] = fucking[j] - 0.1;
+//           io.setAllJointValue(fucking);
+//           a.tic();
+//           io.spinOnce();
+//           io.readJointValue();
+//           zeit = a.toc();
+//           cout << "***********************************" << endl;
+//           cout << "[read time]:" << zeit << endl << endl;
+//           cout << "***********************************" << endl;
+//         }
+//
+//         for(int i = 0; i < 50; i++){
+//           for(int j = 0; j < 12; j++)
+//                fucking[j] = fucking[j] + 0.1;
+//           io.setAllJointValue(fucking);
+//           a.tic();
+//           io.spinOnce();
+//           io.readJointValue();
+//           zeit = a.toc();
+//           cout << "***********************************" << endl;
+//           cout << "[read time]:" << zeit << endl << endl;
+//           cout << "***********************************" << endl;
+//         }
+//
+//       }
+//
+// }
