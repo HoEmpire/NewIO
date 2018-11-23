@@ -18,6 +18,7 @@ New version of IO for dancing cock
   + src/dmotion/include/dmotion/IO/SeroIO.h  
   + src/dmotion/include/dmotion/IO/IOManager.h
 + example show how to use ServoIO and IOManager to read and write Servo 
++ **In the issue some solutions of some tricky bugs is recorded.**
 
 ## Run a test
 + make changes in src/dmotion/test/test_servo.cpp
