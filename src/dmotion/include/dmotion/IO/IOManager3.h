@@ -90,6 +90,11 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     void ServoPowerOff();
 
+    const IMUData& getIMUData()
+    {
+        return m_imu_reader.m_data;
+    }
+
     const PowerState getPowerState() const
     {
         return m_power_state;
@@ -100,8 +105,6 @@ public:
         return m_feet_io.m_data;
     }
 
-
-
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief             set the PI of the joint
     /// @param values_     values of the joints(in degree)
@@ -110,14 +113,18 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     void setServoPI(const std::vector<int> servo_id, const int p, const int i);
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief             check power is on or not by checking whether thers is data coming from IMU
+    ////////////////////////////////////////////////////////////////////////////////
+    void checkIOPower();
+
 private:
     dynamixel::PortHandler* _initPort(const std::string portname, const int baudrate);
-
-    void _checkPower();
 
 private:
     ServoIO m_servo_io;
     FeetSensorIO m_feet_io;
+    IMUReader m_imu_reader;
 
     std::chrono::time_point<std::chrono::system_clock> m_sync_time;
 

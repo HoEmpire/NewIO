@@ -7,8 +7,10 @@
 #include "dmotion/Common/Parameters.h"
 using namespace dynamixel;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
-#define PORT_NAME "/dev/ttyUSB0"
+#define PORT_NAME "/dev/Servo"
 #define BAUDRATE  1000000
+// #define PORT_NAME "/dev/ttyUSB0"
+// #define BAUDRATE  1000000
 #define PROTOCOL_VERSION 2.0
 #define INIT_TICKS 10 //the total time that keep low speed | unit:10ms
 #define INIT_VELLOCITY 30
@@ -213,11 +215,13 @@ void ServoIO::readServoPositions()
         else
         {
             joint.second.real_pos = (static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
-            std::cout.setf(std::ios::left);
-            std::cout << std::setprecision (2);
-            std::cout.setf(std::ios::fixed,std::ios::floatfield);
-            std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
-                      << " | " << "pos:" << joint.second.real_pos << std::endl;
+            if(DEBUG_OUTPUT){
+              std::cout.setf(std::ios::left);
+              std::cout << std::setprecision (2);
+              std::cout.setf(std::ios::fixed,std::ios::floatfield);
+              std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
+                        << " | " << "pos:" << joint.second.real_pos << std::endl;
+            }
         }
     }
 }
@@ -226,7 +230,6 @@ void ServoIO::readServoPositionsBad()
 {
     INFO("ServoIO::readServoPositions: read servo positions");
     m_pos_reader->txRxPacket();
-    //timer::delay_ms(100);
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
@@ -239,10 +242,12 @@ void ServoIO::readServoPositionsBad()
         }
         else
         {
-            joint.second.real_pos = (static_cast<int>(dxl_present_position)-_cfg.init)/_cfg.factor;
-            std::cout << "ServoName：" << joint.first.c_str() << " | "  << "pos:"<< joint.second.real_pos << std::endl;
+           if(DEBUG_OUTPUT){
+               joint.second.real_pos = (static_cast<int>(dxl_present_position)-_cfg.init)/_cfg.factor;
+               std::cout << "ServoName：" << joint.first.c_str() << " | "  << "pos:"<< joint.second.real_pos << std::endl;
+             }
         }
-        //timer::delay_ms(10);
+
     }
 }
 
@@ -259,8 +264,6 @@ void ServoIO::setAllServoSpeed(const int speed)
 
 void ServoIO::setSingleServoSpeed(std::string name, int speed)
 {
-    //std::cout << "ServoIO::setSingleServoSpeed: set servo speed to " << speed << std::endl;
-
     std::map<std::string, Joint>::iterator it = m_joints.begin();
     it = m_joints.find(name);
     if(it != m_joints.end())

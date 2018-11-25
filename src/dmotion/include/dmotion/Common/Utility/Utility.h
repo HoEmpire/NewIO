@@ -5,6 +5,7 @@
 #include "Math.hpp"
 #include <iostream>
 #include <iomanip>
+#define DEBUG_OUTPUT true
 inline void INFO(std::string output)
 {
     std::cout << "INFO:" << output << std::endl;

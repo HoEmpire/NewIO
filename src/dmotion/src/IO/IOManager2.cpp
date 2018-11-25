@@ -71,7 +71,7 @@ void IOManager2::_checkPower()
     if (m_imu_reader.checkPower())
     {
         m_power_state = ON;
-        m_sync_time = m_imu_reader.getSyncTimePoint();
+        //m_sync_time = m_imu_reader.getSyncTimePoint(); TODO
     }
     else
     {
@@ -130,8 +130,8 @@ void IOManager2::spinOnce()
             else
             {
                 imu_failures = 0;
-                m_sync_time = m_imu_reader.getSyncTimePoint();
-            }
+              //  m_sync_time = m_imu_reader.getSyncTimePoint(); TODO
+             }
         }
         // double duration1 = t.toc();
         // std::cout << "imu reader takes time " << duration1 << std::endl;

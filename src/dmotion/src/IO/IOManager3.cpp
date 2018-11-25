@@ -7,9 +7,11 @@
 
 using namespace dynamixel;
 
-#define LEG_ONLY true //ONLY USE LEGS OF ZJU DANCER
+#define LEG_ONLY false //ONLY USE LEGS OF ZJU DANCER
 
-#define DATA_FREQUENCY 10.0    // 100hz data stream
+#define DATA_FREQUENCY 12.0    // 100hz data stream
+#define POWER_DETECTER true   //whether open check power mode or not
+                              //only used in a complete Robot
 
 namespace Motion
 {
@@ -20,6 +22,10 @@ IOManager3::IOManager3()
     ROS_DEBUG("IOManager3::IOManager3: Construct IOManager3 instance");
     initZJUJoint();
     m_servo_io.initServoPositions();
+    if(POWER_DETECTER)
+        checkIOPower();
+    else
+        m_power_state = ON;
 }
 
 IOManager3::~IOManager3() = default;
@@ -76,22 +82,88 @@ void IOManager3::initZJUJoint()
 
 void IOManager3::spinOnce()
 {
-      // use internal clock to calculate waiting time
-      std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_sync_time);
-      double ticks = duration_.count()*1000;
+    static int imu_failures = 0;
+    timer a;
+    if (ON == m_power_state)
+    {
+        // read imu
+        INFO("*****************************************");
+        INFO("*************TIME FOR IMU****************");
+        a.tic();
+        if(POWER_DETECTER)
+        {
+            if (!m_imu_reader.readIMUData())
+            {
+                if (imu_failures++ > 10)
+                {
+                    m_power_state = OFF;
+                    ROS_WARN("IOManager3::spinOnce: power off detected...");
+                    return;
+                }
+            }
+            else
+            {
+                imu_failures = 0;
+            }
+        }
+        a.toc();
+        INFO("*****************************************");
 
-      if (ticks > DATA_FREQUENCY)
-      {
-          ROS_WARN_STREAM("IOManager3::spinOnce:  motion ticks overflow..." << ticks);
+        // read pressure data
+        INFO("*****************************************");
+        INFO("*********TIME FOR FEET SENSOR************");
+        a.tic();
+        if (parameters.global.using_pressure)
+        {
+            if (!m_feet_io.readPressureData())
+            {
+                ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
+            }
+        }
+        a.toc();
+        INFO("*****************************************");
 
-      }
-      else
-      {
-          timer::delay_ms(DATA_FREQUENCY - ticks - 0.1);
-      m_sync_time = std::chrono::system_clock::now();//这句话的位置 TODO pyx before
-      }
-      m_servo_io.sendServoPositions();
-      m_sync_time = std::chrono::system_clock::now();//这句话的位置 TODO pyx after
+        // use internal clock to calculate waiting time
+        std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_sync_time);
+        double ticks = duration_.count()*1000;
+
+        //set delay
+        if (ticks > DATA_FREQUENCY)
+        {
+            ROS_WARN_STREAM("IOManager3::spinOnce:  motion ticks overflow..." << ticks);
+        }
+        else
+        {
+            timer::delay_ms(DATA_FREQUENCY - ticks - 0.1);
+        }
+
+        INFO("*****************************************");
+        INFO("*********TIME FOR SERVOR SEND************");
+        a.tic();
+        m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
+        m_servo_io.sendServoPositions();
+        a.toc();
+        INFO("*****************************************");
+
+    }
+
+    else if (OFF == m_power_state)
+    {
+        checkIOPower();
+
+        if (ON == m_power_state)
+        {
+            m_servo_io.initServoPositions();
+            m_power_state = ON;
+            return;
+        }
+        timer::delay_ms(500);
+    }
+    else
+    {
+        ROS_ERROR("IOManager3::Surprise mother fucker....");
+    }
+
 }
 
 void IOManager3::setAllJointValue(const std::vector<double>& values_)
@@ -149,6 +221,19 @@ void IOManager3::setServoPI(const std::vector<int> servo_id, const int p, const 
 void IOManager3::ServoPowerOff()
 {
     m_servo_io.TorqueOff();
+}
+
+void IOManager3::checkIOPower()
+{
+    ROS_INFO("IOManager3::checkIOPower: checking whether power is on");
+    if (m_imu_reader.checkPower())
+    {
+        m_power_state = ON;
+    }
+    else
+    {
+        m_power_state = OFF;
+    }
 }
 
 }

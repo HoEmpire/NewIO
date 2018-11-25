@@ -4,7 +4,9 @@
 #include "dmotion/IO/IOManager3.h"
 
 #define PORT_NAME "/dev/Servo"
+//#define PORT_NAME "/dev/ttyUSB0"
 #define BAUDRATE  1000000
+
 
 namespace Motion
 {
@@ -70,26 +72,20 @@ bool FeetSensorIO::readPressureData()
 {
     // clear port and send command
     m_port->clearPort();
-    // bool gg = m_port->writePort(m_tx_packet.data(), m_tx_len);
     m_port->writePort(m_tx_packet.data(), m_tx_len);
-    // if(!gg){
-    //   INFO("发值失败");
-    //   std::abort();
-    // }
-    // else
-    //   INFO("发值成功");
 
     // reading left data
     if ( !readSinglePackage(true) )
     {
-        INFO("左脚失败");
-        //return false;
+      if(DEBUG_OUTPUT)
+        INFO("左脚读值失败");
     }
 
     // reading right data
     if ( !readSinglePackage(false) )
     {
-        INFO("右脚失败");
+      if(DEBUG_OUTPUT)
+        INFO("右脚读值失败");
         return false;
     }
     ROS_DEBUG_STREAM("FeetSensorIO::readPressureData: data reading success" << std::endl
@@ -107,12 +103,8 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
     bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
     //bool com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
 
-    // while (!com_res_){
-    //   com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
-    //   INFO("shit!");
-    // }
     if (!com_res_){
-      INFO("读值失败!");
+      INFO("脚底读值失败!");
       com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
       //std::abort();
     }

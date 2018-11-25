@@ -1,9 +1,14 @@
 #include "dmotion/IO/IMUReader.h"
 #include "dmotion/IO/IOManager2.h"
+#include "dmotion/IO/IOManager3.h"
 
 #include "dmotion/Common/Parameters.h"
-#include "dmotion/Common/Utility/Utility.h"
 
+#define WaitingTicks 10//the max time of read failure
+#define PORT_NAME "/dev/IMU"
+#define BAUDRATE  576000
+// #define PORT_NAME "/dev/ttyUSB0"
+// #define BAUDRATE  1000000
 // #define IMU_BLOCK 1
 
 namespace Motion
@@ -14,15 +19,14 @@ IMUReader::IMUReader()
 {
     ROS_DEBUG("IMUReader::IMUReader: init ServoIO instance");
     // init IMU port
-    m_imu_port =  IOManager2::initPort(parameters.io.imu_port_name,
-                                       parameters.io.imu_baudrate);
+    m_imu_port =  IOManager3::initPort(PORT_NAME, BAUDRATE);
 }
 
 IMUReader::~IMUReader()
 {
     m_imu_port->clearPort();
     m_imu_port->closePort();
-    std::cout << "IMU failures " << std::endl;
+    INFO("IMU failures");
 }
 
 bool IMUReader::checkPower()
@@ -53,13 +57,13 @@ void IMUReader::clearPort()
     m_imu_port->clearPort();
 }
 
-std::chrono::time_point<std::chrono::system_clock>
-IMUReader::getSyncTimePoint() const
-{
-    return m_sync_time;
-}
+// std::chrono::time_point<std::chrono::system_clock>
+// IMUReader::getSyncTimePoint() const
+// {
+//     return m_sync_time;
+// }
 
-bool IMUReader::readIMUData(int waiting_ticks)
+bool IMUReader::readIMUData()
 {
     //static int failure_ = 0;
     uint8_t recBuffer[28];
@@ -71,7 +75,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
     {
         // if cannot get complete packet for some time
         // lower board might not on power...
-        if (ticks_failing_++ > waiting_ticks)    //TODO() hardcode
+        if (ticks_failing_++ > WaitingTicks)    //TODO() hardcode
         {
             // m_isPowerOn = false;
             m_failures++;
@@ -110,9 +114,9 @@ bool IMUReader::readIMUData(int waiting_ticks)
         // step 2. receiveype
 #ifdef IMU_BLOCK
         readRes_ = m_imu_port->readPort(recBuffer, 1);
- #else
+#else
         readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
- #endif
+#endif
 
         type = recBuffer[0];
         if ((type & 0x00) != 0)
@@ -149,7 +153,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
                 ROS_WARN("IMUReader::readIMUData: imu checksum error!");
                 continue;
             }
-            _remapIMUData(recBuffer);
+            remapIMUData(recBuffer);
         }
 
         // step 4. extra data
@@ -194,7 +198,7 @@ bool IMUReader::readIMUData(int waiting_ticks)
     return true;
 }
 
-inline bool IMUReader::_remapIMUData(const uint8_t* buffer)
+inline bool IMUReader::remapIMUData(const uint8_t* buffer)
 {
     unsigned short int tmp1[12];
     for (int i = 0; i < 12; i++)

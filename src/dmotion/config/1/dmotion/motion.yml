@@ -1,45 +1,67 @@
 dmotion:
+  global :
+    debug : false
+    debug_io : false
+    debug_stablizer : false
+    debug_imu : false
+    using_odometry : false
+    using_head_data : false
+    using_lateral_stablizer : false
+    using_push_recovery : false
+  
+  kick:
+    using_pi_mode: false
+    kick_controller_p: 1600
+    kick_controller_i: 100
+    using_support_stablizer : false
+  
   hardware:
-    serial_port_name            :  /dev/ttyUSB
-    serial_port_number          :  0
-    serial_port_baudrate        :  576000
-
-    robot_version               :  2013
-    imu_version                 :  ADIS16405BMLZ
-    gyroscope_correct           :  -0.05 # 1.818
-    imu_prepare_time            :  12
-    gyroscope_debug             : false
-
     ##### for test new io ######
     imu_port_name : /dev/IMU
     imu_baudrate : 576000
 
-    servo_port_name : /dev/ttyUSB0
+    servo_port_name : /dev/Servo
     servo_baudrate : 1000000
     servo_protocol_version : 2.0
     servo_init_ticks : 100
-    servo_init_speed: 50
+    servo_init_speed: 70
     ##########
+    serial_port_name            : /dev/ttyUSB
+    serial_port_number          : 1
+    serial_port_baudrate        : 576000
+    robot_version               : 2013
+    imu_version                 : ADIS16405BMLZ
+    gyroscope_correct           : 0.065
+    gyroscope_debug             : false
+    imu_prepare_time            : 6
+    dynamixel_port_number       : 0
+    dynamixel_protocol_version  : 1.0
+
   state:
-    using_pressure : false
-    imu_algorithm_gain : 0.5
+    using_pressure : true
+    imu_algorithm_gain : 0.1
     imu_bias_gain : 0
     imu_pitch_bias : 0
     imu_roll_bias : 0
-    imu_yaw_vel_correction : 0.001
-    imu_prepare_time : 2
+    imu_yaw_vel_correction : -0.0015
+    imu_prepare_time : 5
+
     pressure_counting_start : 10
     pressure_counting_end : 20
-    security_threshold : 0.7
-    security_delay_ticks : 30
+    security_threshold : 0.5
+    security_delay_ticks : 120
     front_down_threshold : 60.0
+
+    com_roll_threshold_left : -6
+    com_roll_threshold_right : 5
+    velocity_threshold : 1
+
     back_down_threshold : -60.0
     side_down_threshold : 60.0
     front_assertion_ticks : 10
     back_assertion_ticks : 10
     side_assertion_ticks : 10
     stable_assertion_ticks : 10
-
 
   robot:
     stand2crouch_stepnum        : 50
@@ -51,15 +73,15 @@ dmotion:
     stand2crouch2step_cm        : 1.0
     other2crouch2step           : 1
     other2crouch2step_height    : 0.0
-    other2crouch2step_cm       : 1.0
+    other2crouch2step_cm       : 3
 
     # Walking Ability
     step_theta_max              : 15
     ad_x_max                    : 2
     ad_theta_max                : 15
-    mid_x_max                   : 4
+    mid_x_max                   : 6
     mid_theta_max               : 10
-    top_x_max                   : 4.5
+    top_x_max                   : 6.5
     top_theta_max               : 5
     back_x_max                  : -1.1
     back_theta_max              : 10
@@ -67,19 +89,19 @@ dmotion:
     right_y_max                 : -1.8
 
     # Walking Correction
-    step_x_amend                : -0.5
+    step_x_amend                : 0.0
     x_compensation_acc          : 0.35
     x_compensation_dec          : 0.35
-    back_theta_amend            : 0
-    step_theta_amend            : 0
-    mid_theta_amend             : 0
-    top_theta_amend             : 0.2
+    back_theta_amend            : -2
+    step_theta_amend            : -2  #0.0
+    mid_theta_amend             : -2
+    top_theta_amend             : -2
 
     # Fixed Data
-    upper_leg                   : 10.8
-    lower_leg                   : 10.8
-    upper_arm                   : 10.0
-    lower_arm                   : 17.0
+    upper_leg                   : 12
+    lower_leg                   : 13
+    upper_arm                   : 9.5
+    lower_arm                   : 20.0
     hip_distance                : 9
     lbz                         : 0
     g                           : 980
@@ -87,47 +109,47 @@ dmotion:
 
     # Gait Data
 
-    stepnum                     : 34
-    hipheight                   : 20.7
+    stepnum                     : 31
+    hipheight                   : 23.5
     yzmp                        : -6
-    ankle_distance              : 12.5
-    ankle_dev_l                 : 0.5
+    ankle_distance              : 13
+    ankle_dev_l                 : 0
     ankle_dev_l_tk              : 0
     ankle_dev_r                 : 0
     ankle_dev_r_tk              : 0
 
         # Leftleg
-    ah_ml_zero                  : 3
-    ah_ml_mid                   : 4
-    ah_ml_top                   : 4
+    ah_ml_zero                  : 2.8
+    ah_ml_mid                   : 3.4
+    ah_ml_top                   : 3.4
     ah_fl                       : 0.5
 
         # Rightleg
-    ah_mr_zero                  : 3
-    ah_mr_mid                   : 4
-    ah_mr_top                   : 4
+    ah_mr_zero                  : 2.8
+    ah_mr_mid                   : 3.4
+    ah_mr_top                   : 3.4
     ah_fr                       : 0.5
 
         # CM Correction
-    cm_r                        : -0.0
-    cm_p                        : 15
+    cm_r                        : 0.0   # -3.0
+    cm_p                        : 13
     cm_y                        : 0
-    cm_dx                       : 0.5
-    cm_dy                       : 0.35
-    cm_dp_fk                    : 0.05
-    cm_dx_fk                    : 0.05
+    cm_dx                       : -0.152
+    cm_dy                       : 0.0405    # 1.2
+    cm_dp_fk                    : 0.00
+    cm_dx_fk                    : 0.00
     percent_fx                  : 1
     cm_dx_bk                    : -0.2
     percent_bx                  : 0.85
-    cm_dy_lk                    : 0.3
-    percent_ly                  : 0.9
-    cm_dy_rk                    : -0.4
-    percent_ry                  : 0.8
+    cm_dy_lk                    : 0.235
+    percent_ly                  : 0.85
+    cm_dy_rk                    : -0.255
+    percent_ry                  : 0.85
     ra_r                        : 0
-    ra_p                        : -2
+    ra_p                        : -3
     ra_y                        : 0
     la_r                        : 0
-    la_p                        : -2
+    la_p                        : -3
     la_y                        : 0
     la_dr_lk                    : 0
     ra_dr_lk                    : 0
@@ -139,10 +161,10 @@ dmotion:
     ra_dp_bk                    : 0
 
     # OTHER
-    arm_crouch_p                : 24
-    arm_crouch_theta            : 0
+    arm_crouch_p                : 26
+    arm_crouch_theta            : 20
 
-    setupside_stepnum           : 29
+    setupside_stepnum           : 30
     setupside_ankle_theta       : 30
     setupside_arm_theta         : 0
 
@@ -153,7 +175,7 @@ dmotion:
     getup_bool                  : true
 
     # Diff HV (PLAT)
-    diffh                        : -17
+    diffh                        : 0
     diffv                    : 0
 
     # Kick data
@@ -166,7 +188,7 @@ dmotion:
     kickpercent                 : 0.75
 
     # odometer
-    forward_k                   : 1.2
+    forward_k                   : 0.91
     back_k                      : 1
     left_k                      : 1
     right_k                     : 1

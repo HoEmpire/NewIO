@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <thread>
+#include <iostream>
 
 class timer
 {
@@ -27,6 +28,7 @@ public:
     {
         end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
+        std::cout << "**" << elapsed_seconds.count() * 1000 << "ms have passed**" << std::endl;
         return elapsed_seconds.count() * 1000;
     }
 
