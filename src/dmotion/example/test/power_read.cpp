@@ -62,10 +62,15 @@ int main(int argc, char ** argv)
     servo_test.initServoPositions();
     sleep(2);
     servo_test.TorqueOff();
+    static int PowerOffCount = 0;
 
-    while(1){
-      servo_test.readServoPositions();
+    while(PowerOffCount <= 10){
+      if(!servo_test.checkPower()){
+          PowerOffCount++;
+      }
       timer::delay_ms(1000);
     }
+    
+    INFO("FUCK YOU BRO");
 
 }

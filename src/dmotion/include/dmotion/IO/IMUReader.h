@@ -14,21 +14,32 @@ namespace Motion
 class IMUReader
 {
 public:
-    friend class IOManager2;
     friend class IOManager3;
 
     IMUReader();
     ~IMUReader();
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief        check time by checking whether there is data coming from imu
+    /// @return       true if power is on;false if power is offf
+    ////////////////////////////////////////////////////////////////////////////////
     bool checkPower();
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief        clear the port
+    ////////////////////////////////////////////////////////////////////////////////
     void clearPort();
 
-    // std::chrono::time_point<std::chrono::system_clock>
-    // getSyncTimePoint() const;
-
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief        read imu
+    /// @return       true if reading data successed;false if reading data failed(power off or something else )
+    ////////////////////////////////////////////////////////////////////////////////
     bool readIMUData();
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief        get the private imu data
+    /// @return       imu data
+    ////////////////////////////////////////////////////////////////////////////////
     const IMUData& getIMUData() const
     {
         if(DEBUG_OUTPUT){
@@ -44,14 +55,14 @@ public:
     }
 
 private:
-    inline bool remapIMUData(const uint8_t* buffer);
+    inline bool remapIMUData(const uint8_t* buffer);//converse data to the form that we can read from binary
 
 private:
-    int m_failures;
+    int m_failures;//read failure time
     dynamixel::PortHandler* m_imu_port;
 
     std::chrono::time_point<std::chrono::system_clock> m_sync_time;
-    IMUData m_data;
+    IMUData m_data;//imu data
 };
 
 }

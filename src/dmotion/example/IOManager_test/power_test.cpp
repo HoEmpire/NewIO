@@ -12,7 +12,7 @@ int main(int argc, char ** argv)
       ros::NodeHandle nh("~");
       parameters.init(&nh);
       Motion::IOManager3 io;
-      
+
       while(ros::ok()){
         io.spinOnce();
       }

@@ -8,7 +8,7 @@ add_library(dmotion_io
         dynamixel_sdk/protocol2_packet_handler.cpp
         dynamixel_sdk/group_sync_write.cpp
 
-        IOManager2.cpp
+        #IOManager2.cpp
         IOManager3.cpp
 
         IMUReader.cpp

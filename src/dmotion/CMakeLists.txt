@@ -46,7 +46,6 @@ target_link_libraries(IOManager_read_write ${catkin_LIBRARIES} dmotion_io dmotio
 add_executable(power_test example/IOManager_test/power_test.cpp)
 target_link_libraries(power_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
-
 add_executable(imu_test example/imu_test/imu_test.cpp)
 target_link_libraries(imu_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
 

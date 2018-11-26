@@ -1,8 +1,9 @@
 #include "dmotion/IO/IMUReader.h"
-#include "dmotion/IO/IOManager2.h"
+//#include "dmotion/IO/IOManager2.h"
 #include "dmotion/IO/IOManager3.h"
 
 #include "dmotion/Common/Parameters.h"
+#include "dmotion/Common/Utility/Utility.h"
 
 #define WaitingTicks 10//the max time of read failure
 #define PORT_NAME "/dev/IMU"
@@ -57,11 +58,6 @@ void IMUReader::clearPort()
     m_imu_port->clearPort();
 }
 
-// std::chrono::time_point<std::chrono::system_clock>
-// IMUReader::getSyncTimePoint() const
-// {
-//     return m_sync_time;
-// }
 
 bool IMUReader::readIMUData()
 {

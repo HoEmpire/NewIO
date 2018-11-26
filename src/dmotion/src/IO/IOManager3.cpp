@@ -4,28 +4,35 @@
 #include "dmotion/Common/Parameters.h"
 
 #include <chrono>
+#include <thread>
 
 using namespace dynamixel;
 
 #define LEG_ONLY false //ONLY USE LEGS OF ZJU DANCER
 
-#define DATA_FREQUENCY 12.0    // 100hz data stream
+#define DATA_FREQUENCY 10.0    // 100hz data stream
+#define IMU_FREQUENCY 10.0    // 100hz data stream
 #define POWER_DETECTER true   //whether open check power mode or not
                               //only used in a complete Robot
+//#define old 1
 
 namespace Motion
 {
-
 IOManager3::IOManager3()
     : m_power_state(OFF)
 {
     ROS_DEBUG("IOManager3::IOManager3: Construct IOManager3 instance");
     initZJUJoint();
-    m_servo_io.initServoPositions();
+    std::thread t(&IOManager3::readIMU,this);
+    t.detach();
+
     if(POWER_DETECTER)
         checkIOPower();
     else
         m_power_state = ON;
+
+    if(m_power_state == ON)
+        m_servo_io.initServoPositions();
 }
 
 IOManager3::~IOManager3() = default;
@@ -80,16 +87,13 @@ void IOManager3::initZJUJoint()
     }
 }
 
+#ifdef old
 void IOManager3::spinOnce()
 {
     static int imu_failures = 0;
-    timer a;
     if (ON == m_power_state)
     {
         // read imu
-        INFO("*****************************************");
-        INFO("*************TIME FOR IMU****************");
-        a.tic();
         if(POWER_DETECTER)
         {
             if (!m_imu_reader.readIMUData())
@@ -106,13 +110,8 @@ void IOManager3::spinOnce()
                 imu_failures = 0;
             }
         }
-        a.toc();
-        INFO("*****************************************");
 
         // read pressure data
-        INFO("*****************************************");
-        INFO("*********TIME FOR FEET SENSOR************");
-        a.tic();
         if (parameters.global.using_pressure)
         {
             if (!m_feet_io.readPressureData())
@@ -121,7 +120,6 @@ void IOManager3::spinOnce()
             }
         }
         a.toc();
-        INFO("*****************************************");
 
         // use internal clock to calculate waiting time
         std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_sync_time);
@@ -137,13 +135,8 @@ void IOManager3::spinOnce()
             timer::delay_ms(DATA_FREQUENCY - ticks - 0.1);
         }
 
-        INFO("*****************************************");
-        INFO("*********TIME FOR SERVOR SEND************");
-        a.tic();
         m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
         m_servo_io.sendServoPositions();
-        a.toc();
-        INFO("*****************************************");
 
     }
 
@@ -165,6 +158,58 @@ void IOManager3::spinOnce()
     }
 
 }
+#else
+void IOManager3::spinOnce()
+{
+    //static int imu_failures = 0;
+    if (ON == m_power_state)
+    {
+
+        // read pressure data
+        if (parameters.global.using_pressure)
+        {
+            if (!m_feet_io.readPressureData())
+            {
+                ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
+            }
+        }
+
+        //
+        // use internal clock to calculate waiting time
+        std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_sync_time);
+        double ticks = duration_.count()*1000;
+
+        //set delay
+        if (ticks > DATA_FREQUENCY)
+        {
+            ROS_WARN_STREAM("IOManager3::spinOnce:  motion ticks overflow..." << ticks);
+        }
+        else
+        {
+            timer::delay_ms(DATA_FREQUENCY - ticks - 0.1);
+        }
+
+        m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
+        m_servo_io.sendServoPositions();
+
+    }
+    else if (OFF == m_power_state)
+    {
+        timer::delay_ms(500);
+    }
+    else if (REOPEN == m_power_state)
+    {
+        m_servo_io.initServoPositions();
+        m_power_state = ON;
+        return;
+    }
+    else
+    {
+        ROS_ERROR("IOManager3::Surprise mother fucker....");
+    }
+
+}
+#endif
 
 void IOManager3::setAllJointValue(const std::vector<double>& values_)
 {
@@ -223,9 +268,10 @@ void IOManager3::ServoPowerOff()
     m_servo_io.TorqueOff();
 }
 
+#ifdef old
 void IOManager3::checkIOPower()
 {
-    ROS_INFO("IOManager3::checkIOPower: checking whether power is on");
+    ROS_INFO("IOManager3::checkIOPower: checking whether power is on by imu");
     if (m_imu_reader.checkPower())
     {
         m_power_state = ON;
@@ -235,5 +281,74 @@ void IOManager3::checkIOPower()
         m_power_state = OFF;
     }
 }
+#else
+void IOManager3::checkIOPower()
+{
+    ROS_INFO("IOManager3::checkIOPower: checking whether power is on by servo");
+    if (m_servo_io.checkPower())
+    {
+        m_power_state = ON;
+    }
+    else
+    {
+        m_power_state = OFF;
+    }
+}
+#endif
+
+void IOManager3::readIMU(){
+  while(ros::ok())
+  {
+      std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_imu_sync_time);
+      double ticks = duration_.count()*1000;
+
+      //set delay
+      if (ticks > IMU_FREQUENCY)
+      {
+          ROS_WARN_STREAM("IOManager3::readIMU:  motion ticks overflow..." << ticks);
+      }
+      else
+      {
+          timer::delay_ms(IMU_FREQUENCY - ticks - 0.1);
+      }
+
+      m_imu_sync_time = timer::getCurrentSystemTime();
+
+      if(m_power_state == ON){
+          //INFO("*****POWER ON*****");
+          if (!m_imu_reader.readIMUData())
+          {
+              if (m_imu_failures++ > 10)
+              {
+                  m_power_state = OFF;
+                  ROS_WARN("IOManager3::readIMU: power off detected...");
+              }
+          }
+          else
+          {
+              m_imu_failures = 0;
+          }
+      }
+      else if(m_power_state == OFF){
+          //INFO("*****POWER OFF*****");
+          if (m_imu_reader.checkPower())
+          {
+              m_power_state = REOPEN;
+          }
+          else
+          {
+              m_power_state = OFF;
+          }
+      }
+      else if(m_power_state == REOPEN){
+      }
+      else
+      {
+          ROS_ERROR("IOManager3::Surprise mother fucker....");
+      }
+  }
+
+}
+
 
 }

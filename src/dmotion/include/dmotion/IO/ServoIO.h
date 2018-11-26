@@ -13,7 +13,7 @@ namespace Motion
 class ServoIO
 {
 public:
-    friend class IOManager2;
+    //friend class IOManager2;
     friend class IOManager3;
 
     enum Addr{
@@ -30,7 +30,8 @@ public:
     enum Length{
         LENGTH_POSITION = 4,
         LENGTH_VELOCITY = 4,
-        LENGTH_PI = 4
+        LENGTH_PI = 4,
+        LENGTH_LED = 1
     };
 
     ServoIO();
@@ -123,6 +124,14 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     void setServoPIMode(std::vector<int> servo_id, const int P, const int I);
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief      check power by read servo(not good,it takes about 1ms, which is unacctable)
+    ///             now it's used to check power berfore ini the servo for the first time(and only first time)
+    /// @return     return true when power is on
+    ///             or false when power is off
+    ////////////////////////////////////////////////////////////////////////////////
+    bool checkPower();
+
 private:
     bool m_writer_inited, m_servo_inited;
 
@@ -131,6 +140,7 @@ private:
 
     dynamixel::GroupSyncWrite * m_pos_writer;
     dynamixel::GroupSyncRead * m_pos_reader;
+    dynamixel::GroupSyncRead * m_pos_power;//use the servo to check power for the first time
 
 
 protected:

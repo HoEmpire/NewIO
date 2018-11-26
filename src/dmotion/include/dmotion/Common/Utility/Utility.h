@@ -8,5 +8,6 @@
 #define DEBUG_OUTPUT true
 inline void INFO(std::string output)
 {
-    std::cout << "INFO:" << output << std::endl;
+    if(DEBUG_OUTPUT)
+        std::cout << "INFO:" << output << std::endl;
 }

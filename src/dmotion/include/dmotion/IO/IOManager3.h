@@ -17,20 +17,6 @@ public:
     static dynamixel::PortHandler*
     initPort(const std::string portname, const int baudrate, const bool block = false);
 
-    enum Addr{
-        ADDR_TORQUE_ENABLE = 64,
-        ADDR_LED = 65,
-        ADDR_RETURN_LEVEL = 68,
-        ADDR_GOAL_POSITION = 116,
-        ADDR_PROFILE_VELOCITY = 112,
-        ADDR_CURR_POSITION = 132
-    };
-
-    enum Length{
-        LENGTH_POSITION = 4,
-        LENGTH_VELOCITY = 4
-    };
-
     IOManager3();
 
     virtual ~IOManager3();
@@ -118,6 +104,8 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     void checkIOPower();
 
+    void readIMU();
+
 private:
     dynamixel::PortHandler* _initPort(const std::string portname, const int baudrate);
 
@@ -126,10 +114,12 @@ private:
     FeetSensorIO m_feet_io;
     IMUReader m_imu_reader;
 
-    std::chrono::time_point<std::chrono::system_clock> m_sync_time;
+    std::chrono::time_point<std::chrono::system_clock> m_sync_time;//sync time in the thread of spinOnce
+    std::chrono::time_point<std::chrono::system_clock>  m_imu_sync_time;//sync time in the thread of readIMU
 
     // data received
     std::vector<float> m_curr_joints;
+    int m_imu_failures = 0;
 
     PowerState m_power_state;
 };

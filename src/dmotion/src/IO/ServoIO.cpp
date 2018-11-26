@@ -13,8 +13,9 @@ using namespace dynamixel;
 // #define BAUDRATE  1000000
 #define PROTOCOL_VERSION 2.0
 #define INIT_TICKS 10 //the total time that keep low speed | unit:10ms
-#define INIT_VELLOCITY 30
+#define INIT_VELLOCITY 30//the ini speed of servo
 #define SAFE_MODE_SPEED 50
+#define checkPowerID 11 // id of left_hip_yaw
 
 namespace Motion
 {
@@ -32,7 +33,8 @@ ServoIO::ServoIO()
     m_servo_protocol = PacketHandler::getPacketHandler(PROTOCOL_VERSION);
     m_pos_writer = new GroupSyncWrite(m_servo_port, m_servo_protocol, ADDR_GOAL_POSITION, LENGTH_POSITION);
     m_pos_reader = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_CURR_POSITION, LENGTH_POSITION);
-    //m_pos_reader = new GroupBulkRead(m_servo_port, m_servo_protocol);
+    m_pos_power = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_LED, LENGTH_LED);
+    m_pos_power->addParam(checkPowerID);
 }
 
 ServoIO::~ServoIO()
@@ -71,10 +73,6 @@ void ServoIO::initServoPositions()
         timer::delay_ms(20);
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 1);
         timer::delay_ms(20);
-        // m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_RETURN_DELAY, 10);
-        // timer::delay_ms(20);
-        // m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_RETURN_LEVEL, 1);
-        // timer::delay_ms(20);
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, INIT_VELLOCITY);//init safety
 
         goal_position_[0] = DXL_LOBYTE(DXL_LOWORD(_cfg.init));
@@ -100,7 +98,6 @@ void ServoIO::initServoPositions()
         }
 
         bool state = m_pos_reader->addParam(_cfg.id);
-        //bool state = m_pos_reader->addParam(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION);
         if (!state)
         {
             ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add read position param error");
@@ -119,11 +116,9 @@ void ServoIO::initServoPositions()
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 0);
     }
 
-//    m_pos_writer->txPacket();
-
     m_writer_inited = true;
     m_servo_inited = false;
-    sleep(1);
+    sleep(1);//delay before finished
     INFO("Servo ini success!!!!!");
 }
 
@@ -137,7 +132,6 @@ void ServoIO::TorqueOff()
     }
     sleep(3);
     INFO("torque off ist schon gemacht!");
-
 }
 
 void ServoIO::sendServoPositions()
@@ -190,16 +184,12 @@ void ServoIO::sendServoPositions()
 void ServoIO::readServoPositions()
 {
     INFO("ServoIO::readServoPositions: read servo positions");
-    //m_pos_reader->txRxPacket();
-    //timer::delay_ms(100);
-    //
     auto dxl_comm_result = m_pos_reader->txRxPacket();
 
     int cunt = 0;
     while (dxl_comm_result != COMM_SUCCESS && cunt < 5)
     {
       INFO("fucking reading error");
-      //INFO(dpacketHandler->getTxRxResult(dxl_comm_result
       dxl_comm_result = m_pos_reader->txRxPacket();
       cunt ++;
     }
@@ -229,14 +219,13 @@ void ServoIO::readServoPositions()
 void ServoIO::readServoPositionsBad()
 {
     INFO("ServoIO::readServoPositions: read servo positions");
-    m_pos_reader->txRxPacket();
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
         uint8_t dxl_error = 0;                          // Dynamixel error
         uint32_t dxl_present_position = 0;               // Present position
         bool state = m_servo_protocol->read4ByteTxRx(m_servo_port, _cfg.id, ADDR_CURR_POSITION, &dxl_present_position, &dxl_error);
-        if (state)
+        if (state != COMM_SUCCESS)
         {
            INFO ("ServoIO::readServoPositions: get current joint value error");
         }
@@ -280,20 +269,15 @@ void ServoIO::setSingleServoSpeed(std::string name, int speed)
 
 void ServoIO::setSingleServoSpeed(int servo_id,  int speed)
 {
-  //  std::cout << "ServoIO::setSingleServoSpeed: set servo speed to " << speed << std::endl;
     m_servo_protocol->write4ByteTxOnly(m_servo_port, servo_id, ADDR_PROFILE_VELOCITY, speed);
 }
 
 void ServoIO::setSingleServoPosition(std::string name, double position)
 {
-    //std::cout << "ServoIO::setSingleServoSpeed: set goal postion of | " << name << " | " << std::endl;
-
     std::map<std::string, Joint>::iterator it = m_joints.begin();
     it = m_joints.find(name);
     if(it != m_joints.end())
     {
-        //const JointConfig& _cfg = (*it).second.cfg;
-        //std::cout << "INFO:find " << name << " success!" << " | id::" << _cfg.id <<std::endl;
         (*it).second.goal_pos = position;
     }
     else
@@ -323,5 +307,22 @@ void ServoIO::setServoPIMode(std::vector<int> servo_id, const int P, const int I
 
     writer_.txPacket();
 }
+
+bool ServoIO::checkPower(){
+    if(DEBUG_OUTPUT)
+        INFO("ServoIO::checkPower:check whether power is on");
+    uint8_t dxl_error = 0;
+    uint8_t data = 0;
+
+    bool state = m_servo_protocol->read1ByteTxRx(m_servo_port, checkPowerID, ADDR_LED, &data, &dxl_error);
+    if (state != COMM_SUCCESS)
+    {
+       INFO ("ServoIO::checkPower: check power failed once");
+       return false;
+    }
+    else
+       return true;
+}
+
 
 }

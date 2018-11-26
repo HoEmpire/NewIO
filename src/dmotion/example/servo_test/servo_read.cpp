@@ -62,9 +62,13 @@ int main(int argc, char ** argv)
     servo_test.initServoPositions();
     sleep(2);
     servo_test.TorqueOff();
-
+    timer a;
     while(1){
+      a.tic();
       servo_test.readServoPositions();
+      INFO("*****************************");
+      a.toc();
+      INFO("*****************************");
       timer::delay_ms(1000);
     }
 
