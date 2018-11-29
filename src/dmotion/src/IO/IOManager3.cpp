@@ -23,8 +23,11 @@ IOManager3::IOManager3()
 {
     ROS_DEBUG("IOManager3::IOManager3: Construct IOManager3 instance");
     initZJUJoint();
-    std::thread t(&IOManager3::readIMU,this);
-    t.detach();
+    std::thread t1(&IOManager3::readIMU,this);
+    t1.detach();
+    timer::delay_ms(200);
+    std::thread t2(&IOManager3::checkPower,this);
+    t2.detach();
 
     if(POWER_DETECTER)
         checkIOPower();
@@ -183,6 +186,7 @@ void IOManager3::spinOnce()
         if (ticks > DATA_FREQUENCY)
         {
             ROS_WARN_STREAM("IOManager3::spinOnce:  motion ticks overflow..." << ticks);
+            timer::delay_ms(100);//TODO
         }
         else
         {
@@ -296,22 +300,10 @@ void IOManager3::checkIOPower()
 }
 #endif
 
+#ifdef old
 void IOManager3::readIMU(){
   while(ros::ok())
   {
-      std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_imu_sync_time);
-      double ticks = duration_.count()*1000;
-
-      //set delay
-      if (ticks > IMU_FREQUENCY)
-      {
-          ROS_WARN_STREAM("IOManager3::readIMU:  motion ticks overflow..." << ticks);
-      }
-      else
-      {
-          timer::delay_ms(IMU_FREQUENCY - ticks - 0.1);
-      }
-
       m_imu_sync_time = timer::getCurrentSystemTime();
 
       if(m_power_state == ON){
@@ -346,8 +338,68 @@ void IOManager3::readIMU(){
       {
           ROS_ERROR("IOManager3::Surprise mother fucker....");
       }
-  }
+      std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_imu_sync_time);
+      double ticks = duration_.count()*1000;
 
+      timer::delay_ms(IMU_FREQUENCY - ticks - 0.1);
+  }
+}
+#else
+void IOManager3::readIMU(){
+    while(ros::ok())
+    {
+
+        if (!m_imu_reader.readIMUData())
+        {
+            if (m_imu_failures++ > 10)//200ms read fail
+            {
+                INFO("read IMU failure once");
+            }
+        }
+        else
+        {
+            m_imu_failures = 0;
+            std::chrono::duration<double> duration_ = (m_imu_reader.m_imu_readBegin - m_imu_sync_time);
+            double ticks = duration_.count()*1000;
+            INFO("*********************************");
+            std::cout << "time: " << ticks << std::endl;
+            INFO("*********************************");
+            m_imu_sync_time = m_imu_reader.m_imu_readBegin;
+        }
+            //timer::delay_us(500);
+    }
+}
+#endif
+
+void IOManager3::checkPower(){
+    int PowerChangeTick = 0;
+    while(ros::ok()){
+      if(m_power_state == ON)
+      {
+        //INFO("POWER ON");
+        if(m_imu_failures > 10)
+        {
+          if(PowerChangeTick++ >= 2)
+               m_power_state = OFF;
+        }
+        else
+          PowerChangeTick = 0;
+      }
+     else if(m_power_state == OFF)
+     {
+       //INFO("POWER OFF");
+       if(m_imu_failures == 0)
+       {
+         if(PowerChangeTick++ >= 2)
+              m_power_state = REOPEN;
+       }
+       else
+         PowerChangeTick = 0;
+     }
+     else
+      // INFO("REOPENING...");
+    timer::delay_ms(250);
+    }
 }
 
 

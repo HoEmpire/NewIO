@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "dmotion/IO/IMUReader.h"
 //#include "dmotion/IO/IOManager2.h"
 #include "dmotion/IO/IOManager3.h"
@@ -5,12 +6,12 @@
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/Common/Utility/Utility.h"
 
-#define WaitingTicks 10//the max time of read failure
+#define WaitingTicks 20000//the max time of read failure
 #define PORT_NAME "/dev/IMU"
 #define BAUDRATE  576000
 // #define PORT_NAME "/dev/ttyUSB0"
 // #define BAUDRATE  1000000
-// #define IMU_BLOCK 1
+#define IMU_BLOCK 1
 
 namespace Motion
 {
@@ -29,7 +30,7 @@ IMUReader::~IMUReader()
     m_imu_port->closePort();
     INFO("IMU failures");
 }
-
+#if 0
 bool IMUReader::checkPower()
 {
     ROS_DEBUG("IMUReader::checkPower: entering checkpower");
@@ -52,13 +53,36 @@ bool IMUReader::checkPower()
 
     return false;
 }
+#else
+bool IMUReader::checkPower()
+{
+    int m_imu_success = 0;
+    int ticks = 0;
+    while(ticks++ < 10){
+      if (readIMUData())
+      {
+          if (m_imu_success++ > 2)
+          {
+            return true;
+          }
+      }
+      else
+      {
+          m_imu_success = 0;
+      }
+      timer::delay_ms(10.0);
+    }
+    return false;
+}
+
+#endif
 
 void IMUReader::clearPort()
 {
     m_imu_port->clearPort();
 }
 
-
+#ifdef old
 bool IMUReader::readIMUData()
 {
     //static int failure_ = 0;
@@ -88,7 +112,6 @@ bool IMUReader::readIMUData()
  #endif
         if ( !readRes_ || recBuffer[0] != (uint8_t)0xee)
         {
-            // ROS_INFO("not cool...");
             continue;
         }
 
@@ -193,6 +216,135 @@ bool IMUReader::readIMUData()
 
     return true;
 }
+#else
+bool IMUReader::readIMUData()
+{
+
+      /**************** buffer initial ****************/
+      const unsigned char gyro_preamble[3] = {0xEE, 0xEE, 0x50};
+
+      uint8_t byte_buffer;
+      uint8_t datas_buffer[28];
+      //header:{0xEE, 0xEE, 0x50} (1Byte x3)
+      //accl_x | accl_y | accl_z | grpo_x | grpo_y | grpo_z | checksum (2Byte x6 +1)
+      //magn | checksum (8Byte + 1)
+      //packet_end (1Byte)
+
+      int state = 0;
+      int cnt_read_num = 0;
+      int same_cnt = 0;
+      bool read_flag = 0;
+      int power_tick = 0;
+      std::chrono::time_point<std::chrono::system_clock> m_imu_readBegin_tmp;
+      while(true)
+      {
+        while(!m_imu_port->readPort(&byte_buffer, 1))
+        {
+          timer::delay_us(10);
+          power_tick++;
+          if(power_tick > 2000){
+              INFO("tick overflow");
+              return false;// 20ms read failed
+          }
+        }
+        power_tick = 0;
+
+        switch(state)
+        {
+          case 0:
+          {
+            if(byte_buffer == gyro_preamble[0])
+            {
+              //INFO("CASE 0");
+              state = 1;
+              m_imu_readBegin_tmp = timer::getCurrentSystemTime();
+            }
+            else
+            {
+              std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+              m_imu_port->clearPort();
+            }
+          }
+          break;
+          case 1:
+          {
+            if(byte_buffer == gyro_preamble[1])
+            {
+              //INFO("CASE 1");
+              state = 2;
+            }
+            else
+            {
+              state = 0;
+              std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+            }
+          }
+          break;
+          case 2:
+          {
+            if(byte_buffer == gyro_preamble[2])
+            {
+              //INFO("CASE 2");
+              state = 3;
+              cnt_read_num = 0;
+            }
+            else
+            {
+              state = 0;
+              std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+            }
+          }
+          break;
+          case 3:
+          {
+            //INFO("CASE 3");
+            datas_buffer[cnt_read_num++] = byte_buffer;
+            if(cnt_read_num == 25)
+            {
+              read_flag = 1;
+              state = 0;
+            }
+          }
+        }
+
+      if(read_flag == 0)
+        continue;
+      read_flag = 0;
+
+
+       #if 0
+         for(i = 0;i<46;i++){
+           printf("%02x,",datas_buffer[i]);
+         }
+         printf("\n");
+       #endif
+       int i = 0;
+       uint8_t sum_acc = 0;
+       uint8_t sum_magn = 0;
+       for(i = 0;i < 13;i++){
+         sum_acc += datas_buffer[i];
+       }
+
+       for(i = 13;i < 22;i++){
+         sum_magn += datas_buffer[i];
+       }
+       if(((sum_acc & 0xff) == 0xff) && ((sum_magn & 0xff) == 0xff)){
+         remapIMUData(datas_buffer);
+         //INFO("remap true.");
+       }
+       else{
+         INFO("check sum failed.");
+         return false;
+       }
+       m_imu_readBegin = m_imu_readBegin_tmp;
+       m_imu_port->clearPort();
+       return true;
+      }
+
+}
+#endif
+
+
 
 inline bool IMUReader::remapIMUData(const uint8_t* buffer)
 {

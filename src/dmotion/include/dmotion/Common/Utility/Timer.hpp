@@ -32,6 +32,11 @@ public:
         return elapsed_seconds.count() * 1000;
     }
 
+    static void delay_us(const int microseconds)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+    }
+
     static void delay_ms(const int msecs)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(msecs));

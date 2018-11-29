@@ -22,6 +22,7 @@ namespace Motion
 
 ServoIO::ServoIO()
     : m_writer_inited(false)
+    , m_reader_inited(false)
     , m_servo_inited(false)
 {
     INFO("ServoIO::ServoIO: init ServoIO instance");
@@ -97,13 +98,14 @@ void ServoIO::initServoPositions()
             }
         }
 
-        bool state = m_pos_reader->addParam(_cfg.id);
-        if (!state)
+        if(!m_reader_inited)
         {
-            ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add read position param error");
+            bool state = m_pos_reader->addParam(_cfg.id);
+            if (!state)
+            {
+                ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add read position param error");
+            }
         }
-
-
     }
 
     m_pos_writer->txPacket();
@@ -117,6 +119,7 @@ void ServoIO::initServoPositions()
     }
 
     m_writer_inited = true;
+    m_reader_inited = true;
     m_servo_inited = false;
     sleep(1);//delay before finished
     INFO("Servo ini success!!!!!");

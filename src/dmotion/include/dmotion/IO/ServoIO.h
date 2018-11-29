@@ -133,7 +133,7 @@ public:
     bool checkPower();
 
 private:
-    bool m_writer_inited, m_servo_inited;
+    bool m_writer_inited, m_reader_inited, m_servo_inited;
 
     dynamixel::PortHandler* m_servo_port;
     dynamixel::PacketHandler* m_servo_protocol;

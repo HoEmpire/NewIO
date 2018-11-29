@@ -106,6 +106,8 @@ public:
 
     void readIMU();
 
+    void checkPower();
+
 private:
     dynamixel::PortHandler* _initPort(const std::string portname, const int baudrate);
 

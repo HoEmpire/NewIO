@@ -54,6 +54,10 @@ public:
         return m_data;
     }
 
+public:
+    std::chrono::time_point<std::chrono::system_clock> m_imu_readBegin;
+    // std::chrono::time_point<std::chrono::system_clock> m_sync_time;
+
 private:
     inline bool remapIMUData(const uint8_t* buffer);//converse data to the form that we can read from binary
 

@@ -78,14 +78,15 @@ bool FeetSensorIO::readPressureData()
     if ( !readSinglePackage(true) )
     {
       if(DEBUG_OUTPUT)
-        INFO("左脚读值失败");
+        //INFO("左脚读值失败");
+        return false;
     }
 
     // reading right data
     if ( !readSinglePackage(false) )
     {
       if(DEBUG_OUTPUT)
-        INFO("右脚读值失败");
+        //INFO("右脚读值失败");
         return false;
     }
     ROS_DEBUG_STREAM("FeetSensorIO::readPressureData: data reading success" << std::endl

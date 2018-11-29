@@ -84,7 +84,7 @@ bool PortHandler::readData1Byte(uint8_t* buffer, int length, double timeout)
   this->setPacketTimeout(timeout);
   while(!this->isPacketTimeout())
   {
-    rx_length += this->readPort(&buffer[rx_length], length-rx_length);        
+    rx_length += this->readPort(&buffer[rx_length], length-rx_length);
     if (rx_length == length)
       return true;
   }
@@ -258,7 +258,7 @@ bool PortHandler::waitUntilReadablePoll()
           std::cout << "reset from pollin" << std::endl;
           return true;
       }
-  }  
+  }
 
   return false;
 }
@@ -275,7 +275,7 @@ bool PortHandler::setupPort(int cflag_baud, const bool block)
   {
     socket_fd_ = open(port_name_, O_RDWR|O_NOCTTY);
   }
-  
+
   if(socket_fd_ < 0)
   {
     printf("[PortHandler::SetupPort] Error opening serial port!\n");
