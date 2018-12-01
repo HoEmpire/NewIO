@@ -1,0 +1,2 @@
+
+SUBSYSTEM=="tty", KERNEL=="ttyUSB[0-9]*", MODE="0666", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="AI03DS90", SYMLINK+="Servo", RUN+="/etc/zjudancer/hardware/change_timer.sh %k"

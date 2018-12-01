@@ -10,8 +10,26 @@ New version of IO for dancing cock
   catkin_make
   source devel/setup.zsh
  ```
- 
+
+## Serial ports config
+
+We use udev rules to change the access permissions to devices, set port corresponded to our port names used in code.
+
+Generally, the serial port mapping are listed below:
+
+- ttyUSB0---> Servo
+- ttyUSB1---> IMU
+
+For instant setup for usage, you can put the [99-dancer-serial.rules](./udev/99-dancer-serial.rules) to `/etc/udev/rules.d`, and put the [change_timer.sh](./udev/change_timer.sh) to `etc/zjudancer/hardware`, then give executive permission to this file: `sudo chmod +x change_timer.sh` .
+
+If one day  the hardware is changed, you should learn to change the rules according to new features, hope you can get some suggestion from the below figure.
+
+![udev_rules](./img/udev_rules_method.png)
+
+
+
 ## Tips
+
 + All IO is finished 
 + Read the description function of the code in  
   + src/dmotion/include/dmotion/IO/SeroIO.h  
