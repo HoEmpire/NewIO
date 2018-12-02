@@ -243,6 +243,21 @@ void ServoIO::readServoPositionsBad()
     }
 }
 
+double ServoIO::getReadServoData(std::string name){
+    std::map<std::string, Joint>::iterator it = m_joints.begin();
+    it = m_joints.find(name);
+    if(it != m_joints.end())
+    {
+      return (*it).second.real_pos;
+    }
+    else
+    {
+      INFO("ServoIO:READ NAME NO EXISTS!");
+      return 0;
+    }
+
+}
+
 void ServoIO::setAllServoSpeed(const int speed)
 {
     std::cout << "ServoIO::setAllServoSpeed: set servo speed to " << speed << std::endl;
@@ -326,6 +341,5 @@ bool ServoIO::checkPower(){
     else
        return true;
 }
-
 
 }

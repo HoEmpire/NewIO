@@ -12,6 +12,7 @@
 // #define PORT_NAME "/dev/ttyUSB0"
 // #define BAUDRATE  1000000
 #define IMU_BLOCK 1
+//#define old 1
 
 namespace Motion
 {
@@ -206,9 +207,9 @@ bool IMUReader::readIMUData()
 
         // step 5. packet end
 #ifdef IMU_BLOCK
-        readRes_ = m_imu_port->readPort(recBuffer, 1);
+        readRes_ = m_imu_port->readPort(recBuffer, 3);
  #else
-        readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
+        readRes_ = m_imu_port->readData1Byte(recBuffer, 3, 3.0);
  #endif
 
         break;
@@ -219,6 +220,10 @@ bool IMUReader::readIMUData()
 #else
 bool IMUReader::readIMUData()
 {
+
+      typedef std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds> microClock_type;
+      microClock_type tp;
+      //获取当前时间点，windows system_clock是100纳秒级别的(不同系统不一样，自己按照介绍的方法测试)，所以要转换
 
       /**************** buffer initial ****************/
       const unsigned char gyro_preamble[3] = {0xEE, 0xEE, 0x50};
@@ -235,7 +240,10 @@ bool IMUReader::readIMUData()
       int same_cnt = 0;
       bool read_flag = 0;
       int power_tick = 0;
-      std::chrono::time_point<std::chrono::system_clock> m_imu_readBegin_tmp;
+      int ms_cnt = 0;
+      int us_cnt = 0;
+      std::chrono::time_point<std::chrono::steady_clock> m_imu_readBegin_tmp;
+      timer a;
       while(true)
       {
         while(!m_imu_port->readPort(&byte_buffer, 1))
@@ -244,10 +252,17 @@ bool IMUReader::readIMUData()
           power_tick++;
           if(power_tick > 2000){
               INFO("tick overflow");
+              //a.toc();
               return false;// 20ms read failed
           }
         }
         power_tick = 0;
+        // tp =std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());
+        // us_cnt = tp.time_since_epoch().count() % 1000;
+        // ms_cnt = (tp.time_since_epoch().count() / 1000) % 1000;
+        // std::cout << "time point--" << ms_cnt << "ms ," << us_cnt << "us" ;
+        //
+        // printf("   %02x\n", byte_buffer);
 
         switch(state)
         {
@@ -258,10 +273,12 @@ bool IMUReader::readIMUData()
               //INFO("CASE 0");
               state = 1;
               m_imu_readBegin_tmp = timer::getCurrentSystemTime();
+              //a.tic();
             }
             else
             {
-              std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+              printf("Gyro:Read Byte %2x, number: %d, state: %d \n",byte_buffer,same_cnt,state);
+              //std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
               m_imu_port->clearPort();
             }
           }
@@ -275,8 +292,9 @@ bool IMUReader::readIMUData()
             }
             else
             {
+              printf("Gyro:Read Byte %2x, number: %d, state: %d \n",byte_buffer,same_cnt,state);
+              //std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
               state = 0;
-              std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
             }
           }
           break;
@@ -290,8 +308,9 @@ bool IMUReader::readIMUData()
             }
             else
             {
+              printf("Gyro:Read Byte %2x, number: %d, state: %d \n",byte_buffer,same_cnt,state);
+              //std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
               state = 0;
-              std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
             }
           }
           break;
@@ -338,6 +357,7 @@ bool IMUReader::readIMUData()
        }
        m_imu_readBegin = m_imu_readBegin_tmp;
        m_imu_port->clearPort();
+      // a.toc();
        return true;
       }
 
@@ -413,5 +433,22 @@ inline bool IMUReader::remapIMUData(const uint8_t* buffer)
 
     return true;
 }
+
+void IMUReader::test_imu()
+{
+  uint8_t byte_buffer;
+  timer a;
+  while(ros::ok())
+  {
+    a.tic();
+    while(!m_imu_port->readPort(&byte_buffer, 1))
+    {
+      timer::delay_us(10);
+    }
+    m_imu_port->clearPort();
+    a.toc();
+  }
+}
+
 
 }

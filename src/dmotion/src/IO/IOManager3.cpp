@@ -28,6 +28,9 @@ IOManager3::IOManager3()
     timer::delay_ms(200);
     std::thread t2(&IOManager3::checkPower,this);
     t2.detach();
+    // auto a = t1.GetThreadPriority();
+    // std::cout << "========priority========" <<std::endl << a << "========================" << std::endl;
+    // std::abort();
 
     if(POWER_DETECTER)
         checkIOPower();
@@ -262,6 +265,33 @@ void IOManager3::reverseMotion()
     }
 }
 
+std::vector<double> IOManager3::readAllPosition()
+{
+  std::vector<double> data;
+  data.push_back(m_servo_io.getReadServoData("right_hip_yaw"));
+  data.push_back(m_servo_io.getReadServoData("right_hip_roll"));
+  data.push_back(m_servo_io.getReadServoData("right_hip_pitch"));
+  data.push_back(m_servo_io.getReadServoData("right_knee"));
+  data.push_back(m_servo_io.getReadServoData("right_ankle_pitch"));
+  data.push_back(m_servo_io.getReadServoData("right_ankle_roll"));
+
+  data.push_back(m_servo_io.getReadServoData("left_hip_yaw"));
+  data.push_back(m_servo_io.getReadServoData("left_hip_roll"));
+  data.push_back(m_servo_io.getReadServoData("left_hip_pitch"));
+  data.push_back(m_servo_io.getReadServoData("left_knee"));
+  data.push_back(m_servo_io.getReadServoData("left_ankle_pitch"));
+  data.push_back(m_servo_io.getReadServoData("left_ankle_roll"));
+
+  if(!LEG_ONLY){
+    data.push_back(m_servo_io.getReadServoData("right_arm_upper"));
+    data.push_back(m_servo_io.getReadServoData("right_arm_lower"));
+    data.push_back(m_servo_io.getReadServoData("left_arm_upper"));
+    data.push_back(m_servo_io.getReadServoData("left_arm_lower"));
+  }
+
+  return data;
+}
+
 void IOManager3::setServoPI(const std::vector<int> servo_id, const int p, const int i)
 {
     m_servo_io.setServoPIMode(servo_id, p, i);
@@ -270,6 +300,11 @@ void IOManager3::setServoPI(const std::vector<int> servo_id, const int p, const 
 void IOManager3::ServoPowerOff()
 {
     m_servo_io.TorqueOff();
+}
+
+void IOManager3::setAllspeed(int v)
+{
+    m_servo_io.setAllServoSpeed(v);
 }
 
 #ifdef old
@@ -363,10 +398,9 @@ void IOManager3::readIMU(){
             double ticks = duration_.count()*1000;
             INFO("*********************************");
             std::cout << "time: " << ticks << std::endl;
-            INFO("*********************************");
             m_imu_sync_time = m_imu_reader.m_imu_readBegin;
         }
-            //timer::delay_us(500);
+          //  timer::delay_us(6000);
     }
 }
 #endif

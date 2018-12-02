@@ -54,9 +54,11 @@ public:
         return m_data;
     }
 
+    void test_imu();
+
 public:
-    std::chrono::time_point<std::chrono::system_clock> m_imu_readBegin;
-    // std::chrono::time_point<std::chrono::system_clock> m_sync_time;
+    std::chrono::time_point<std::chrono::steady_clock> m_imu_readBegin;
+    // std::chrono::time_point<std::chrono::steady_clock> m_sync_time;
 
 private:
     inline bool remapIMUData(const uint8_t* buffer);//converse data to the form that we can read from binary
@@ -65,7 +67,7 @@ private:
     int m_failures;//read failure time
     dynamixel::PortHandler* m_imu_port;
 
-    std::chrono::time_point<std::chrono::system_clock> m_sync_time;
+    std::chrono::time_point<std::chrono::steady_clock> m_sync_time;
     IMUData m_data;//imu data
 };
 

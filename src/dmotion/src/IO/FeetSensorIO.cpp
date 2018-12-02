@@ -6,7 +6,7 @@
 #define PORT_NAME "/dev/Servo"
 //#define PORT_NAME "/dev/ttyUSB0"
 #define BAUDRATE  1000000
-
+//#define old 1
 
 namespace Motion
 {
@@ -78,15 +78,16 @@ bool FeetSensorIO::readPressureData()
     if ( !readSinglePackage(true) )
     {
       if(DEBUG_OUTPUT)
-        //INFO("左脚读值失败");
+        INFO("左脚读值失败");
         return false;
     }
 
+    m_port->writePort(m_tx_packet.data(), m_tx_len);
     // reading right data
     if ( !readSinglePackage(false) )
     {
       if(DEBUG_OUTPUT)
-        //INFO("右脚读值失败");
+        INFO("右脚读值失败");
         return false;
     }
     ROS_DEBUG_STREAM("FeetSensorIO::readPressureData: data reading success" << std::endl
@@ -96,12 +97,13 @@ bool FeetSensorIO::readPressureData()
     return true;
 }
 
+#ifdef old
 bool FeetSensorIO::readSinglePackage(const bool isLeft)
 {
     static int count = 0;
     assert(static_cast<int>(m_tx_packet.size()) == m_tx_len);
 
-    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 5.0);
+    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 4.0);
     //bool com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
 
     if (!com_res_){
@@ -144,6 +146,178 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
         return false;
     }
 }
+
+#else
+bool FeetSensorIO::readSinglePackage(const bool isLeft)
+{
+
+      /**************** buffer initial ****************/
+      uint8_t byte_buffer;
+      uint8_t datas_buffer[22];
+      //header:{0xEE, 0xEE, 0x50} (1Byte x3)
+      //accl_x | accl_y | accl_z | grpo_x | grpo_y | grpo_z | checksum (2Byte x6 +1)
+      //magn | checksum (8Byte + 1)
+      //packet_end (1Byte)
+
+      int state = 0;
+      int cnt_read_num = 0;
+      int same_cnt = 0;
+      bool read_flag = 0;
+      std::chrono::time_point<std::chrono::steady_clock> StartTime;
+      std::chrono::time_point<std::chrono::steady_clock> EndTime;
+      std::chrono::duration<double> WaitTime;
+
+      StartTime = timer::getCurrentSystemTime();
+      while(true)
+      {
+        while(!m_port->readPort(&byte_buffer, 1))
+        {
+          timer::delay_us(10);
+          if(WaitTime.count() * 1000 > 4.0){
+              INFO("pressure sensor:after 4ms read failed");
+              return false;// 4ms read failed
+          }
+          EndTime = timer::getCurrentSystemTime();
+          WaitTime = EndTime - StartTime;
+        }
+
+        switch(state)
+        {
+          case 0:
+          {
+            if(byte_buffer == 0xff)
+            {
+              //INFO("CASE 0");
+              state = 1;
+              datas_buffer[cnt_read_num++] = byte_buffer;
+
+              //a.tic();
+            }
+            else
+            {
+              cnt_read_num = 0;
+              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer;
+              std::cout << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+              m_port->clearPort();
+            }
+          }
+          break;
+          case 1:
+          {
+            if(byte_buffer == 0xff)
+            {
+              //INFO("CASE 1");
+              state = 2;
+              datas_buffer[cnt_read_num++] = byte_buffer;
+            }
+            else
+            {
+              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+              state = 0;
+              cnt_read_num = 0;
+            }
+          }
+          break;
+          case 2:
+          {
+            if((isLeft && byte_buffer == 0x18) || (!isLeft && byte_buffer == 0x19))
+            {
+              //INFO("CASE 2");
+              state = 3;
+              datas_buffer[cnt_read_num++] = byte_buffer;
+            }
+            else
+            {
+              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+              state = 0;
+              cnt_read_num = 0;
+            }
+          }
+          break;
+          case 3:
+          {
+            if(byte_buffer == 0x12)
+            {
+              //INFO("CASE 3");
+              state = 4;
+              datas_buffer[cnt_read_num++] = byte_buffer;
+            }
+            else
+            {
+              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+              state = 0;
+              cnt_read_num = 0;
+            }
+          }
+          break;
+          case 4:
+          {
+            if(byte_buffer == 0x00)
+            {
+              //INFO("CASE 4");
+              state = 5;
+              datas_buffer[cnt_read_num++] = byte_buffer;
+            }
+            else
+            {
+              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+              state = 0;
+              cnt_read_num = 0;
+            }
+          }
+          break;
+          case 5:
+          {
+            //INFO("CASE 5");
+            datas_buffer[cnt_read_num++] = byte_buffer;
+            if(cnt_read_num == 22)
+            {
+              read_flag = 1;
+              state = 0;
+            }
+          }
+        }
+
+      if(read_flag == 0)
+        continue;
+      read_flag = 0;
+
+
+       #if 0
+         for(i = 0;i<46;i++){
+           printf("%02x,",datas_buffer[i]);
+         }
+         printf("\n");
+       #endif
+       int i = 0;
+       uint8_t sum = 0;
+
+       for(i = 2;i < 22;i++){
+         sum += datas_buffer[i];
+       }
+
+       if(sum == 0xff){
+         for(i = 0;i< 22;i++)
+             m_rx_packet.push_back(datas_buffer[i]);
+
+         remapPressureData(isLeft);
+         //INFO("pressure sensor:remap true.");
+       }
+       else{
+         INFO("pressure sensor:check sum failed.");
+         return false;
+       }
+       //m_imu_readBegin = m_imu_readBegin_tmp;
+       //m_port->clearPort();
+      // a.toc();
+       return true;
+      }
+}
+#endif
+
+
+
+
 
 void FeetSensorIO::remapPressureData(const bool isLeft)
 {

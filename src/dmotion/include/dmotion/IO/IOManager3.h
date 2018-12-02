@@ -78,6 +78,15 @@ public:
 
     const IMUData& getIMUData()
     {
+        if(DEBUG_OUTPUT){
+          std::cout << std::setprecision (3);
+          std::cout << "grpo_x: " << m_imu_reader.m_data.gypo.x <<std::endl;
+          std::cout << "grpo_y: " << m_imu_reader.m_data.gypo.y <<std::endl;
+          std::cout << "grpo_z: " << m_imu_reader.m_data.gypo.z <<std::endl;
+          std::cout << "accl_x: " << m_imu_reader.m_data.accl.x <<std::endl;
+          std::cout << "accl_y: " << m_imu_reader.m_data.accl.y <<std::endl;
+          std::cout << "accl_z: " << m_imu_reader.m_data.accl.z <<std::endl;
+        }
         return m_imu_reader.m_data;
     }
 
@@ -104,6 +113,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     void checkIOPower();
 
+    void setAllspeed(int v);
+
+    std::vector<double> readAllPosition();
+
     void readIMU();
 
     void checkPower();
@@ -116,8 +129,8 @@ private:
     FeetSensorIO m_feet_io;
     IMUReader m_imu_reader;
 
-    std::chrono::time_point<std::chrono::system_clock> m_sync_time;//sync time in the thread of spinOnce
-    std::chrono::time_point<std::chrono::system_clock>  m_imu_sync_time;//sync time in the thread of readIMU
+    std::chrono::time_point<std::chrono::steady_clock> m_sync_time;//sync time in the thread of spinOnce
+    std::chrono::time_point<std::chrono::steady_clock>  m_imu_sync_time;//sync time in the thread of readIMU
 
     // data received
     std::vector<float> m_curr_joints;

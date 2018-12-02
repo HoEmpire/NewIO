@@ -15,6 +15,7 @@ int main(int argc, char ** argv)
 
       while(ros::ok()){
         io.spinOnce();
+        //io.readIMU();
         //io.getIMUData();
       }
 }

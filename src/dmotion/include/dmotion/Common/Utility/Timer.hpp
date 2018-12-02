@@ -12,7 +12,7 @@
 class timer
 {
 public:
-    typedef std::chrono::system_clock::time_point time_point;
+    typedef std::chrono::steady_clock::time_point time_point;
 
     timer()
     {
@@ -21,16 +21,17 @@ public:
 
     void tic()
     {
-        start = std::chrono::system_clock::now();
+        start = std::chrono::steady_clock::now();
     }
 
     double toc()
     {
-        end = std::chrono::system_clock::now();
+        end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
         std::cout << "**" << elapsed_seconds.count() * 1000 << "ms have passed**" << std::endl;
         return elapsed_seconds.count() * 1000;
     }
+
 
     static void delay_us(const int microseconds)
     {
@@ -50,11 +51,11 @@ public:
     // rough clock
     static const time_point getCurrentSystemTime()
     {
-        return std::chrono::system_clock::now();
+        return std::chrono::steady_clock::now();
     }
 
 private:
-    std::chrono::time_point<std::chrono::system_clock> start, end;
+    std::chrono::time_point<std::chrono::steady_clock> start, end;
 };
 
 #endif //dmotion_lib_MUTILITY_H

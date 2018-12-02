@@ -17,6 +17,7 @@
 /* Author: zerom, Ryu Woon Jung (Leon) */
 
 #include "dmotion/IO/dynamixel_sdk/port_handler.h"
+#include "dmotion/Common/Utility/Utility.h"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -84,11 +85,11 @@ bool PortHandler::readData1Byte(uint8_t* buffer, int length, double timeout)
   this->setPacketTimeout(timeout);
   while(!this->isPacketTimeout())
   {
+    //timer::delay_us(10);
     rx_length += this->readPort(&buffer[rx_length], length-rx_length);
     if (rx_length == length)
       return true;
   }
-
   // std::cout << "PortHandler::readData1Byte: incomplete packete, actual length " << rx_length << std::endl;
   return false;
 }

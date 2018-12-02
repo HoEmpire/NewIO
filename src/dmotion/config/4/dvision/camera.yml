@@ -1,0 +1,66 @@
+dvision:
+  camera:
+    debug:                 false
+    device:                /dev/video0
+    width:                 640
+    height:                480
+    frameRate:             30
+
+    saturation:            64
+    contrast:              32
+    brightness:            0
+    hue:                   0
+    gamma:                 100
+    gain:                  0
+    sharpness:             0
+
+    exposure_auto:         1 # 0 is auto, 1 is manual
+    exposure_absolute:     154
+
+    whitebalance_auto:     1
+    whitebalance_absolute: 3730
+
+    focus_auto:            1
+    focus_absolute:        0
+
+  projection:
+    fx:                    361.6525036841294
+    fy:                    361.7689621508856
+    cx:                    323.4079968398914
+    cy:                    233.5282443448509
+    dist_coeff:           [-1.03829,
+                            0.261343,
+                            -0.00125468,
+                            -0.00158986,
+                            0.109689,
+                            -0.683433,
+                            -0.182982,
+                            0.297605,
+                            0.0199847,
+                            -0.00582598,
+                            0.00735284,
+                            -0.00146413,
+                            -0.00137839,
+                            0.0136541]
+
+    extrinsic_para: [
+            -0.56438,
+            -0.12249,
+            55.1963,
+            -7.9367e-05,
+            -0.2654,
+            -0.014085,
+            3.3473,
+            -0.43566,
+            6.7674,
+            -0.0023154,
+            0.013671,
+            -0.053801,
+            0.9965,
+            0.99708,
+            0.010788,
+            -0.028389
+                     ]
+
+
+# Update by Yyj interal parameters 23 July

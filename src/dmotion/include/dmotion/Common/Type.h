@@ -80,19 +80,19 @@ struct Joint
 
     }
 
-    void setGoalPos(const float position)
+    void setGoalPos(const double position)
     {
         goal_pos = position;
     }
 
-    void setRealPos(const float position)
+    void setRealPos(const double position)
     {
         real_pos = position;
     }
 
     const JointConfig& cfg;
-    float goal_pos;
-    float real_pos;
+    double goal_pos;
+    double real_pos;
 };
 
 
