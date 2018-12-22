@@ -31,6 +31,12 @@ add_subdirectory(src/InverseKinematics)
 add_subdirectory(src/ThreeInterpolation)
 
 
+add_executable(climb_read example/test/climb_read.cpp)
+target_link_libraries(climb_read ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
+
+add_executable(climb_write example/test/climb_write.cpp)
+target_link_libraries(climb_write ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
+
 add_executable(test_servo example/test/test_servo.cpp)
 target_link_libraries(test_servo ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
 

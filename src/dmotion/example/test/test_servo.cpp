@@ -8,43 +8,31 @@
 // #include <stdlib.h>
 // #include <pthread.h>
 // #include <sched.h>
-#define PORT_NAME "/dev/IMU"
-#define BAUDRATE  576000
+//#define PORT_NAME "/dev/ttyUSB0"
+//#define BAUDRATE  1000000
 
 
 using namespace std;
 int main(int argc, char ** argv)
 {
-  dynamixel::PortHandler* imu_port = dynamixel::PortHandler::getPortHandler(PORT_NAME);
-
-  if (!imu_port->setBaudRate(BAUDRATE,false))
-  {
-      ROS_FATAL("IOManager3::_initPort: could not change baudrate");
-      ROS_FATAL("IOManager3::_initPort: are you stupid enough, dass du unfaehig zu eroeffnenung des Port bist?");
-      std::abort();
+  ros::init(argc, argv, "testing");
+  ros::NodeHandle nh("~");
+  parameters.init(&nh);
+  Motion::IOManager3 io;
+  std::vector<double> fucking(16);
+  ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
+  //int cunt = 0;
+  double zeit = 0;
+  //read constantly
+  io.ServoPowerOff();
+  while(ros::ok())
+  {   
+    timer a;
+    io.readJointValue();
+    zeit = a.toc();
+    cout << "***********************************" << endl;
+    cout << "[read time]:" << zeit << endl << endl;
+    cout << "***********************************" << endl;
+    sleep(1);
   }
-
-  uint8_t byte_buffer;
-  timer a;
-  a.tic();
-  int count;
-  while(1)
-  {
-    INFO("start reading!");
-    count = 0;
-    while(!imu_port->readPort(&byte_buffer, 1))
-    {
-      timer::delay_us(100);
-      count++;
-    }
-    INFO("read success");
-    std::cout << "read times:" << count << std::endl;
-    timer::delay_ms(2);
-    INFO("delay 2ms");
-    imu_port->clearPort();
-    INFO("clear port");
-    a.toc();
-    a.tic();
-  }
-
 }

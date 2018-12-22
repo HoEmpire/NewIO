@@ -9,8 +9,8 @@
 #define WaitingTicks 20000//the max time of read failure
 #define PORT_NAME "/dev/IMU"
 #define BAUDRATE  576000
-// #define PORT_NAME "/dev/ttyUSB0"
-// #define BAUDRATE  1000000
+//#define PORT_NAME "/dev/ttyUSB0"
+//#define BAUDRATE  1000000
 #define IMU_BLOCK 1
 //#define old 1
 

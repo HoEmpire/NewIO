@@ -9,8 +9,8 @@ using namespace dynamixel;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
 #define PORT_NAME "/dev/Servo"
 #define BAUDRATE  1000000
-// #define PORT_NAME "/dev/ttyUSB0"
-// #define BAUDRATE  1000000
+//#define PORT_NAME "/dev/ttyUSB0"
+//#define BAUDRATE  1000000
 #define PROTOCOL_VERSION 2.0
 #define INIT_TICKS 10 //the total time that keep low speed | unit:10ms
 #define INIT_VELLOCITY 30//the ini speed of servo
