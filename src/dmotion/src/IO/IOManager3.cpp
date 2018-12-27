@@ -8,11 +8,11 @@
 
 using namespace dynamixel;
 
-#define LEG_ONLY false //ONLY USE LEGS OF ZJU DANCER
+#define LEG_ONLY true //ONLY USE LEGS OF ZJU DANCER
 
 #define DATA_FREQUENCY 10.0    // 100hz data stream
 #define IMU_FREQUENCY 10.0    // 100hz data stream
-#define POWER_DETECTER true   //whether open check power mode or not
+#define POWER_DETECTER false   //whether open check power mode or not
                               //only used in a complete Robot
 //#define old 1
 
@@ -23,17 +23,16 @@ IOManager3::IOManager3()
 {
     ROS_DEBUG("IOManager3::IOManager3: Construct IOManager3 instance");
     initZJUJoint();
-    std::thread t1(&IOManager3::readIMU,this);
-    t1.detach();
-    timer::delay_ms(200);
-    std::thread t2(&IOManager3::checkPower,this);
-    t2.detach();
-    // auto a = t1.GetThreadPriority();
-    // std::cout << "========priority========" <<std::endl << a << "========================" << std::endl;
-    // std::abort();
 
     if(POWER_DETECTER)
+    {
+        std::thread t1(&IOManager3::readIMU,this);
+        t1.detach();
+        timer::delay_ms(200);
+        std::thread t2(&IOManager3::checkPower,this);
+        t2.detach();
         checkIOPower();
+    }
     else
         m_power_state = ON;
 
@@ -193,7 +192,7 @@ void IOManager3::spinOnce()
         }
         else
         {
-            timer::delay_ms(DATA_FREQUENCY - ticks - 0.1);
+            timer::delay_us((DATA_FREQUENCY - ticks)*1000);
         }
 
         m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
@@ -242,7 +241,7 @@ void IOManager3::setAllJointValue(const std::vector<double>& values_)
     }
 }
 
-void IOManager3::setSingleJointValue(const std::string name, const double values_)
+void IOManager3::setJointValue(const std::string name, const double values_)
 {
     m_servo_io.setSingleServoPosition(name, values_);
 }
@@ -292,6 +291,19 @@ std::vector<double> IOManager3::readAllPosition()
   return data;
 }
 
+bool IOManager3::getJointValue(const std::string joint_name, float& value)
+{
+    auto _joint = m_servo_io.m_joints.find(joint_name);
+    if (_joint == m_servo_io.m_joints.end())
+    {
+        ROS_FATAL("joint not existing... check joint name");
+        return false;
+    }
+    value = _joint->second.real_pos;
+
+    return true;
+}
+
 void IOManager3::setServoPI(const std::vector<int> servo_id, const int p, const int i)
 {
     m_servo_io.setServoPIMode(servo_id, p, i);
@@ -305,6 +317,11 @@ void IOManager3::ServoPowerOff()
 void IOManager3::setAllspeed(int v)
 {
     m_servo_io.setAllServoSpeed(v);
+}
+
+void IOManager3::setAllTimeBase()
+{
+    m_servo_io.setAllServoTimeBase(true);
 }
 
 #ifdef old
@@ -394,10 +411,10 @@ void IOManager3::readIMU(){
         else
         {
             m_imu_failures = 0;
-            std::chrono::duration<double> duration_ = (m_imu_reader.m_imu_readBegin - m_imu_sync_time);
-            double ticks = duration_.count()*1000;
-            INFO("*********************************");
-            std::cout << "time: " << ticks << std::endl;
+            // std::chrono::duration<double> duration_ = (m_imu_reader.m_imu_readBegin - m_imu_sync_time);
+            // double ticks = duration_.count()*1000;
+            // INFO("*********************************");
+            // std::cout << "time: " << ticks << std::endl;
             m_imu_sync_time = m_imu_reader.m_imu_readBegin;
         }
           //  timer::delay_us(6000);

@@ -42,15 +42,15 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     const IMUData& getIMUData() const
     {
-        if(DEBUG_OUTPUT){
-          std::cout << std::setprecision (3);
-          std::cout << "grpo_x: " << m_data.gypo.x <<std::endl;
-          std::cout << "grpo_y: " << m_data.gypo.y <<std::endl;
-          std::cout << "grpo_z: " << m_data.gypo.z <<std::endl;
-          std::cout << "accl_x: " << m_data.accl.x <<std::endl;
-          std::cout << "accl_y: " << m_data.accl.y <<std::endl;
-          std::cout << "accl_z: " << m_data.accl.z <<std::endl;
-        }
+        // if(DEBUG_OUTPUT){
+        //   std::cout << std::setprecision (3);
+        //   std::cout << "grpo_x: " << m_data.gypo.x <<std::endl;
+        //   std::cout << "grpo_y: " << m_data.gypo.y <<std::endl;
+        //   std::cout << "grpo_z: " << m_data.gypo.z <<std::endl;
+        //   std::cout << "accl_x: " << m_data.accl.x <<std::endl;
+        //   std::cout << "accl_y: " << m_data.accl.y <<std::endl;
+        //   std::cout << "accl_z: " << m_data.accl.z <<std::endl;
+        // }
         return m_data;
     }
 

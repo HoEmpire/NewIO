@@ -65,7 +65,9 @@ int main(int argc, char **argv)
     sleep(3);
 
     int flag = 0;
-
+    // io.setAllTimeBase();
+    // sleep(1);
+    // io.setAllspeed(10);
     while (ros::ok())
     {
         for (unsigned i = 0; i < servo_times.size(); i++)

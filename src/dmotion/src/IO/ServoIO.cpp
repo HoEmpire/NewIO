@@ -7,13 +7,21 @@
 #include "dmotion/Common/Parameters.h"
 using namespace dynamixel;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
-#define PORT_NAME "/dev/Servo"
-#define BAUDRATE  1000000
-// #define PORT_NAME "/dev/ttyUSB0"
+// #define PORT_NAME "/dev/Servo"
 // #define BAUDRATE  1000000
+#define PORT_NAME "/dev/ttyUSB0"
+#define BAUDRATE  1000000
 #define PROTOCOL_VERSION 2.0
-#define INIT_TICKS 10 //the total time that keep low speed | unit:10ms
-#define INIT_VELLOCITY 30//the ini speed of servo
+#define IS_TIME_BASE 1
+
+#if IS_TIME_BASE
+  #define INIT_TICKS 0 //the total time that keep low speed | unit:10ms
+  #define INIT_VELLOCITY 3000//the ini speed of servo
+#else
+  #define INIT_TICKS 100 //the total time that keep low speed | unit:10ms
+  #define INIT_VELLOCITY 30//the ini speed of servo
+#endif
+
 #define SAFE_MODE_SPEED 50
 #define checkPowerID 11 // id of left_hip_yaw
 
@@ -56,12 +64,16 @@ void ServoIO::addJoint(std::string name, Joint Joints_cfg)
       std::cout << "WARNING:" << name << " already exists" << std::endl;
       std::cout << "WARNING:ADD NEW JOINT FAILED!" << std::endl;
     }
-
 }
 
 void ServoIO::initServoPositions()
 {
     INFO("ServoIO::initServoPositions: init all servos");
+    if(IS_TIME_BASE)
+        setAllServoTimeBase(true);
+    else
+        setAllServoTimeBase(false);
+
     for (auto& joint:m_joints)
     {
         static uint8_t goal_position_[4];
@@ -75,6 +87,7 @@ void ServoIO::initServoPositions()
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 1);
         timer::delay_ms(20);
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, INIT_VELLOCITY);//init safety
+        timer::delay_ms(20);
 
         goal_position_[0] = DXL_LOBYTE(DXL_LOWORD(_cfg.init));
         goal_position_[1] = DXL_HIBYTE(DXL_LOWORD(_cfg.init));
@@ -109,7 +122,7 @@ void ServoIO::initServoPositions()
     }
 
     m_pos_writer->txPacket();
-
+    sleep(3);//TODO hardcode
     // turn off led
     for (auto& joint:m_joints)
     {
@@ -117,11 +130,9 @@ void ServoIO::initServoPositions()
 
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 0);
     }
-
     m_writer_inited = true;
     m_reader_inited = true;
     m_servo_inited = false;
-    sleep(1);//delay before finished
     INFO("Servo ini success!!!!!");
 }
 
@@ -153,8 +164,18 @@ void ServoIO::sendServoPositions()
         {
             if (SAFE_MODE)// TODO pyx 测试模式
               setAllServoSpeed(SAFE_MODE_SPEED);
-            else
-              setAllServoSpeed();
+            else{
+              if(IS_TIME_BASE)
+              {
+                setAllServoSpeed(10);
+                timer::delay_ms(10);
+                setAllServoAcc(4);
+                timer::delay_ms(10);
+              }
+              else
+                setAllServoSpeed();
+            }
+
 
             init_ticks = 0;
             m_servo_inited = true;
@@ -321,9 +342,8 @@ void ServoIO::setServoPIMode(std::vector<int> servo_id, const int P, const int I
     for(int i = 0; i < int(servo_id.size()); i++)
     {
         writer_.addParam(servo_id[i], pi_buffer);
+        writer_.txPacket();
     }
-
-    writer_.txPacket();
 }
 
 bool ServoIO::checkPower(){
@@ -340,6 +360,31 @@ bool ServoIO::checkPower(){
     }
     else
        return true;
+}
+
+void ServoIO::setAllServoTimeBase(bool flag)
+{
+    std::cout << "ServoIO::setAllServoTimeBase: set all servo to time based mode " << std::endl;
+    for (auto& joint:m_joints)
+    {
+        const JointConfig& _cfg = joint.second.cfg;
+        std::cout << "FUCKONCE" << std::endl;
+        if(flag)
+          m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, 10, 0x04);
+        else
+          m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, 10, 0x00);
+        timer::delay_ms(10);
+    }
+}
+
+void ServoIO::setAllServoAcc(int acc)
+{
+    std::cout << "ServoIO::setAllServoAcc: set servo acceleration to " << acc << std::endl;
+    for (auto& joint:m_joints)
+    {
+        const JointConfig& _cfg = joint.second.cfg;
+        m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_ACCELERATION, acc);
+    }
 }
 
 }

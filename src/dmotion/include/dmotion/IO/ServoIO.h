@@ -22,9 +22,11 @@ public:
         ADDR_RETURN_LEVEL = 68,
         ADDR_RETURN_DELAY = 9,
         ADDR_GOAL_POSITION = 116,
+        ADDR_PROFILE_ACCELERATION = 108,
         ADDR_PROFILE_VELOCITY = 112,
         ADDR_CURR_POSITION = 132,
-        ADDR_PI = 82
+        ADDR_PI = 82,
+        ADDR_DRIVE_MODE = 10
     };
 
     enum Length{
@@ -138,6 +140,10 @@ public:
     ///             or false when power is off
     ////////////////////////////////////////////////////////////////////////////////
     bool checkPower();
+
+    void setAllServoTimeBase(bool flag);
+
+    void setAllServoAcc(int acc);
 
 private:
     bool m_writer_inited, m_reader_inited, m_servo_inited;

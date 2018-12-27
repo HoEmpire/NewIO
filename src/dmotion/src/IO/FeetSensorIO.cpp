@@ -3,8 +3,8 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/IO/IOManager3.h"
 
-#define PORT_NAME "/dev/Servo"
-//#define PORT_NAME "/dev/ttyUSB0"
+// #define PORT_NAME "/dev/Servo"
+#define PORT_NAME "/dev/ttyUSB0"
 #define BAUDRATE  1000000
 //#define old 1
 
@@ -79,10 +79,10 @@ bool FeetSensorIO::readPressureData()
     {
       if(DEBUG_OUTPUT)
         INFO("左脚读值失败");
-        return false;
+        //return false;
     }
 
-    m_port->writePort(m_tx_packet.data(), m_tx_len);
+    //m_port->writePort(m_tx_packet.data(), m_tx_len);
     // reading right data
     if ( !readSinglePackage(false) )
     {
@@ -173,12 +173,13 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
         while(!m_port->readPort(&byte_buffer, 1))
         {
           timer::delay_us(10);
+          EndTime = timer::getCurrentSystemTime();
+          WaitTime = EndTime - StartTime;
           if(WaitTime.count() * 1000 > 4.0){
               INFO("pressure sensor:after 4ms read failed");
               return false;// 4ms read failed
           }
-          EndTime = timer::getCurrentSystemTime();
-          WaitTime = EndTime - StartTime;
+
         }
 
         switch(state)
@@ -298,7 +299,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
 
        if(sum == 0xff){
          for(i = 0;i< 22;i++)
-             m_rx_packet.push_back(datas_buffer[i]);
+             m_rx_packet[i] = datas_buffer[i];
 
          remapPressureData(isLeft);
          //INFO("pressure sensor:remap true.");

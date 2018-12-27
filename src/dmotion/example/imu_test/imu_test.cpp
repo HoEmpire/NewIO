@@ -4,10 +4,10 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
 #include "../../include/dmotion/IO/IMUReader.h"
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <pthread.h>
-// #include <sched.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <sched.h>
 
 using namespace std;
 int main(int argc, char ** argv)
@@ -28,11 +28,11 @@ int main(int argc, char ** argv)
 #endif
     timer a;
     while(ros::ok()){
-      a.tic();
+      //a.tic();
       imu.readIMUData();
-      a.toc();
+      //a.toc();
       //imu.test_imu();
-      //imu.getIMUData();
+        imu.getIMUData();
       //timer::delay_ms(6);
 
     }

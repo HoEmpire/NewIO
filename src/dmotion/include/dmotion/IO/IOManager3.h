@@ -36,7 +36,7 @@ public:
     /// @param name     name of the joint
     /// @param values_  values of the joint(in degree)
     ////////////////////////////////////////////////////////////////////////////////
-    void setSingleJointValue(const std::string name, const double values_);
+    void setJointValue(const std::string name, const double values_);
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief             set the goal position of all the joints
@@ -78,15 +78,15 @@ public:
 
     const IMUData& getIMUData()
     {
-        if(DEBUG_OUTPUT){
-          std::cout << std::setprecision (3);
-          std::cout << "grpo_x: " << m_imu_reader.m_data.gypo.x <<std::endl;
-          std::cout << "grpo_y: " << m_imu_reader.m_data.gypo.y <<std::endl;
-          std::cout << "grpo_z: " << m_imu_reader.m_data.gypo.z <<std::endl;
-          std::cout << "accl_x: " << m_imu_reader.m_data.accl.x <<std::endl;
-          std::cout << "accl_y: " << m_imu_reader.m_data.accl.y <<std::endl;
-          std::cout << "accl_z: " << m_imu_reader.m_data.accl.z <<std::endl;
-        }
+        // if(DEBUG_OUTPUT){
+        //   std::cout << std::setprecision (3);
+        //   std::cout << "grpo_x: " << m_imu_reader.m_data.gypo.x <<std::endl;
+        //   std::cout << "grpo_y: " << m_imu_reader.m_data.gypo.y <<std::endl;
+        //   std::cout << "grpo_z: " << m_imu_reader.m_data.gypo.z <<std::endl;
+        //   std::cout << "accl_x: " << m_imu_reader.m_data.accl.x <<std::endl;
+        //   std::cout << "accl_y: " << m_imu_reader.m_data.accl.y <<std::endl;
+        //   std::cout << "accl_z: " << m_imu_reader.m_data.accl.z <<std::endl;
+        // }
         return m_imu_reader.m_data;
     }
 
@@ -113,13 +113,37 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     void checkIOPower();
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief             set all the speed of all the servos
+    /// @param v           Profile speed of the servo | range:0 ~ 32767 | unit:0.229 [rev/min]
+    ////////////////////////////////////////////////////////////////////////////////
     void setAllspeed(int v);
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief             get all the position data of all the servos(before get newest position you need to use readJointValue() first)
+    /// @return            a vector of all the positons, the sequence is the same with send positions
+    ////////////////////////////////////////////////////////////////////////////////
     std::vector<double> readAllPosition();
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief             a thread for reading IMU
+    ////////////////////////////////////////////////////////////////////////////////
     void readIMU();
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief             a thread for checking power state(T:250ms)
+    ////////////////////////////////////////////////////////////////////////////////
     void checkPower();
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief             get value of one joint
+    /// @param joint_name  name of the joints
+    /// @param value       value of joint
+    /// @return            true if success
+    ////////////////////////////////////////////////////////////////////////////////
+    bool getJointValue(const std::string joint_name, float& value);
+
+    void setAllTimeBase();
 
 private:
     dynamixel::PortHandler* _initPort(const std::string portname, const int baudrate);

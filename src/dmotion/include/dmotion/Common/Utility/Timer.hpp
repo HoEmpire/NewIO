@@ -32,7 +32,6 @@ public:
         return elapsed_seconds.count() * 1000;
     }
 
-
     static void delay_us(const int microseconds)
     {
         std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
@@ -52,6 +51,23 @@ public:
     static const time_point getCurrentSystemTime()
     {
         return std::chrono::steady_clock::now();
+    }
+
+    void smartDelay_ms(double ms)
+    {
+        end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        double time_past = elapsed_seconds.count() * 1000;
+        if(time_past < ms)
+        {
+           delay_us((ms - time_past) * 1000);
+        }
+        else
+        {
+           std::cout << "smart ticks overflow:" << time_past << " ms > " << ms << " ms" << std::endl;
+           std::abort();
+        }
+
     }
 
 private:

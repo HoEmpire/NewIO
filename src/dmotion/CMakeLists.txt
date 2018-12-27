@@ -29,10 +29,10 @@ add_subdirectory(src/IO)
 add_subdirectory(src/Common)
 add_subdirectory(src/InverseKinematics)
 add_subdirectory(src/ThreeInterpolation)
-
+add_subdirectory(src/State)
 
 add_executable(test_servo example/test/test_servo.cpp)
-target_link_libraries(test_servo ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
+target_link_libraries(test_servo ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
 add_executable(servo_read example/servo_test/servo_read.cpp)
 target_link_libraries(servo_read ${catkin_LIBRARIES} dmotion_io dmotion_common)
@@ -51,3 +51,6 @@ target_link_libraries(imu_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
 add_executable(make_a_circle example/test/circle.cpp)
 target_link_libraries(make_a_circle ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
+
+add_executable(state_test example/test/state_test.cpp)
+target_link_libraries(state_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state)
