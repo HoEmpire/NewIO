@@ -53,12 +53,13 @@ struct JointConfig
      init(init_), max_pos(max_pos_), min_pos(min_pos_)
   {
       factor = static_cast<float>(resolution)/360.0*cw;
+      factor_vel = static_cast<float>(cw);
       init = init * factor * cw;
   }
 
   void setFactor()
   {
-    factor = static_cast<float>(resolution)/360.0*cw;
+    factor = static_cast<float>(resolution)*cw;
       init = init * factor * cw;
   }
 
@@ -70,6 +71,7 @@ struct JointConfig
   int min_pos;
 
   float factor;
+  float factor_vel;
 };
 
 struct Joint
@@ -93,6 +95,7 @@ struct Joint
     const JointConfig& cfg;
     double goal_pos;
     double real_pos;
+    double real_vel;
 };
 
 

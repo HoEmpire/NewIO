@@ -24,6 +24,7 @@ public:
         ADDR_GOAL_POSITION = 116,
         ADDR_PROFILE_ACCELERATION = 108,
         ADDR_PROFILE_VELOCITY = 112,
+        ADDR_CURR_VELOCITY = 128,
         ADDR_CURR_POSITION = 132,
         ADDR_PI = 82,
         ADDR_DRIVE_MODE = 10
@@ -145,6 +146,10 @@ public:
 
     void setAllServoAcc(int acc);
 
+    void readServoVelocity();
+
+    void readServoPositions_test();
+
 private:
     bool m_writer_inited, m_reader_inited, m_servo_inited;
 
@@ -153,6 +158,7 @@ private:
 
     dynamixel::GroupSyncWrite * m_pos_writer;
     dynamixel::GroupSyncRead * m_pos_reader;
+    dynamixel::GroupSyncRead * m_pos_reader2;
     dynamixel::GroupSyncRead * m_pos_power;//use the servo to check power for the first time
 
 

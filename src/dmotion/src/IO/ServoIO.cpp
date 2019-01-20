@@ -7,10 +7,10 @@
 #include "dmotion/Common/Parameters.h"
 using namespace dynamixel;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
-#define PORT_NAME "/dev/Servo"
-#define BAUDRATE  1000000
-//#define PORT_NAME "/dev/ttyUSB0"
-//#define BAUDRATE  1000000
+// #define PORT_NAME "/dev/Servo"
+// #define BAUDRATE  1000000
+#define PORT_NAME "/dev/ttyUSB0"
+#define BAUDRATE  3000000
 #define PROTOCOL_VERSION 2.0
 #define IS_TIME_BASE 1
 
@@ -42,6 +42,7 @@ ServoIO::ServoIO()
     m_servo_protocol = PacketHandler::getPacketHandler(PROTOCOL_VERSION);
     m_pos_writer = new GroupSyncWrite(m_servo_port, m_servo_protocol, ADDR_GOAL_POSITION, LENGTH_POSITION);
     m_pos_reader = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_CURR_POSITION, LENGTH_POSITION);
+    m_pos_reader2 = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_CURR_VELOCITY, 2*LENGTH_POSITION);
     m_pos_power = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_LED, LENGTH_LED);
     m_pos_power->addParam(checkPowerID);
 }
@@ -114,6 +115,7 @@ void ServoIO::initServoPositions()
         if(!m_reader_inited)
         {
             bool state = m_pos_reader->addParam(_cfg.id);
+            state = m_pos_reader2->addParam(_cfg.id);//TODO
             if (!state)
             {
                 ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add read position param error");
@@ -169,7 +171,7 @@ void ServoIO::sendServoPositions()
               {
                 setAllServoSpeed(10);
                 timer::delay_ms(10);
-                setAllServoAcc(4);
+                setAllServoAcc(5);
                 timer::delay_ms(10);
               }
               else
@@ -276,7 +278,6 @@ double ServoIO::getReadServoData(std::string name){
       INFO("ServoIO:READ NAME NO EXISTS!");
       return 0;
     }
-
 }
 
 void ServoIO::setAllServoSpeed(const int speed)
@@ -368,7 +369,6 @@ void ServoIO::setAllServoTimeBase(bool flag)
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
-        std::cout << "FUCKONCE" << std::endl;
         if(flag)
           m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, 10, 0x04);
         else
@@ -384,6 +384,65 @@ void ServoIO::setAllServoAcc(int acc)
     {
         const JointConfig& _cfg = joint.second.cfg;
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_ACCELERATION, acc);
+    }
+}
+
+void ServoIO::readServoVelocity()
+{
+    INFO("ServoIO::readServoVelocity: read servo velocities");
+    auto dxl_comm_result = m_pos_reader2->txRxPacket();
+
+    int cunt = 0;
+    while (dxl_comm_result != COMM_SUCCESS && cunt < 5)
+    {
+      INFO("fucking reading error");
+      dxl_comm_result = m_pos_reader2->txRxPacket();
+      cunt ++;
+    }
+
+    for (auto& joint:m_joints)
+    {
+        const JointConfig& _cfg = joint.second.cfg;
+        if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_VELOCITY, LENGTH_POSITION))
+        {
+           INFO ("ServoIO::readServoVelocity: get current joint value error");
+        }
+        else
+        {
+            joint.second.real_vel = (static_cast<int>(m_pos_reader2->getData(_cfg.id, ADDR_CURR_VELOCITY, LENGTH_POSITION)))*_cfg.factor_vel;
+
+            if(DEBUG_OUTPUT){
+              std::cout.setf(std::ios::left);
+              std::cout << std::setprecision (2);
+              std::cout.setf(std::ios::fixed,std::ios::floatfield);
+              std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
+                        << " | " << "vel:" << joint.second.real_vel << std::endl;
+            }
+        }
+      }
+}
+
+void ServoIO::readServoPositions_test()
+{
+    INFO("ServoIO::readServoPositions_test: read servo positions");
+    for (auto& joint:m_joints)
+    {
+        const JointConfig& _cfg = joint.second.cfg;
+        if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
+        {
+           INFO ("ServoIO::readServoPositions_test: get current joint value error");
+        }
+        else
+        {
+            joint.second.real_pos = (static_cast<int>(m_pos_reader2->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
+            if(DEBUG_OUTPUT){
+              std::cout.setf(std::ios::left);
+              std::cout << std::setprecision (2);
+              std::cout.setf(std::ios::fixed,std::ios::floatfield);
+              std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
+                        << " | " << "pos:" << joint.second.real_pos << std::endl;
+            }
+        }
     }
 }
 

@@ -16,7 +16,7 @@ int main(int argc, char ** argv)
       ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
       int cunt = 0;
       //write
-      while(ros::ok() && cunt < 10){
+      while(ros::ok() && cunt < 50){
 
         for(int i = 0; i < 12; i++){
           fucking[11] = fucking[11] - 1;

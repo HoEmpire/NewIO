@@ -1,28 +1,19 @@
 #include "dmotion/Common/Utility/Utility.h"
-#include "dmotion/Common/Type.h"
-#include "dmotion/State/imu_filter.hpp"
-#include "dmotion/State/stateless_orientation.hpp"
+#include "dmotion/State/imu_filter_new.hpp"
 
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2/convert.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <Eigen/Geometry>
 //
 #include "dmotion/Common/Parameters.h"
 #include "../../include/dmotion/IO/IMUReader.h"
 
 #include <thread>
-
 #include <fstream>
 #include <iostream>
 
-#define workplace "/home/tim/NewIO/test_data/test1"
+#define workplace "/home/ubuntu/NewIO/test_data/test1"
 
 using namespace std;
-
-#define imu_bias_gain 0.1
-#define imu_algorithm_gain 0.8
-
+using namespace Eigen;
 Motion::IMUData imu_data;
 
 void tt()
@@ -33,6 +24,14 @@ void tt()
         imu_data = imu.getIMUData();
     }
 
+}
+
+static inline void QuaternionToEulerAngles(float qw, float qx, float qy, float qz,
+                                           float& roll, float& pitch, float& yaw)
+{
+    roll = atan2f(2.f * (qz*qy + qw*qx), 1-2*(qx*qx+qy*qy)); //x
+    pitch =  asinf(2.f * (qw*qy - qx*qz)); //y
+    yaw = atan2f(2.f * (qx*qy + qw*qz), 1-2*(qy*qy+qz*qz));//z
 }
 
 int main(int argc, char ** argv)
@@ -53,111 +52,119 @@ int main(int argc, char ** argv)
     ofstream out7("wx.txt", ios::out|ios::trunc);
     ofstream out8("wy.txt", ios::out|ios::trunc);
     ofstream out9("wz.txt", ios::out|ios::trunc);
-    ofstream out10("time.txt", ios::out|ios::trunc);
 
     std::vector<float> roll,pitch,yaw;
     std::vector<float> ax,ay,az;
     std::vector<float> wx,wy,wz;
-    std::vector<double> t;
 
     timer::time_point start,now;
     std::chrono::duration<double> elapsed_seconds;
-    double time_past;
 
-    auto m_frame = WorldFrame::ENU;
-    ImuFilter m_imu_filter;
-    m_imu_filter.setWorldFrame(m_frame);
-    m_imu_filter.setDriftBiasGain(imu_bias_gain);
-    m_imu_filter.setAlgorithmGain(imu_algorithm_gain);
-
-    geometry_msgs::Vector3 lin_acc, ang_vel;
-    geometry_msgs::Quaternion init_q;
-    // lin_acc.x = 0;
-    // lin_acc.y = 0;
-    // lin_acc.z = -9.8;
-    // ang_vel.x = 0;
-    // ang_vel.y = 0;
-    // ang_vel.z = 0;
-    //
-    //
-    // StatelessOrientation::computeOrientation(m_frame, lin_acc, init_q);
-    // m_imu_filter.setOrientation(init_q.w, init_q.x, init_q.y, init_q.z);
-
-    tf2::Matrix3x3 R;
-    float q0, q1, q2, q3;
-    double x,y,z;
-    m_imu_filter.getOrientation(q0, q1, q2, q3);
-
-    tf2::Quaternion q(q1, q2, q3, q0);
-    tf2::Matrix3x3(q).getRPY(x, y, z);
-    std::cout << "x = " << x << " ,y = " << y << " ,z = " << z << std::endl;
-
+    ImuFilter dick;
     std::thread t1(tt);
     t1.detach();
-
-    sleep(5);
+    sleep(1);
 
     long int count = 0;
-    int ini_ticks = 0;
+    int ini_ticks = 1;
     timer a;
-
-    tf2::Matrix3x3(q).getRPY(x, y, z);
-    while(ros::ok())
+    float lin_acc_x;
+    float lin_acc_y;
+    float lin_acc_z;
+    float ang_vel_x;
+    float ang_vel_y;
+    float ang_vel_z;
+    float x,y,z;
+    float q0,q1,q2,q3;
+    a.tic();
+    for(ini_ticks = 1; ini_ticks <= 1000; ini_ticks++)
     {
-      a.tic();
-      lin_acc.x = imu_data.accl.x;
-      lin_acc.y = imu_data.accl.y;
-      lin_acc.z = imu_data.accl.z;
-      ang_vel.x = imu_data.gypo.x;
-      ang_vel.y = imu_data.gypo.y;
-      ang_vel.z = imu_data.gypo.z;
-
-      if(ini_ticks < 100)
+      lin_acc_x = imu_data.accl.x;
+      lin_acc_y = imu_data.accl.y;
+      lin_acc_z = imu_data.accl.z;
+      ang_vel_x = imu_data.gypo.x;
+      ang_vel_y = imu_data.gypo.y;
+      ang_vel_z = imu_data.gypo.z;
+      if(ini_ticks == 1)
       {
-          StatelessOrientation::computeOrientation(m_frame, lin_acc, init_q);
-          m_imu_filter.setOrientation(init_q.w, init_q.x, init_q.y, init_q.z);
-          start = timer::getCurrentSystemTime();
+        dick.iniAcclast(lin_acc_x , lin_acc_y, lin_acc_z);
       }
       else
       {
-          m_imu_filter.madgwickAHRSupdateIMU(ang_vel.x, ang_vel.y, ang_vel.z,
-                                           lin_acc.x, lin_acc.y, lin_acc.z,
-                                           0.005);
-          m_imu_filter.getOrientation(q0, q1, q2, q3);
-          tf2::Matrix3x3(tf2::Quaternion(q1, q2, q3, q0)).getRPY(x, y, z);
-
-          now = timer::getCurrentSystemTime();//TODO be careful about the time
-          elapsed_seconds = now -start;
-          time_past = elapsed_seconds.count() * 1000;
-
-          roll.push_back(x);
-          pitch.push_back(y);
-          yaw.push_back(z);
-          ax.push_back(lin_acc.x);
-          ay.push_back(lin_acc.y);
-          az.push_back(lin_acc.z);
-          wx.push_back(ang_vel.x);
-          wy.push_back(ang_vel.y);
-          wz.push_back(ang_vel.z);
-          t.push_back(time_past);
+        dick.iniIMU(ang_vel_x, ang_vel_y, ang_vel_z,
+                    lin_acc_x, lin_acc_y, lin_acc_z,
+                    ini_ticks);
       }
+      start = timer::getCurrentSystemTime();
+      a.smartDelay_ms(5.0);
+      a.tic();
+    }
 
-      if(count % 100 == 0)
+    dick.iniGravity();
+    dick.iniQuaternion();
+    dick.getOrientation(q0, q1, q2, q3);
+    INFO("***********************");
+    INFO("Ini finished!!!");
+    INFO("***********************");
+    // Quaterniond Q1(q0, q1, q2, q3);
+    // Matrix3d R1;
+    // R1 = Q1.matrix();
+    // Vector3d Euler1 = R1.eulerAngles(2,1,0);
+    float x1,y1,z1;
+    // x1 = Euler1(2);
+    // y1 = Euler1(1);
+    // z1 = Euler1(0);
+    QuaternionToEulerAngles(q0,q1,q2,q3,x1,y1,z1);
+    cout << "x1: "<< x1 << " ,y1: " << y1 << ",z1: " << z1 << endl;
+
+    while(ros::ok())
+    {
+
+      lin_acc_x = imu_data.accl.x;
+      lin_acc_y = imu_data.accl.y;
+      lin_acc_z = imu_data.accl.z;
+      ang_vel_x = imu_data.gypo.x;
+      ang_vel_y = imu_data.gypo.y;
+      ang_vel_z = imu_data.gypo.z;
+
+      dick.Fusing(ang_vel_x, ang_vel_y, ang_vel_z,
+                  lin_acc_x, lin_acc_y, lin_acc_z);
+      dick.getOrientation(q0, q1, q2, q3);
+
+      // Quaterniond Q(q0, q1, q2, q3);
+      // Matrix3d R;
+      // R = Q.matrix();
+      // Vector3d Euler = R.eulerAngles(2,1,0);
+      // x = Euler(2);
+      // y = Euler(1);
+      // z = Euler(0);
+      //QuaternionToEulerAngles(q0,q1,q2,q3,x,y,z);
+      dick.getRPY(x,y,z);
+      roll.push_back(x);
+      pitch.push_back(y);
+      yaw.push_back(z);
+      ax.push_back(lin_acc_x);
+      ay.push_back(lin_acc_y);
+      az.push_back(lin_acc_x);
+      wx.push_back(ang_vel_x);
+      wy.push_back(ang_vel_y);
+      wz.push_back(ang_vel_z);
+
+      if(count % 1 == 0)
       {
           std::cout << "x = " << x << " ,y = " << y << " ,z = " << z << std::endl;
       }
 
-      ini_ticks++;
       count++;
 
-
-
       a.smartDelay_ms(5.0);
+      a.tic();
     }
 
     sleep(2);
-
+    INFO("***********************");
     INFO("get shit done");
+    INFO("***********************");
     cout << int(roll.size()) << endl;
     int i;
     for(i = 0;i < int(roll.size()); i++)
@@ -171,7 +178,6 @@ int main(int argc, char ** argv)
       out7 << wx[i] << " ";
       out8 << wy[i] << " ";
       out9 << wz[i] << " ";
-      out10 << t[i] << " ";
     }
     cout << i << endl;
 
@@ -185,6 +191,5 @@ int main(int argc, char ** argv)
     out7.close();
     out8.close();
     out9.close();
-    out10.close();
 
 }

@@ -19,6 +19,7 @@
 #include <algorithm>
 
 #include "dmotion/IO/dynamixel_sdk/group_sync_read.h"
+#include "dmotion/Common/Utility/Utility.h"
 
 #include <iostream>
 
@@ -125,6 +126,7 @@ int GroupSyncRead::rxPacket()
     uint8_t id = id_list_[i];
 
     result = ph_->readRx(port_, id, data_length_, data_list_[id]);
+    timer::delay_us(10);//TODO delay in here
     if (result != COMM_SUCCESS)
       return result;
   }

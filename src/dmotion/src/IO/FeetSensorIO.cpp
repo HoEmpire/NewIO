@@ -3,9 +3,9 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/IO/IOManager3.h"
 
-// #define PORT_NAME "/dev/Servo"
+//#define PORT_NAME "/dev/Servo"
 #define PORT_NAME "/dev/ttyUSB0"
-#define BAUDRATE  1000000
+#define BAUDRATE  3000000
 //#define old 1
 
 namespace Motion
