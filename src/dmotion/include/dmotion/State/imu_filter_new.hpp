@@ -6,6 +6,8 @@
 #include <cmath>
 #include <Eigen/Core>
 
+namespace Motion{
+
 
 class ImuFilter
 {
@@ -57,6 +59,8 @@ class ImuFilter
 
     void calAccWog();
 
+    void clearData();
+
   private:
 
     // **** state variables
@@ -73,6 +77,15 @@ class ImuFilter
     float ax_last = 0;
     float ay_last = 0;
     float az_last = 0;
+
+    float wx_old = 0.0;
+    float wy_old = 0.0;
+    float wz_old = 0.0;
+    float exI = 0.0;
+    float eyI = 0.0;
+    float ezI = 0.0;
+
 };
 
+}
 #endif

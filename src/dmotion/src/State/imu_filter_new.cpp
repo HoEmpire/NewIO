@@ -80,24 +80,22 @@ void qUtoV(
   normalizeQuaternion(q0, q1, q2, q3);
 }
 
-void Loawpass_test(float &wx, float &wy, float &wz){
-  static float coe_test = 1.0 / (1.0 + 2 * M_PI * LPF_FREQ * FILTER_FREQUENCE);
-  static float wx_old = 0.0;
-  static float wy_old = 0.0;
-  static float wz_old = 0.0;
-  if(wx_old == 0.0 || wy_old == 0.0 || wz_old == 0.0)
-  {
-    wx_old = wx;
-    wy_old = wy;
-    wz_old = wz;
-  }
-  else
-  {
-    wx = coe_test * wx + (1 - coe_test) * wx_old;
-    wy = coe_test * wy + (1 - coe_test) * wy_old;
-    wz = coe_test * wz + (1 - coe_test) * wz_old;
-  }
-}
+// void Loawpass_test(float &wx, float &wy, float &wz){
+//   static float coe_test = 1.0 / (1.0 + 2 * M_PI * LPF_FREQ * FILTER_FREQUENCE);
+//   if(wx_old == 0.0 || wy_old == 0.0 || wz_old == 0.0)
+//   {
+//     wx_old = wx;
+//     wy_old = wy;
+//     wz_old = wz;
+//   }
+//   else
+//   {
+//     wx = coe_test * wx + (1 - coe_test) * wx_old;
+//     wy = coe_test * wy + (1 - coe_test) * wy_old;
+//     wz = coe_test * wz + (1 - coe_test) * wz_old;
+//   }
+// }
+namespace Motion{
 
 ImuFilter::ImuFilter()
 {
@@ -112,9 +110,19 @@ void ImuFilter::Lowpass_Filter(
   float &ax_old, float &ay_old, float &az_old)
 {
   static float coe = 1.0 / (1.0 + 2 * M_PI * LPF_FREQ * FILTER_FREQUENCE);
-  ax_old = coe * ax_new + (1 - coe) * ax_old;
-  ay_old = coe * ay_new + (1 - coe) * ay_old;
-  az_old = coe * az_new + (1 - coe) * az_old;
+  if(ax_old == 0.0 || ay_old == 0.0 || az_old == 0.0)
+  {
+    ax_old = ax_new;
+    ay_old = ay_new;
+    az_old = az_new;
+  }
+  else
+  {
+    ax_old = coe * ax_new + (1 - coe) * ax_old;
+    ay_old = coe * ay_new + (1 - coe) * ay_old;
+    az_old = coe * az_new + (1 - coe) * az_old;
+  }
+
 }
 
 void ImuFilter::iniIMU(
@@ -180,9 +188,7 @@ void ImuFilter::Fusing(
     cross(ax_temp, ay_temp, az_temp, vgx, vgy, vgz, ex, ey, ez);
 
     float exP,eyP,ezP;
-    static float exI = 0.0;
-    static float eyI = 0.0;
-    static float ezI = 0.0;
+
     exI = exI + ex * Ki * FILTER_FREQUENCE;
     eyI = eyI + ey * Ki * FILTER_FREQUENCE;
     ezI = ezI + ez * Ki * FILTER_FREQUENCE;
@@ -220,4 +226,19 @@ void ImuFilter::calAccWog()
     ax_wog = v3(0);
     ay_wog = v3(1);
     az_wog = v3(2);
+}
+
+void ImuFilter::clearData()
+{
+  wx_old = 0.0;
+  wy_old = 0.0;
+  wz_old = 0.0;
+  exI = 0.0;
+  eyI = 0.0;
+  ezI = 0.0;
+  ax_last = 0;
+  ay_last = 0;
+  az_last = 0;
+}
+
 }

@@ -7,6 +7,8 @@
 #include "dmotion/Common/Utility/Utility.h"
 
 using namespace std;
+namespace Motion{
+
 RobotStatus::RobotStatus(ros::NodeHandle* nh)
   : m_support(DOUBLE_BASED)
   , m_desired_support(RIGHT_BASED)
@@ -410,4 +412,6 @@ deltadataDebug
 RobotStatus::getDelta()
 {
     return m_deltaDist;
+}
+
 }

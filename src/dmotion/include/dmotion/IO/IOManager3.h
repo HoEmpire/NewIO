@@ -126,6 +126,12 @@ public:
     std::vector<double> readAllPosition();
 
     ////////////////////////////////////////////////////////////////////////////////
+    /// @brief             get all the velocity data of all the servos(before get newest velocity you need to use readJointValue() first)
+    /// @return            a vector of all the velocity, the sequence is the same with send velocity
+    ////////////////////////////////////////////////////////////////////////////////
+    std::vector<double> readAllVel();
+
+    ////////////////////////////////////////////////////////////////////////////////
     /// @brief             a thread for reading IMU
     ////////////////////////////////////////////////////////////////////////////////
     void readIMU();
@@ -143,7 +149,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     bool getJointValue(const std::string joint_name, float& value);
 
-    void setAllTimeBase();
+    // void setAllTimeBase();
+
+    void readPosVel();
 
 private:
     dynamixel::PortHandler* _initPort(const std::string portname, const int baudrate);

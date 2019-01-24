@@ -53,7 +53,7 @@ struct JointConfig
      init(init_), max_pos(max_pos_), min_pos(min_pos_)
   {
       factor = static_cast<float>(resolution)/360.0*cw;
-      factor_vel = static_cast<float>(cw);
+      factor_vel = static_cast<float>(cw*1.374);
       init = init * factor * cw;
   }
 
@@ -118,7 +118,6 @@ enum PowerState
 };
 
 
-
 enum RoboState
 {
   STABLE,
@@ -132,6 +131,8 @@ enum SupportPhase
   SUPPORT_LEFT,
   SUPPORT_RIGHT
 };
+
+
 
 typedef std::vector<float> JointValues;
 }

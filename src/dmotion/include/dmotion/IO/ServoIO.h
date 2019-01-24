@@ -83,7 +83,14 @@ public:
     /// @param   name    name of the Servo
     /// @return          position data of the Servo
     ////////////////////////////////////////////////////////////////////////////////
-    double getReadServoData(std::string name);
+    double getReadPos(std::string name);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /// @brief           get read data of Servo
+    /// @param   name    name of the Servo
+    /// @return          velocity data of the Servo
+    ////////////////////////////////////////////////////////////////////////////////
+    double getReadVel(std::string name);
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief Read whole set of position data
@@ -149,6 +156,8 @@ public:
     void readServoVelocity();
 
     void readServoPositions_test();
+
+    void readServoPosVel();
 
 private:
     bool m_writer_inited, m_reader_inited, m_servo_inited;

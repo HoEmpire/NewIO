@@ -16,7 +16,7 @@ int main(int argc, char ** argv)
       ROS_INFO("！！！！！！！！！！！！！FUCK！！！！！！！！！！！！！！");
       int cunt = 0;
       //write
-      while(ros::ok() && cunt < 50){
+      while(ros::ok() && cunt < 10){
 
         for(int i = 0; i < 12; i++){
           fucking[11] = fucking[11] - 1;
@@ -37,7 +37,7 @@ int main(int argc, char ** argv)
 
       //read constantly
       while(ros::ok() && cunt < 20){
-        io.readJointValue();
+        io.readPosVel();
         sleep(1);
         cunt++;
       }

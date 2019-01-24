@@ -65,7 +65,7 @@ public:
         else
         {
            std::cout << "smart ticks overflow:" << time_past << " ms > " << ms << " ms" << std::endl;
-           std::abort();
+          // std::abort();
         }
 
     }

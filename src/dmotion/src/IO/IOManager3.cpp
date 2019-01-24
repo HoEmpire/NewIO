@@ -255,7 +255,7 @@ void IOManager3::reverseMotion()
 {
     m_servo_io.TorqueOff();
     while(ros::ok()){
-        std::cout << "Press F to get a set of current joint value!(or press OTHERS to quit!)" << std::endl;
+        std::cout << "Press f to get a set of current joint value!(or press OTHERS to quit!)" << std::endl;
         char input;
         std::cin >> input;
         if (input != 'f')
@@ -267,25 +267,52 @@ void IOManager3::reverseMotion()
 std::vector<double> IOManager3::readAllPosition()
 {
   std::vector<double> data;
-  data.push_back(m_servo_io.getReadServoData("right_hip_yaw"));
-  data.push_back(m_servo_io.getReadServoData("right_hip_roll"));
-  data.push_back(m_servo_io.getReadServoData("right_hip_pitch"));
-  data.push_back(m_servo_io.getReadServoData("right_knee"));
-  data.push_back(m_servo_io.getReadServoData("right_ankle_pitch"));
-  data.push_back(m_servo_io.getReadServoData("right_ankle_roll"));
+  data.push_back(m_servo_io.getReadPos("right_hip_yaw"));
+  data.push_back(m_servo_io.getReadPos("right_hip_roll"));
+  data.push_back(m_servo_io.getReadPos("right_hip_pitch"));
+  data.push_back(m_servo_io.getReadPos("right_knee"));
+  data.push_back(m_servo_io.getReadPos("right_ankle_pitch"));
+  data.push_back(m_servo_io.getReadPos("right_ankle_roll"));
 
-  data.push_back(m_servo_io.getReadServoData("left_hip_yaw"));
-  data.push_back(m_servo_io.getReadServoData("left_hip_roll"));
-  data.push_back(m_servo_io.getReadServoData("left_hip_pitch"));
-  data.push_back(m_servo_io.getReadServoData("left_knee"));
-  data.push_back(m_servo_io.getReadServoData("left_ankle_pitch"));
-  data.push_back(m_servo_io.getReadServoData("left_ankle_roll"));
+  data.push_back(m_servo_io.getReadPos("left_hip_yaw"));
+  data.push_back(m_servo_io.getReadPos("left_hip_roll"));
+  data.push_back(m_servo_io.getReadPos("left_hip_pitch"));
+  data.push_back(m_servo_io.getReadPos("left_knee"));
+  data.push_back(m_servo_io.getReadPos("left_ankle_pitch"));
+  data.push_back(m_servo_io.getReadPos("left_ankle_roll"));
 
   if(!LEG_ONLY){
-    data.push_back(m_servo_io.getReadServoData("right_arm_upper"));
-    data.push_back(m_servo_io.getReadServoData("right_arm_lower"));
-    data.push_back(m_servo_io.getReadServoData("left_arm_upper"));
-    data.push_back(m_servo_io.getReadServoData("left_arm_lower"));
+    data.push_back(m_servo_io.getReadPos("right_arm_upper"));
+    data.push_back(m_servo_io.getReadPos("right_arm_lower"));
+    data.push_back(m_servo_io.getReadPos("left_arm_upper"));
+    data.push_back(m_servo_io.getReadPos("left_arm_lower"));
+  }
+
+  return data;
+}
+
+std::vector<double> IOManager3::readAllVel()
+{
+  std::vector<double> data;
+  data.push_back(m_servo_io.getReadVel("right_hip_yaw"));
+  data.push_back(m_servo_io.getReadVel("right_hip_roll"));
+  data.push_back(m_servo_io.getReadVel("right_hip_pitch"));
+  data.push_back(m_servo_io.getReadVel("right_knee"));
+  data.push_back(m_servo_io.getReadVel("right_ankle_pitch"));
+  data.push_back(m_servo_io.getReadVel("right_ankle_roll"));
+
+  data.push_back(m_servo_io.getReadVel("left_hip_yaw"));
+  data.push_back(m_servo_io.getReadVel("left_hip_roll"));
+  data.push_back(m_servo_io.getReadVel("left_hip_pitch"));
+  data.push_back(m_servo_io.getReadVel("left_knee"));
+  data.push_back(m_servo_io.getReadVel("left_ankle_pitch"));
+  data.push_back(m_servo_io.getReadVel("left_ankle_roll"));
+
+  if(!LEG_ONLY){
+    data.push_back(m_servo_io.getReadVel("right_arm_upper"));
+    data.push_back(m_servo_io.getReadVel("right_arm_lower"));
+    data.push_back(m_servo_io.getReadVel("left_arm_upper"));
+    data.push_back(m_servo_io.getReadVel("left_arm_lower"));
   }
 
   return data;
@@ -319,10 +346,15 @@ void IOManager3::setAllspeed(int v)
     m_servo_io.setAllServoSpeed(v);
 }
 
-void IOManager3::setAllTimeBase()
+void IOManager3::readPosVel()
 {
-    m_servo_io.setAllServoTimeBase(true);
+  m_servo_io.readServoPosVel();
 }
+
+// void IOManager3::setAllTimeBase()
+// {
+//     m_servo_io.setAllServoTimeBase(true);
+// }
 
 #ifdef old
 void IOManager3::checkIOPower()

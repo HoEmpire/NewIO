@@ -12,7 +12,7 @@ using namespace dynamixel;
 #define PORT_NAME "/dev/ttyUSB0"
 #define BAUDRATE  3000000
 #define PROTOCOL_VERSION 2.0
-#define IS_TIME_BASE 1
+#define IS_TIME_BASE true //set time based profile
 
 #if IS_TIME_BASE
   #define INIT_TICKS 0 //the total time that keep low speed | unit:10ms
@@ -24,6 +24,7 @@ using namespace dynamixel;
 
 #define SAFE_MODE_SPEED 50
 #define checkPowerID 11 // id of left_hip_yaw
+#define READ_OUTPUT false// print the read result of position and velocity from encoder
 
 namespace Motion
 {
@@ -266,12 +267,26 @@ void ServoIO::readServoPositionsBad()
     }
 }
 
-double ServoIO::getReadServoData(std::string name){
+double ServoIO::getReadPos(std::string name){
     std::map<std::string, Joint>::iterator it = m_joints.begin();
     it = m_joints.find(name);
     if(it != m_joints.end())
     {
       return (*it).second.real_pos;
+    }
+    else
+    {
+      INFO("ServoIO:READ NAME NO EXISTS!");
+      return 0;
+    }
+}
+
+double ServoIO::getReadVel(std::string name){
+    std::map<std::string, Joint>::iterator it = m_joints.begin();
+    it = m_joints.find(name);
+    if(it != m_joints.end())
+    {
+      return (*it).second.real_vel;
     }
     else
     {
@@ -444,6 +459,66 @@ void ServoIO::readServoPositions_test()
             }
         }
     }
+}
+
+void ServoIO::readServoPosVel()
+{
+    if(READ_OUTPUT)
+      INFO("ServoIO::readServoVelocity: read servo velocities");
+
+    auto dxl_comm_result = m_pos_reader2->txRxPacket();
+
+    int cunt = 0;
+    while (dxl_comm_result != COMM_SUCCESS && cunt < 5)
+    {
+      INFO("fucking reading error");
+      dxl_comm_result = m_pos_reader2->txRxPacket();
+      cunt ++;
+    }
+
+    for (auto& joint:m_joints)
+    {
+        const JointConfig& _cfg = joint.second.cfg;
+        if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_VELOCITY, LENGTH_POSITION))
+        {
+           INFO ("ServoIO::readServoVelocity: get current joint value error");
+        }
+        else
+        {
+            joint.second.real_vel = (static_cast<int>(m_pos_reader2->getData(_cfg.id, ADDR_CURR_VELOCITY, LENGTH_POSITION)))*_cfg.factor_vel;
+
+            if(READ_OUTPUT){
+              std::cout.setf(std::ios::left);
+              std::cout << std::setprecision (2);
+              std::cout.setf(std::ios::fixed,std::ios::floatfield);
+              std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
+                        << " | " << "vel:" << joint.second.real_vel << std::endl;
+            }
+        }
+      }
+
+      if(READ_OUTPUT)
+        INFO("ServoIO::readServoPositions_test: read servo positions");
+
+      for (auto& joint:m_joints)
+      {
+          const JointConfig& _cfg = joint.second.cfg;
+          if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
+          {
+             INFO ("ServoIO::readServoPositions_test: get current joint value error");
+          }
+          else
+          {
+              joint.second.real_pos = (static_cast<int>(m_pos_reader2->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
+              if(READ_OUTPUT){
+                std::cout.setf(std::ios::left);
+                std::cout << std::setprecision (2);
+                std::cout.setf(std::ios::fixed,std::ios::floatfield);
+                std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
+                          << " | " << "pos:" << joint.second.real_pos << std::endl;
+              }
+          }
+      }
 }
 
 }

@@ -16,6 +16,7 @@
 //#include "dcommon/dcommon.hpp"
 
 #include "dmotion/Common/Type.h"
+namespace Motion{
 
 class RobotStatus
 {
@@ -120,3 +121,5 @@ class RobotStatus
 
     Motion::PowerState m_power_state;
 };
+
+}

@@ -66,8 +66,7 @@ int main(int argc, char ** argv)
     while(1){
       a.tic();
       b.tic();
-      servo_test.readServoVelocity();
-      servo_test.readServoPositions_test();
+      servo_test.readServoPosVel();
       INFO("*****************************");
       a.toc();
       INFO("*****************************");
