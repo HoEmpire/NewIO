@@ -38,10 +38,10 @@ If one day  the hardware is changed, you should learn to change the rules accord
   + src/dmotion/include/dmotion/IO/IMUReader.h
 + example show how to use servo and iomanager and the sensors to read and write Servo 
 + if it's the first time that you used this code, make sure you have checked the Macro definition in the following files is correct(especially the port and baud rate)
-  + src/dmotion/include/dmotion/IO/SeroIO.cpp
-  + src/dmotion/include/dmotion/IO/IOManager.cpp
-  + src/dmotion/include/dmotion/IO/FeetSensorIO.cpp
-  + src/dmotion/include/dmotion/IO/IMUReader.cpp
+  + src/dmotion/src/IO/SeroIO.cpp
+  + src/dmotion/src/IO/IOManager.cpp
+  + src/dmotion/src/IO/FeetSensorIO.cpp
+  + src/dmotion/src/IO/IMUReader.cpp
 + **In the issue some solutions of some tricky bugs is recorded.**
 
 ## What's new
