@@ -8,6 +8,7 @@
 #include "../../include/dmotion/IO/IOManager3.h"
 #include "dmotion/State/StateManager.hpp"
 #include "dmotion/ForwardKinematics/ForwardKinematics.h"
+#include "../../include/dmotion/PendulumWalk/PendulumWalk.h"
 
 #include <thread>
 #include <fstream>
@@ -20,6 +21,8 @@ using namespace Eigen;
 Motion::IMUData imu_data;
 Motion::PowerState power_data;
 Motion::PressureData pressure_data;
+double vx_real;
+double x_real;
 bool servo_state;
 std::vector<double> read_pos(12,0);
 std::vector<double> read_vel(12,0);
@@ -47,22 +50,43 @@ void AddElements(std::vector<T> &master, std::vector<T> slave)
     }
 }
 
-Motion::IOManager3 io;
+
 void tt()
 {
-
+    Motion::IOManager3 io;
     io.setAllspeed(30);
+    std::vector<double> fucking;
 //    io.setAllJointValue(fucking);
     io.spinOnce();
     sleep(2);
     io.setAllspeed(0);//after 4 seconds, servo ini finished
+    PendulumWalk pen;
 
-
-  //  cunt = 0;
+    double E;
+    int ticks = 0;
     while(ros::ok()){
 
+
+        E = 0.0001*(0.5*vx_real*vx_real-14*x_real*x_real);
+        if(E < -0.1)
+        {
+          INFO("too slow");
+          // if(ticks == 0)
+          //   pen.GiveAStep(5,0,0);
+          // if(ticks < 35)
+          // {
+          //   fucking = pen.GiveATick();
+          //   ticks++;
+          // }
+          // else
+          //   ticks = 0;
+        }
+
+        if(E > 0.8)
+            INFO("too fast");
         io.spinOnce();
         io.readPosVel();
+        imu_data = io.getIMUData();
         power_data = io.getPowerState();
         pressure_data = io.getPressureData();
         servo_state = io.m_servo_inited;
@@ -71,16 +95,12 @@ void tt()
     }
 }
 
-void ttt()
-{
-    imu_data = io.getIMUData();
-}
-
 int main(int argc, char ** argv)
 {
     ros::init(argc, argv, "testing");
     ros::NodeHandle nh("~");
     parameters.init(&nh);
+
 
     if(chdir(workplace))
         exit(0);  //设置工作路径，也就是B显示的路径
@@ -153,10 +173,12 @@ int main(int argc, char ** argv)
     std::vector<int> support_now;
     double x_old = 0, y_old = 0, z_old = 0;
     double x_new = 0, y_new = 0, z_new = 0;
-    Eigen::Matrix3d rotation_matrix_OA, rotation_matrix_BA, rotation_matrix_OB;
+    Eigen::Matrix3d rotation_matrix_OA, rotation_matrix_BA, rotation_matrix_OB, rotation_matrix_body;
     bool isRight;
-    double temp_vx, temp_vy, temp_wx, temp_wy, temp_wz;
+    double temp_vx, temp_vy, temp_wx, temp_wy, temp_wz, temp_roll, temp_pitch, temp_yaw;
     Eigen::Matrix<double,3,1> temp_vel;
+    Eigen::Matrix<double,3,1> vel_ref, vel_co;
+    Eigen::Matrix<double,3,1> temp_pos, pos_real;
     Eigen::Matrix<double,3,1> pos_old, pos_new;
     Eigen::Matrix<double,3,1> w1, w2, w3;
     Eigen::Matrix<double,3,1> Pd;
@@ -165,8 +187,6 @@ int main(int argc, char ** argv)
 
 
     std::thread t1(tt);
-    std::thread t2(ttt);
-    t2.detach();
     sleep(4);
     t1.detach();
 
@@ -241,9 +261,12 @@ int main(int argc, char ** argv)
             isRight = false;
             temp_vx = leg_left.vx_result;
             temp_vy = leg_left.vy_result;
-              temp_wx = leg_left.vroll_result;
+            temp_wx = leg_left.vroll_result;
             temp_wy = leg_left.vpitch_result;
             temp_wz = leg_left.vyaw_result;
+            temp_roll = leg_left.roll_result;
+            temp_pitch = leg_left.pitch_result;
+            temp_yaw = leg_left.yaw_result;
             Eigen::Vector3d eulerAngle_BA(leg_left.yaw_result/180*M_PI,
                                           leg_left.pitch_result/180*M_PI,
                                           leg_left.roll_result/180*M_PI);
@@ -272,6 +295,9 @@ int main(int argc, char ** argv)
             temp_wx = leg_right.vroll_result;
             temp_wy = leg_right.vpitch_result;
             temp_wz = leg_right.vyaw_result;
+            temp_roll = leg_right.roll_result;
+            temp_pitch = leg_right.pitch_result;
+            temp_yaw = leg_right.yaw_result;
             Eigen::Vector3d eulerAngle_BA(leg_right.yaw_result/180*M_PI,
                                           leg_right.pitch_result/180*M_PI,
                                           leg_right.roll_result/180*M_PI);
@@ -307,6 +333,7 @@ int main(int argc, char ** argv)
         temp_vel = rotation_matrix_OB * temp_vel;
         data_vx.push_back(temp_vel(0));
         data_vy.push_back(temp_vel(1));
+        vel_ref = temp_vel;
 
         pos_new(0) = x_new;
         pos_new(1) = y_new;
@@ -326,49 +353,39 @@ int main(int argc, char ** argv)
         y_old = y_new;
         z_old = z_new;
 
-        R_new = rotation_matrix_BA;
-        dR = R_new * R_old.transpose();
-        double theta;
-        theta = acos(0.5*(dR(0,0) + dR(1,1) + dR(2,2) - 1));
-        if(theta < 1e-5)
-        {
-          w2(0) = 0;
-          w2(1) = 0;
-          w2(2) = 0;
-        }
-        else
-        {
-          double factor = theta / 2 * sin(theta);
-          w2(0) = dR(2,1) - dR(1,2);
-          w2(1) = dR(0,2) - dR(2,0);
-          w2(2) = dR(1,0) - dR(0,1);
-          w2 = w2 * factor;
-        }
+        w2(0) = -temp_wy*sin(temp_yaw) + temp_wx*cos(temp_yaw)*cos(temp_pitch);
+        w2(1) =  temp_wy*cos(temp_yaw) + temp_wx*sin(temp_yaw)*cos(temp_pitch);
+        w2(2) =  temp_wz - temp_wx*sin(temp_pitch);
+
+        w2 = rotation_matrix_OB * w2;
         w3(0) = imu_data.gypo.x;
         w3(1) = imu_data.gypo.y;
         w3(2) = imu_data.gypo.z;
         w3 = rotation_matrix_OA * w3;
 
-        w2(0) = temp_wx;
-        w2(1) = temp_wy;
-        w2(2) = temp_wz;
-        w2 = rotation_matrix_OB * w2;
-
         w1 = w3 - w2;
+
         cross(w1, rotation_matrix_OB * pos_new, temp_vel);
         data_vx_w.push_back(temp_vel(0));
         data_vy_w.push_back(temp_vel(1));
+        vel_co = temp_vel;
 
         data_x.push_back(x_new);
         data_y.push_back(y_new);
         data_z.push_back(z_new);
 
+        rotation_matrix_body = yawAngle2;
+        temp_vel = rotation_matrix_body.transpose() * (vel_co + vel_ref);
+        vx_real = temp_vel(0);
+
+        temp_pos(0) = x_new;
+        temp_pos(1) = y_new;
+        temp_pos(2) = z_new;
+        pos_real = rotation_matrix_body.transpose() * (rotation_matrix_OB * temp_pos);
+        x_real =  pos_real(0); //update x
+
         R_old = rotation_matrix_BA;
-
-
-
       }
-
     }
 
     INFO("***********************");

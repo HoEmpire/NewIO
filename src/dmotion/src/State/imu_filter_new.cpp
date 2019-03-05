@@ -241,13 +241,18 @@ void ImuFilter::calAccWog()
     Quaterniond Q(q0, q1, q2, q3);
     Matrix3d R;
     R = Q.matrix();
-    Vector3d v1(0, 0, -1), v2(0, 0, 0), v3(ax_last, ay_last, az_last);
-    v2 = R.inverse() * v1 * g;
-    v3 = v3 - v2;
-    v3 = R * v3;
-    ax_wog = v3(0);
-    ay_wog = v3(1);
-    az_wog = v3(2);
+    Vector3d  v2(0, 0, 0), v3(ax_last, ay_last, az_last);
+    // v2 = R.inverse() * v1 * g;
+    // v3 = v3 - v2;
+    // v3 = R * v3;
+    // ax_wog = v3(0);
+    // ay_wog = v3(1);
+    // az_wog = v3(2);
+    //
+    v2 = R * v3 ;
+    ax_wog = v2(0);
+    ay_wog = v2(1);
+    az_wog = v2(2) - g;
 }
 
 void ImuFilter::clearData()

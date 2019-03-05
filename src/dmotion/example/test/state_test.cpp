@@ -215,14 +215,14 @@ static inline void cross(
   z(2) = x(0) * y(1) - x(1) * y(0);
 }
 
-template <typename T>
-void AddElements(std::vector<T> &master, std::vector<T> slave)
-{
-    for (unsigned int i = 0; i < slave.size(); i++)
-    {
-        master.emplace_back(slave[i]);
-    }
-}
+// template <typename T>
+// // void AddElements(std::vector<T> &master, std::vector<T> slave)
+// // {
+// //     for (unsigned int i = 0; i < slave.size(); i++)
+// //     {
+// //         master.emplace_back(slave[i]);
+// //     }
+// // }
 
 void tt()
 {
@@ -278,7 +278,7 @@ void tt()
     fucking.clear();
     AddElements(fucking, rc_right[0]);
     AddElements(fucking, rc_left[0]);
-    AddElements(fucking, arm);
+    //AddElements(fucking, arm);
     io.setAllspeed(30);
     io.setAllJointValue(fucking);
     io.spinOnce();
@@ -300,7 +300,7 @@ void tt()
                 fucking.clear();
                 AddElements(fucking, rc_right[cunt]);
                 AddElements(fucking, rc_left[cunt]);
-                AddElements(fucking, arm);
+                //AddElements(fucking, arm);
                 io.setAllJointValue(fucking);
             }
             else if(cunt < 2 * num && cunt >= num)
@@ -308,7 +308,7 @@ void tt()
                 fucking.clear();
                 AddElements(fucking, rc_left[cunt - num]);
                 AddElements(fucking, rc_right[cunt - num]);
-                AddElements(fucking, arm);
+                //AddElements(fucking, arm);
                 io.setAllJointValue(fucking);
             }
             cunt++;

@@ -10,6 +10,8 @@
 #include <cmath>
 #include <iostream>
 #include <Eigen/Dense>
+#include <iomanip>
+
 
 namespace dmotion {
 
@@ -70,7 +72,7 @@ namespace dmotion {
     template<class T>
     inline void PrintVector(const std::vector<T> &vectorOb) {
         for (unsigned i = 0; i < vectorOb.size(); i++)
-            std::cout << " " << vectorOb[i];
+            std::cout <<std::fixed << std::setprecision(7) << vectorOb[i]<< " ";
         std::cout << std::endl;
     }
 
@@ -170,6 +172,40 @@ namespace dmotion {
                 return std::atan(opposite / neighbor) - M_PI;
         }
     }
+
+    /**
+     * 用于计算三维空间中两点之间的距离
+     * @tparam T
+     * @param x_1
+     * @param y_1
+     * @param z_1
+     * @param x_2
+     * @param y_2
+     * @param z_2
+     * @return
+     */
+    template<typename T>
+    inline double getDistance(const T &x_1, const T &y_1, const T &z_1, const T &x_2, const T &y_2, const T &z_2) {
+        return std::sqrt(std::pow(x_1 - x_2, 2) + std::pow(y_1 - y_2, 2) + std::pow(z_1 - z_2, 2));
+
+    }
+
+    /**
+     * 把slave vector里面的元素追加到master后面
+     * @tparam T
+     * @param master
+     * @param slave
+     * @return
+     */
+    template <typename T>
+    void AddElements(std::vector<T> &master, std::vector<T> slave)
+    {
+        for (unsigned int i = 0; i< slave.size() ; i++)
+        {
+            master.emplace_back(slave[i]);
+        }
+    }
+
 }
 
 

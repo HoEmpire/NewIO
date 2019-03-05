@@ -24,12 +24,17 @@ include_directories(
 
 )
 
+include_directories(./include/dmotion/OneFootLanding)
+
+add_library(dmotion_OneFootLanding ./src/OneFootLanding/OneFootLanding.cpp)
+
 # add_subdirectory(3rdparty)
 add_subdirectory(src/IO)
 add_subdirectory(src/Common)
 add_subdirectory(src/InverseKinematics)
 add_subdirectory(src/ForwardKinematics)
 add_subdirectory(src/ThreeInterpolation)
+add_subdirectory(src/PendulumWalk)
 add_subdirectory(src/State)
 
 add_executable(climb_read example/test/climb_read.cpp)
@@ -63,7 +68,16 @@ add_executable(state_test example/test/state_test.cpp)
 target_link_libraries(state_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state dmotion_kinematics_forward)
 
 add_executable(pr_demo example/test/pr_demo.cpp)
-target_link_libraries(pr_demo ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state dmotion_kinematics_forward)
+target_link_libraries(pr_demo
+                      ${catkin_LIBRARIES}
+                      dmotion_kinematics
+                      dmotion_io
+                      dmotion_common
+                      dmotion_state
+                      dmotion_kinematics_forward
+                      dmotion_OneFootLanding
+                      dmotion_PendulumWalk
+                      dmotion_chazhi)
 
 add_executable(filter_test example/test/filter_test.cpp)
 target_link_libraries(filter_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state)
