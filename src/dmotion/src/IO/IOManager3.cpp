@@ -12,14 +12,15 @@ using namespace dynamixel;
 
 #define DATA_FREQUENCY 10.0    // 100hz data stream
 #define IMU_FREQUENCY 10.0    // 100hz data stream
-#define POWER_DETECTER false   //whether open check power mode or not
+#define POWER_DETECTER true   //whether open check power mode or not
                               //only used in a complete Robot
 //#define old 1
 
 namespace Motion
 {
 IOManager3::IOManager3()
-    : m_power_state(OFF)
+    : m_power_state(OFF),
+      m_servo_inited(false)
 {
     ROS_DEBUG("IOManager3::IOManager3: Construct IOManager3 instance");
     initZJUJoint();
@@ -37,7 +38,11 @@ IOManager3::IOManager3()
         m_power_state = ON;
 
     if(m_power_state == ON)
-        m_servo_io.initServoPositions();
+    {
+      m_servo_io.initServoPositions();
+      m_servo_inited = true;
+    }
+
 }
 
 IOManager3::~IOManager3() = default;
@@ -152,6 +157,7 @@ void IOManager3::spinOnce()
         if (ON == m_power_state)
         {
             m_servo_io.initServoPositions();
+            m_servo_inited = true;
             m_power_state = ON;
             return;
         }
@@ -201,11 +207,13 @@ void IOManager3::spinOnce()
     }
     else if (OFF == m_power_state)
     {
+        m_servo_inited = false;
         timer::delay_ms(500);
     }
     else if (REOPEN == m_power_state)
     {
         m_servo_io.initServoPositions();
+        m_servo_inited = true;
         m_power_state = ON;
         return;
     }
@@ -464,6 +472,7 @@ void IOManager3::checkPower(){
         {
           if(PowerChangeTick++ >= 2)
                m_power_state = OFF;
+               m_servo_inited = false;
         }
         else
           PowerChangeTick = 0;

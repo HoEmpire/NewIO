@@ -27,183 +27,6 @@ std::vector<double> read_vel(12,0);
 using namespace dmotion;
 using namespace Motion;
 int flag = 0;
-// void tt()
-// {
-//     Motion::IMUReader imu;
-//     while(ros::ok()){
-//         imu.readIMUData();
-//         imu_data = imu.getIMUData();
-//     }
-//
-// }
-//
-// static inline void QuaternionToEulerAngles(float qw, float qx, float qy, float qz,
-//                                            float& roll, float& pitch, float& yaw)
-// {
-//     roll = atan2f(2.f * (qz*qy + qw*qx), 1-2*(qx*qx+qy*qy)); //x
-//     pitch =  asinf(2.f * (qw*qy - qx*qz)); //y
-//     yaw = atan2f(2.f * (qx*qy + qw*qz), 1-2*(qy*qy+qz*qz));//z
-// }
-//
-// int main(int argc, char ** argv)
-// {
-//     if(chdir(workplace))
-//         exit(0);  //设置工作路径，也就是B显示的路径
-//
-//     ros::init(argc, argv, "testing");
-//     ros::NodeHandle nh("~");
-//     parameters.init(&nh);
-//
-//     ofstream out1("roll.txt", ios::out|ios::trunc);
-//     ofstream out2("pitch.txt", ios::out|ios::trunc);
-//     ofstream out3("yaw.txt", ios::out|ios::trunc);
-//     ofstream out4("ax.txt", ios::out|ios::trunc);
-//     ofstream out5("ay.txt", ios::out|ios::trunc);
-//     ofstream out6("az.txt", ios::out|ios::trunc);
-//     ofstream out7("wx.txt", ios::out|ios::trunc);
-//     ofstream out8("wy.txt", ios::out|ios::trunc);
-//     ofstream out9("wz.txt", ios::out|ios::trunc);
-//
-//     std::vector<float> roll,pitch,yaw;
-//     std::vector<float> ax,ay,az;
-//     std::vector<float> wx,wy,wz;
-//
-//     timer::time_point start,now;
-//     std::chrono::duration<double> elapsed_seconds;
-//
-//     ImuFilter dick;
-//     std::thread t1(tt);
-//     t1.detach();
-//     sleep(1);
-//
-//     long int count = 0;
-//     int ini_ticks = 1;
-//     timer a;
-//     float lin_acc_x;
-//     float lin_acc_y;
-//     float lin_acc_z;
-//     float ang_vel_x;
-//     float ang_vel_y;
-//     float ang_vel_z;
-//     float x,y,z;
-//     float q0,q1,q2,q3;
-//     a.tic();
-//     for(ini_ticks = 1; ini_ticks <= 1000; ini_ticks++)
-//     {
-//       lin_acc_x = imu_data.accl.x;
-//       lin_acc_y = imu_data.accl.y;
-//       lin_acc_z = imu_data.accl.z;
-//       ang_vel_x = imu_data.gypo.x;
-//       ang_vel_y = imu_data.gypo.y;
-//       ang_vel_z = imu_data.gypo.z;
-//       if(ini_ticks == 1)
-//       {
-//         dick.iniAcclast(lin_acc_x , lin_acc_y, lin_acc_z);
-//       }
-//       else
-//       {
-//         dick.iniIMU(ang_vel_x, ang_vel_y, ang_vel_z,
-//                     lin_acc_x, lin_acc_y, lin_acc_z,
-//                     ini_ticks);
-//       }
-//       start = timer::getCurrentSystemTime();
-//       a.smartDelay_ms(2.0);
-//       a.tic();
-//     }
-//
-//     dick.iniGravity();
-//     dick.iniQuaternion();
-//     dick.getOrientation(q0, q1, q2, q3);
-//     INFO("***********************");
-//     INFO("Ini finished!!!");
-//     INFO("***********************");
-//     // Quaterniond Q1(q0, q1, q2, q3);
-//     // Matrix3d R1;
-//     // R1 = Q1.matrix();
-//     // Vector3d Euler1 = R1.eulerAngles(2,1,0);
-//     float x1,y1,z1;
-//     // x1 = Euler1(2);
-//     // y1 = Euler1(1);
-//     // z1 = Euler1(0);
-//     QuaternionToEulerAngles(q0,q1,q2,q3,x1,y1,z1);
-//     cout << "x1: "<< x1 << " ,y1: " << y1 << ",z1: " << z1 << endl;
-//
-//     while(ros::ok())
-//     {
-//
-//       lin_acc_x = imu_data.accl.x;
-//       lin_acc_y = imu_data.accl.y;
-//       lin_acc_z = imu_data.accl.z;
-//       ang_vel_x = imu_data.gypo.x;
-//       ang_vel_y = imu_data.gypo.y;
-//       ang_vel_z = imu_data.gypo.z;
-//
-//       dick.Fusing(ang_vel_x, ang_vel_y, ang_vel_z,
-//                   lin_acc_x, lin_acc_y, lin_acc_z);
-//       dick.getOrientation(q0, q1, q2, q3);
-//
-//       // Quaterniond Q(q0, q1, q2, q3);
-//       // Matrix3d R;
-//       // R = Q.matrix();
-//       // Vector3d Euler = R.eulerAngles(2,1,0);
-//       // x = Euler(2);
-//       // y = Euler(1);
-//       // z = Euler(0);
-//       //QuaternionToEulerAngles(q0,q1,q2,q3,x,y,z);
-//       dick.getRPY(x,y,z);
-//       roll.push_back(x);
-//       pitch.push_back(y);
-//       yaw.push_back(z);
-//       ax.push_back(lin_acc_x);
-//       ay.push_back(lin_acc_y);
-//       az.push_back(lin_acc_x);
-//       wx.push_back(ang_vel_x);
-//       wy.push_back(ang_vel_y);
-//       wz.push_back(ang_vel_z);
-//
-//       if(count % 1 == 0)
-//       {
-//           std::cout << "x = " << x << " ,y = " << y << " ,z = " << z << std::endl;
-//       }
-//
-//       count++;
-//
-//       a.smartDelay_ms(2.0);
-//       a.tic();
-//     }
-//
-//     sleep(2);
-//     INFO("***********************");
-//     INFO("get shit done");
-//     INFO("***********************");
-//     cout << int(roll.size()) << endl;
-//     int i;
-//     for(i = 0;i < int(roll.size()); i++)
-//     {
-//       out1 << roll[i] << " ";
-//       out2 << pitch[i] << " ";
-//       out3 << yaw[i] << " ";
-//       out4 << ax[i] << " ";
-//       out5 << ay[i] << " ";
-//       out6 << az[i] << " ";
-//       out7 << wx[i] << " ";
-//       out8 << wy[i] << " ";
-//       out9 << wz[i] << " ";
-//     }
-//     cout << i << endl;
-//
-//
-//     out1.close();
-//     out2.close();
-//     out3.close();
-//     out4.close();
-//     out5.close();
-//     out6.close();
-//     out7.close();
-//     out8.close();
-//     out9.close();
-//
-// }
 
 static inline void cross(
   Eigen::Matrix<double,3,1> x,
@@ -224,107 +47,33 @@ void AddElements(std::vector<T> &master, std::vector<T> slave)
     }
 }
 
+Motion::IOManager3 io;
 void tt()
 {
-    Motion::IOManager3 io;
 
-    std::vector<double> fucking(16, 0);
-
-    ifstream af("/home/ubuntu/walk_c.txt");
-    std::vector<double> left;
-    std::vector<double> right;
-    std::vector<std::vector<double>> rc_left;
-    std::vector<std::vector<double>> rc_right;
-    int cunt = 0;
-    while (!af.eof())
-    {
-        double tmp;
-        af >> tmp;
-        //cout <<fixed << setprecision(6) << tmp  <<endl;
-        if (6 == cunt)
-        {
-            rc_right.push_back(right);
-            right.clear();
-            left.push_back(tmp);
-            cunt++;
-        }
-        else if (12 == cunt)
-        {
-            rc_left.push_back(left);
-            left.clear();
-            right.push_back(tmp);
-            cunt = 1;
-        }
-        else if (cunt >= 0 && cunt <= 5)
-        {
-            right.push_back(tmp);
-            cunt++;
-        }
-        else if (cunt >= 7 && cunt <= 11)
-        {
-            left.push_back(tmp);
-            cunt++;
-        }
-    }
-
-    int num = rc_left.size();
-    cout << "num: " << num << endl;
-
-    std::vector<double> arm = {0, 30, 0, 30};
-    std::vector<int> changeP = {6,7,13,14};
-    io.setServoPI(changeP,700,0);
-    sleep(2);
-
-    fucking.clear();
-    AddElements(fucking, rc_right[0]);
-    AddElements(fucking, rc_left[0]);
-    AddElements(fucking, arm);
     io.setAllspeed(30);
-    io.setAllJointValue(fucking);
+//    io.setAllJointValue(fucking);
     io.spinOnce();
     sleep(2);
-    io.setAllspeed(0);
+    io.setAllspeed(0);//after 4 seconds, servo ini finished
 
 
-    cunt = 0;
+  //  cunt = 0;
     while(ros::ok()){
-        if(flag >= 1000)
-        {
-            if(cunt == 2*num)
-            {
-                cunt = 0;
-            }
-
-            if(cunt < num)
-            {
-                fucking.clear();
-                AddElements(fucking, rc_right[cunt]);
-                AddElements(fucking, rc_left[cunt]);
-                AddElements(fucking, arm);
-                io.setAllJointValue(fucking);
-            }
-            else if(cunt < 2 * num && cunt >= num)
-            {
-                fucking.clear();
-                AddElements(fucking, rc_left[cunt - num]);
-                AddElements(fucking, rc_right[cunt - num]);
-                AddElements(fucking, arm);
-                io.setAllJointValue(fucking);
-            }
-            cunt++;
-        }
 
         io.spinOnce();
         io.readPosVel();
         power_data = io.getPowerState();
-        imu_data = io.getIMUData();
         pressure_data = io.getPressureData();
         servo_state = io.m_servo_inited;
         read_pos = io.readAllPosition();
         read_vel = io.readAllVel();
-        //read_vel = io.readAllVel();
     }
+}
 
+void ttt()
+{
+    imu_data = io.getIMUData();
 }
 
 int main(int argc, char ** argv)
@@ -336,6 +85,7 @@ int main(int argc, char ** argv)
     if(chdir(workplace))
         exit(0);  //设置工作路径，也就是B显示的路径
 
+ //open files
     ofstream out1("roll.txt", ios::out|ios::trunc);
     ofstream out2("pitch.txt", ios::out|ios::trunc);
     ofstream out3("yaw.txt", ios::out|ios::trunc);
@@ -386,8 +136,6 @@ int main(int argc, char ** argv)
     ofstream feet_yawv("feet_yawv.txt", ios::out|ios::trunc);
 
 
-
-
     std::vector<float> roll,pitch,yaw;
     std::vector<float> ax,ay,az;
     std::vector<float> wx,wy,wz;
@@ -417,7 +165,9 @@ int main(int argc, char ** argv)
 
 
     std::thread t1(tt);
-    sleep(6);
+    std::thread t2(ttt);
+    t2.detach();
+    sleep(4);
     t1.detach();
 
     Motion::StateManager sm;

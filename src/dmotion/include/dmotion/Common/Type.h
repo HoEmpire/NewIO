@@ -117,19 +117,30 @@ enum PowerState
   REOPEN
 };
 
-
-enum RoboState
+enum StableState
 {
   STABLE,
   UNSTABLE,
-  FALLING
+  FRONTDOWN,
+  BACKDOWN,
+  RIGHTDOWN,
+  LEFTDOWN
 };
 
-enum SupportPhase
+
+
+enum SupportState
 {
   SUPPORT_BOTH,
   SUPPORT_LEFT,
   SUPPORT_RIGHT
+};
+
+enum IniState
+{
+  WAIT,
+  INITED,
+  INITING
 };
 
 

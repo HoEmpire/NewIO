@@ -1,7 +1,7 @@
 <launch>
     <node pkg="dmotion"
-          name="state_test"
-          type="state_test"
+          name="filter_test"
+          type="filter_test"
           output="screen"
           respawn="false"
           required="true"

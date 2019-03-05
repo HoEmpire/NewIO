@@ -9,6 +9,7 @@
 #include <vector>
 #include <Eigen/Dense>
 
+
 namespace dmotion {
 
     class InvKin {
@@ -51,8 +52,6 @@ namespace dmotion {
         std::vector<double> finals;
 
 
-
-
     public:
         // 静态常成员变量便于调用,这些参数比较固定,机器人装好后一般绝对不会变,故没有写在参数文件中
         // 存在几何改动时到InverseKinematics.cpp中改动
@@ -72,12 +71,71 @@ namespace dmotion {
         // 为了方便理解和调参,这里的RPY变换根据以下描述进行变换
         // 起始状态脚坐标系B和此处的世界坐标系A坐标轴方向重合,先绕Z_a转yaw角,再绕Y_b转pitch角,最后绕X_b转roll角.
         // 输出从上到下的共6个舵机角度值(角度值).
-        std::vector<double> LegInvKin(std::vector<double> &foot_pose);
-
-
+        std::vector<double> LegInvKin(std::vector<double> foot_pose);
 
 
     };
+
+
+    /**
+     * 双腿逆运动学的实现，适用于机器人双脚同时着地站在地上
+     */
+    class WholeBodyIK {
+    public:
+        InvKin left_leg_;
+        InvKin right_leg_;
+
+
+        /** 构造函数的实现 **/
+        WholeBodyIK(const double ankle_distance_x);
+
+        WholeBodyIK(const double ankle_distance_x, const double ankle_distance_y,
+                    const double ankle_distance_z);
+
+        /** 两腿逆运动学的解算 **/
+        std::vector<double> &GetIKResult(std::vector<double> &body_pose);
+        /** 改变两个脚之间的xyz方向距离**/
+        void ChangeFootPos(const double new_foot_x, const double new_foot_y, const double new_foot_z);
+
+
+    private:
+        /** 两落脚点中心之间的距离，左脚相对于右脚**/
+        double ankle_distance_x_;
+        double ankle_distance_y_;
+        double ankle_distance_z_;
+        /** 以下三个参数表示脚相对于身体的姿态 **/
+        double relative_r;
+        double relative_p;
+        double relative_y;
+        /** 脚坐标量相对于身体的变换临时变量 **/
+        double absolute_left_x;
+        double absolute_left_y;
+        double absolute_left_z;
+        double absolute_right_x;
+        double absolute_right_y;
+        double absolute_right_z;
+        double relative_left_x;
+        double relative_left_y;
+        double relative_left_z;
+        double relative_right_x;
+        double relative_right_y;
+        double relative_right_z;
+
+        /** 一些计算的中间量 **/
+        double offset_x;
+        double offset_y;
+        double offset_z;
+        /** 存放用于单腿逆运动学的单腿位姿参数 **/
+        std::vector<double> vector_for_right;
+        std::vector<double> vector_for_left;
+        /** 存放两个单腿逆运动学得出的角度值 **/
+        std::vector<double> angles_for_left;
+        std::vector<double> angles_for_right;
+        /** 存放最后的两条腿的舵机值 **/
+        std::vector<double> legs_finals;
+    };
+
+
 }
 
 

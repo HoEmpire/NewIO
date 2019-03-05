@@ -9,6 +9,7 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/InverseKinematics/InverseKinematics.h"
+#include "dmotion/ForwardKinematics/ForwardKinematics.h"
 #include "dmotion/ThreeInterpolation/ThreeInterpolation.h"
 #include "dmotion/Utility/dmotion_math.hpp"
 
@@ -24,6 +25,7 @@ int main(int argc, char **argv)
     Motion::IOManager3 io;
 
     std::vector<double> fucking(16, 0);
+    std::vector<double> dx(16, 0);
     for (int i = 0; i < 12; i++)
     {
         std::cout << "第" << i << "个:" << fucking[i] << std::endl;
@@ -50,8 +52,8 @@ int main(int argc, char **argv)
 
     ThreeInterpolation x_offset(tit, valuex, valuexd);
     ThreeInterpolation z_offset(tit, valuez, valuezd);
-    x_offset.CalculatePoints(11);
-    z_offset.CalculatePoints(11);
+    x_offset.CalculatePoints(10);
+    z_offset.CalculatePoints(10);//TODO 小心坑
 
     std::vector<double> servo_offsetx = x_offset.GetPoints();
     std::vector<double> servo_offsetz = z_offset.GetPoints();
@@ -68,29 +70,52 @@ int main(int argc, char **argv)
     // io.setAllTimeBase();
     // sleep(1);
     // io.setAllspeed(10);
+    timer a;
+    std::vector<double> vel(16,0);
+    std::vector<double> pos(16,0);
+    double tmp_x,tmp_z,tmp_vx,tmp_vz;
+    std::vector<double> manipulate_points, manipulate_vel;
+    std::vector<double> servo_points;
+
+    tmp_x = servo_offsetx[0];
+    tmp_z = servo_offsetz[0] - 33;
+    manipulate_points = {tmp_x, -4.5, tmp_z, 0, 0, 0};
+    servo_points = leg.LegInvKin(manipulate_points);
+    for(int j = 0;j <= 5; j++)
+    {
+      fucking[j] = servo_points[j];
+      pos[j] = servo_points[j];
+    }
+    io.setAllJointValue(fucking);
+    io.spinOnce();
+    sleep(5);
+
     while (ros::ok())
     {
         for (unsigned i = 0; i < servo_times.size(); i++)
         {
-            double tmp_x = servo_offsetx[i];
-            double tmp_z = servo_offsetz[i] - 28;
-            std::vector<double> manipulate_points = {tmp_x, -4.5, tmp_z, 0, 0, 0};
-            std::vector<double> servo_points = leg.LegInvKin(manipulate_points);
+            tmp_x = servo_offsetx[i];
+            tmp_z = servo_offsetz[i] - 33;
+            manipulate_points = {tmp_x, -4.5, tmp_z, 0, 0, 0};
+            servo_points = leg.LegInvKin(manipulate_points);
 
-            fucking[0] = servo_points[0];
-            fucking[1] = servo_points[1];
-            fucking[2] = servo_points[2];
-            fucking[3] = servo_points[3];
-            fucking[4] = servo_points[4];
-            fucking[5] = servo_points[5];
+            for(int j = 0;j <= 5; j++)
+            {
+              fucking[j] = 2 * servo_points[j] - pos[j] - vel[j] * 0.005;
+              vel[j] = 2 * (servo_points[j] - pos[j]) / 0.01 - vel[j];
+              pos[j] = servo_points[j];
+            }
+
+
             io.setAllJointValue(fucking);
             io.spinOnce();
-            if (i == 0 && flag == 0)
-            {
-                sleep(5);
-                flag = 1;
-            }
-            cout << i << endl;
+            io.readPosVel();
+            // heihei = io.readAllVel();
+            // gg = io.readAllPosition();
+            for(int j = 0;j <= 5;j++)
+              cout << fucking[j] << "," << servo_points[j] <<endl;
+            if(!ros::ok())
+              break;
         }
     }
 }

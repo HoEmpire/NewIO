@@ -1,6 +1,6 @@
 #include "dmotion/State/imu_filter_new.hpp"
 
-#define FILTER_FREQUENCE 0.005 // 5ms
+#define FILTER_FREQUENCE 0.01 // 5ms //change for test
 #define LPF_FREQ 50
 #define Ki 0.001
 #define Kp 2
@@ -59,9 +59,31 @@ static inline void cross(
 static inline void QuaternionToEulerAngles(float qw, float qx, float qy, float qz,
                                            float& roll, float& pitch, float& yaw)
 {
-    roll = atan2f(2.f * (qz*qy + qw*qx), 1-2*(qx*qx+qy*qy)); //x
-    pitch =  asinf(2.f * (qw*qy - qx*qz)); //y
-    yaw = atan2f(2.f * (qx*qy + qw*qz), 1-2*(qy*qy+qz*qz));//z
+    const float Epsilon = 0.001;
+    const float Threshold = 0.5f - Epsilon;
+
+    float TEST = qw*qy - qx*qz;
+
+  if (TEST < -Threshold || TEST > Threshold) // 奇异姿态,俯仰角为±90°
+  {
+      int sign;
+      if(TEST > 0)
+          sign = 1;
+      else
+          sign = -1;
+
+      yaw = -2 * sign * atan2f(qx, qw); // yaw
+      pitch = sign * (M_PI / 2.0); // pitch
+      roll = 0; // roll
+
+  }
+  else
+  {
+      roll = atan2f(2.f * (qz*qy + qw*qx), 1-2*(qx*qx+qy*qy)); //x
+      pitch =  asinf(2.f * (qw*qy - qx*qz)); //y
+      yaw = atan2f(2.f * (qx*qy + qw*qz), 1-2*(qy*qy+qz*qz));//z
+  }
+
 }
 
 void qUtoV(

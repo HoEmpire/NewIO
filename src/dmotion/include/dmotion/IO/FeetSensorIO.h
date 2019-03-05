@@ -54,8 +54,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     void remapPressureData(const bool isLeft);
 
-private:
     dynamixel::PortHandler* m_port;
+
+private:
 
     PressureData m_data;
 

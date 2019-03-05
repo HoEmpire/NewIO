@@ -146,7 +146,30 @@ namespace dmotion {
         return std::acos(1);
     }
 
-
+    /**
+     * 双变量反正切函数，用于准确求取一个角度，定义域是[0,2pi)
+     * @tparam T
+     * @param opposite 对边长度（直角边）
+     * @param neighbor 临边长度 (直角边)
+     * @return
+     */
+    inline double Atan(const double opposite, const double neighbor) {
+        if (0 < neighbor)
+            return std::atan(opposite / neighbor);
+        else if (0 == neighbor) {
+            if (0 > opposite)
+                return -M_PI / 2;
+            else if (0 < opposite)
+                return M_PI / 2;
+            else
+                return 0;
+        } else {
+            if (0 <= opposite)
+                return std::atan(opposite / neighbor) + M_PI;
+            else
+                return std::atan(opposite / neighbor) - M_PI;
+        }
+    }
 }
 
 

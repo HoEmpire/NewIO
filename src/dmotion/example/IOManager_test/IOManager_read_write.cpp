@@ -34,14 +34,16 @@ int main(int argc, char ** argv)
         cunt++;
 
       }
-
+      timer a;
       //read constantly
-      while(ros::ok() && cunt < 20){
+      while(ros::ok()){
+        a.tic();
         io.readPosVel();
-        sleep(1);
-        cunt++;
+        a.toc();
+        a.smartDelay_ms(10.0);
+        //cunt++;
       }
 
       //read after type f
-      io.reverseMotion();
+      //io.reverseMotion();
 }

@@ -61,12 +61,14 @@ class ImuFilter
 
     void clearData();
 
+    float ax_wog, ay_wog, az_wog;
+
   private:
 
     // **** state variables
     float q0, q1, q2, q3;  // quaternion
     float roll, pitch, yaw;
-    float ax_wog, ay_wog, az_wog;
+
     float wx_b = 0;
     float wy_b = 0;
     float wz_b = 0;

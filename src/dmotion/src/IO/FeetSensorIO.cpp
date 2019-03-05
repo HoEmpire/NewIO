@@ -3,9 +3,10 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/IO/IOManager3.h"
 
-//#define PORT_NAME "/dev/Servo"
-#define PORT_NAME "/dev/ttyUSB0"  
-#define BAUDRATE  3000000
+#define PORT_NAME "/dev/Servo"
+#define BAUDRATE  1000000
+// #define PORT_NAME "/dev/ttyUSB0"
+// #define BAUDRATE  1000000
 //#define old 1
 
 namespace Motion
@@ -91,8 +92,8 @@ bool FeetSensorIO::readPressureData()
         return false;
     }
     ROS_DEBUG_STREAM("FeetSensorIO::readPressureData: data reading success" << std::endl
-                    << "Left Feet " << m_data.left[0] << ' ' << m_data.left[1] << ' ' << m_data.left[2] << ' ' << m_data.left[3]
-                    << "Right Feet " << m_data.right[0] << ' ' << m_data.right[1] << ' ' << m_data.right[2] << ' ' << m_data.right[3]
+                    << "Left Feet: " << m_data.left[0] << ' ' << m_data.left[1] << ' ' << m_data.left[2] << ' ' << m_data.left[3]
+                    << "Right Feet: " << m_data.right[0] << ' ' << m_data.right[1] << ' ' << m_data.right[2] << ' ' << m_data.right[3]
                     );
     return true;
 }

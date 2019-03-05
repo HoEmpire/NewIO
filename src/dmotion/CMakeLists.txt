@@ -28,6 +28,7 @@ include_directories(
 add_subdirectory(src/IO)
 add_subdirectory(src/Common)
 add_subdirectory(src/InverseKinematics)
+add_subdirectory(src/ForwardKinematics)
 add_subdirectory(src/ThreeInterpolation)
 add_subdirectory(src/State)
 
@@ -56,7 +57,22 @@ add_executable(imu_test example/imu_test/imu_test.cpp)
 target_link_libraries(imu_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
 add_executable(make_a_circle example/test/circle.cpp)
-target_link_libraries(make_a_circle ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
+target_link_libraries(make_a_circle ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics dmotion_kinematics_forward)
 
 add_executable(state_test example/test/state_test.cpp)
-target_link_libraries(state_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state)
+target_link_libraries(state_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state dmotion_kinematics_forward)
+
+add_executable(pr_demo example/test/pr_demo.cpp)
+target_link_libraries(pr_demo ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state dmotion_kinematics_forward)
+
+add_executable(filter_test example/test/filter_test.cpp)
+target_link_libraries(filter_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state)
+
+add_executable(fucking_test example/test/fucking_test.cpp)
+target_link_libraries(fucking_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_kinematics dmotion_kinematics_forward)
+
+add_executable(math_test example/test/math_test.cpp)
+target_link_libraries(math_test ${catkin_LIBRARIES} dmotion_kinematics dmotion_kinematics_forward)
+
+add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
+target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)

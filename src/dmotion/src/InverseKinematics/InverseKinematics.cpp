@@ -14,7 +14,7 @@ namespace dmotion {
 
     const double InvKin::upper_leg_length = 12.0;  //大腿的长度
     const double InvKin::lower_leg_length = 12.0;  //小腿的长度
-    const double InvKin::ankle_from_ground = 3.5;  //脚踝距离地面的高度
+    const double InvKin::ankle_from_ground = 6.0;  //脚踝距离地面的高度
     const double InvKin::half_hip_width = 4.5;     //两髋关节点距离的一半,相当于髋关节点相对于身体中心原点的y方向坐标
     const double InvKin::hip_x_from_origin = 0;    //髋关节点相对于身体中心原点的x方向坐标
     const double InvKin::hip_z_from_origin = 8.0;  //髋关节点相对于身体中心原点的z
@@ -59,7 +59,7 @@ namespace dmotion {
      * @param foot_pose 脚底的x y z r p y
      * @return
      */
-    std::vector<double> InvKin::LegInvKin(std::vector<double> &foot_pose) {
+    std::vector<double> InvKin::LegInvKin(std::vector<double> foot_pose) {
         /** 下面三个坐标是脚踝点相对于髋关节点的坐标 **/
         foot_pose[3] = dmotion::Deg2Rad(foot_pose[3]);
         foot_pose[4] = dmotion::Deg2Rad(foot_pose[4]);
@@ -83,6 +83,9 @@ namespace dmotion {
         ankle_x_to_hip = foot_pose[0] - foot_vertical_x - hip_x_from_origin;
         ankle_y_to_hip = foot_pose[1] - foot_vertical_y - (isRight_ ? (-half_hip_width) : half_hip_width);
         ankle_z_to_hip = foot_pose[2] - foot_vertical_z + hip_z_from_origin;
+        // std::cout << "x : " << ankle_x_to_hip << std::endl;
+        // std::cout << "y : " << ankle_y_to_hip << std::endl;
+        // std::cout << "z : " << ankle_z_to_hip << std::endl;
         ankle_norm = std::sqrt(
                 ankle_x_to_hip * ankle_x_to_hip + ankle_y_to_hip * ankle_y_to_hip + ankle_z_to_hip * ankle_z_to_hip);
         /** 获得了knee_pitch的角度 **/
@@ -111,41 +114,23 @@ namespace dmotion {
         /**分左右腿获得hip_pitch的角度**/
         if (!isRight_) {
             /** 先得到ankle_to_hip在ankle只经过yaw和roll变换之后的坐标系中的坐标 **/
-            ankle_to_hip_yaw_roll_x = ankle_x_to_hip * std::cos(dmotion::Deg2Rad(hip_yaw_)) +
-                                      ankle_y_to_hip * std::sin(dmotion::Deg2Rad(hip_yaw_));
+            ankle_to_hip_yaw_roll_x = ankle_x_to_hip * std::cos(hip_yaw_) + ankle_y_to_hip * std::sin(hip_yaw_);
             /** 因为估计此时的y分量应该为0，所以不算ankle_to_hip_yaw_roll_y **/
-            /*
-            double ankle_to_hip_yaw_roll_y = ankle_z_to_hip * std::sin( hip_roll_)) +
-                                             ankle_y_to_hip * std::cos(dmotion::Deg2Rad(hip_roll_)) *
-                                             std::cos(dmotion::Deg2Rad(hip_yaw_)) -
-                                             ankle_x_to_hip * std::cos(dmotion::Deg2Rad(hip_roll_)) *
-                                             std::sin(dmotion::Deg2Rad(hip_yaw_));
-            */
-            ankle_to_hip_yaw_roll_z = ankle_z_to_hip * std::cos(dmotion::Deg2Rad(hip_roll_)) -
-                                      ankle_y_to_hip * std::cos(dmotion::Deg2Rad(hip_yaw_)) *
-                                      std::sin(dmotion::Deg2Rad(hip_roll_)) +
-                                      ankle_x_to_hip * std::sin(dmotion::Deg2Rad(hip_roll_)) *
-                                      std::sin(dmotion::Deg2Rad(hip_yaw_));
+
+            ankle_to_hip_yaw_roll_z =
+                    ankle_z_to_hip * std::cos(hip_roll_) - ankle_y_to_hip * std::cos(hip_yaw_) * std::sin(hip_roll_) +
+                    ankle_x_to_hip * std::sin(hip_roll_) * std::sin(hip_yaw_);
         } else if (isRight_) {
-            ankle_to_hip_yaw_roll_x = ankle_x_to_hip * std::cos(dmotion::Deg2Rad(-hip_yaw_)) +
-                                      ankle_y_to_hip * std::sin(dmotion::Deg2Rad(-hip_yaw_));
+            ankle_to_hip_yaw_roll_x = ankle_x_to_hip * std::cos(-hip_yaw_) + ankle_y_to_hip * std::sin(-hip_yaw_);
             /** 因为估计此时的y分量应该为0，所以不算ankle_to_hip_yaw_roll_y **/
-            /*
-            double ankle_to_hip_yaw_roll_y = ankle_z_to_hip * std::sin(dmotion::Deg2Rad(hip_roll_)) +
-                                             ankle_y_to_hip * std::cos(dmotion::Deg2Rad(hip_roll_)) *
-                                             std::cos(dmotion::Deg2Rad(hip_yaw_)) -
-                                             ankle_x_to_hip * std::cos(dmotion::Deg2Rad(hip_roll_)) *
-                                             std::sin(dmotion::Deg2Rad(hip_yaw_));
-            */
-            ankle_to_hip_yaw_roll_z = ankle_z_to_hip * std::cos(dmotion::Deg2Rad(-hip_roll_)) -
-                                      ankle_y_to_hip * std::cos(dmotion::Deg2Rad(-hip_yaw_)) *
-                                      std::sin(dmotion::Deg2Rad(-hip_roll_)) +
-                                      ankle_x_to_hip * std::sin(dmotion::Deg2Rad(-hip_roll_)) *
-                                      std::sin(dmotion::Deg2Rad(-hip_yaw_));
+
+            ankle_to_hip_yaw_roll_z = ankle_z_to_hip * std::cos(-hip_roll_) -
+                                      ankle_y_to_hip * std::cos(-hip_yaw_) * std::sin(-hip_roll_) +
+                                      ankle_x_to_hip * std::sin(-hip_roll_) * std::sin(-hip_yaw_);
         }
         /** 获得只经过yaw和roll变换后的-z_unit向量和上面这个向量的夹角
          * 获得hip_pitch_**/
-        hip_pitch_absolute = std::atan(ankle_to_hip_yaw_roll_x / (-ankle_to_hip_yaw_roll_z));
+        hip_pitch_absolute = dmotion::Atan(ankle_to_hip_yaw_roll_x, (-ankle_to_hip_yaw_roll_z));
         hip_pitch_ = hip_pitch_absolute + dmotion::CosineTheorem(upper_leg_length, ankle_norm, lower_leg_length);
         /** 这里获得脚底向下的向量在经过hip的ypr变换之后的坐标系中的坐标**/
         if (!isRight_) {
@@ -166,11 +151,14 @@ namespace dmotion {
                              std::sin(hip_roll_) +
                              foot_vertical_x * std::cos(-hip_pitch_absolute) * std::sin(hip_roll_) *
                              std::sin(hip_yaw_);
-            ankle_pitch_absolute = std::atan(-foot_hip_rpy_x / foot_hip_rpy_z);
+
+            ankle_pitch_absolute = dmotion::Atan(foot_hip_rpy_x, -foot_hip_rpy_z);
+
             ankle_pitch_ =
                     ankle_pitch_absolute + dmotion::CosineTheorem(lower_leg_length, ankle_norm, upper_leg_length);
-            ankle_roll_ = std::atan(
-                    -foot_hip_rpy_y / std::sqrt(foot_hip_rpy_x * foot_hip_rpy_x + foot_hip_rpy_z * foot_hip_rpy_z));
+
+            ankle_roll_ = dmotion::Atan(
+                    -foot_hip_rpy_y, std::sqrt(foot_hip_rpy_x * foot_hip_rpy_x + foot_hip_rpy_z * foot_hip_rpy_z));
 
         } else if (isRight_) {
             foot_hip_rpy_x = foot_vertical_x * std::cos(-hip_pitch_absolute) * std::cos(-hip_yaw_) -
@@ -191,11 +179,14 @@ namespace dmotion {
                              std::sin(-hip_roll_) +
                              foot_vertical_x * std::cos(-hip_pitch_absolute) * std::sin(-hip_roll_) *
                              std::sin(-hip_yaw_);
-            ankle_pitch_absolute = std::atan(-foot_hip_rpy_x / foot_hip_rpy_z);
+            ankle_pitch_absolute = dmotion::Atan(foot_hip_rpy_x, -foot_hip_rpy_z);
+
+
             ankle_pitch_ =
                     ankle_pitch_absolute + dmotion::CosineTheorem(lower_leg_length, ankle_norm, upper_leg_length);
-            ankle_roll_ = std::atan(
-                    foot_hip_rpy_y / std::sqrt(foot_hip_rpy_x * foot_hip_rpy_x + foot_hip_rpy_z * foot_hip_rpy_z));
+
+            ankle_roll_ = dmotion::Atan(
+                    foot_hip_rpy_y, std::sqrt(foot_hip_rpy_x * foot_hip_rpy_x + foot_hip_rpy_z * foot_hip_rpy_z));
         }
         /** 更新当前参数**/
         finals.clear();
@@ -207,6 +198,156 @@ namespace dmotion {
         finals.emplace_back(ankle_roll_);
         dmotion::Rad2Deg(finals);
         return finals;
+
+    }
+
+    /**
+     * 两条腿逆运动学对象的构造函数
+     * @param ankle_distance_y
+     */
+    WholeBodyIK::WholeBodyIK(const double ankle_distance_y) : left_leg_(false), right_leg_(true) {
+        ankle_distance_x_ = 0;
+        ankle_distance_y_ = ankle_distance_y;
+        ankle_distance_z_ = 0;
+        offset_x = 0;
+        offset_y = ankle_distance_y_ / 2.0;
+        offset_z = 0;
+        relative_y = 0;
+        relative_p = 0;
+        relative_r = 0;
+        relative_left_x = 0;
+        relative_left_y = 0;
+        relative_left_z = 0;
+        relative_right_x = 0;
+        relative_right_y = 0;
+        relative_right_z = 0;
+
+    }
+
+    /**
+     * 两条腿逆运动学对象的构造函数的重载，为了应对两个脚不是平时状态的情况
+     * @param ankle_distance 踝关节间距
+     */
+    WholeBodyIK::WholeBodyIK(const double ankle_distance_x, const double ankle_distance_y,
+                             const double ankle_distance_z) : left_leg_(false), right_leg_(true) {
+        ankle_distance_x_ = ankle_distance_x;
+        ankle_distance_y_ = ankle_distance_y;
+        ankle_distance_z_ = ankle_distance_z;
+        offset_x = ankle_distance_x_ / 2.0;
+        offset_y = ankle_distance_y_ / 2.0;
+        offset_z = ankle_distance_z_ / 2.0;
+        relative_y = 0;
+        relative_p = 0;
+        relative_r = 0;
+        relative_left_x = 0;
+        relative_left_y = 0;
+        relative_left_z = 0;
+        relative_right_x = 0;
+        relative_right_y = 0;
+        relative_right_z = 0;
+    }
+
+    /**
+     * 这里是双腿逆运动学的解算实现
+     * @param body_pose 输入机器人身体中心原点相对于两脚之间中心的位置和姿态，姿态的旋转顺序
+     * 先绕Z_a转yaw角,再绕Y_b转pitch角,最后绕X_b转roll角
+     * @return 返回左腿和右腿的关节角度值，先左腿，后右腿，舵机依照安装顺序从上到下排序
+     */
+    std::vector<double> &WholeBodyIK::GetIKResult(std::vector<double> &body_pose) {
+        body_pose[3] = dmotion::Deg2Rad(body_pose[3]);
+        body_pose[4] = dmotion::Deg2Rad(body_pose[4]);
+        body_pose[5] = dmotion::Deg2Rad(body_pose[5]);
+
+        relative_p = std::asin(-(std::sin(body_pose[3]) * std::sin(body_pose[5]) +
+                                 std::cos(body_pose[3]) * std::cos(body_pose[5]) * std::sin(body_pose[4])));
+        relative_r = std::asin((std::cos(body_pose[3]) * std::sin(body_pose[4]) * std::sin(body_pose[5]) -
+                                std::cos(body_pose[5]) * std::sin(body_pose[3])) / std::cos(relative_p));
+        relative_y = std::asin((std::cos(body_pose[5]) * std::sin(body_pose[4]) * std::sin(body_pose[3]) -
+                                std::cos(body_pose[3]) * std::sin(body_pose[5])) / std::cos(relative_p));
+
+        vector_for_left.clear();
+        vector_for_right.clear();
+        legs_finals.clear();
+
+
+        absolute_left_x = offset_x - body_pose[0];
+        absolute_right_x = -offset_x - body_pose[0];
+        absolute_left_y = offset_y - body_pose[1];
+        absolute_right_y = -offset_y - body_pose[1];
+        absolute_left_z = offset_z - body_pose[2];
+        absolute_right_z = -offset_z - body_pose[2];
+
+
+        relative_left_x = absolute_left_x * std::cos(body_pose[4]) * std::cos(body_pose[5]) -
+                          absolute_left_z * std::sin(body_pose[4]) +
+                          absolute_left_y * std::cos(body_pose[4]) * std::sin(body_pose[5]);
+        relative_left_y = absolute_left_y * std::cos(body_pose[3]) * std::cos(body_pose[5]) +
+                          absolute_left_z * std::cos(body_pose[4]) * std::sin(body_pose[3]) -
+                          absolute_left_x * std::cos(body_pose[3]) * std::sin(body_pose[5]) +
+                          absolute_left_x * std::cos(body_pose[5]) * std::sin(body_pose[4]) * std::sin(body_pose[3]) +
+                          absolute_left_y * std::sin(body_pose[4]) * std::sin(body_pose[3]) * std::sin(body_pose[5]);
+        relative_left_z = absolute_left_z * std::cos(body_pose[4]) * std::cos(body_pose[3]) -
+                          absolute_left_y * std::cos(body_pose[5]) * std::sin(body_pose[3]) +
+                          absolute_left_x * std::sin(body_pose[3]) * std::sin(body_pose[5]) +
+                          absolute_left_x * std::cos(body_pose[3]) * std::cos(body_pose[5]) * std::sin(body_pose[4]) +
+                          absolute_left_y * std::cos(body_pose[3]) * std::sin(body_pose[4]) * std::sin(body_pose[5]);
+
+        relative_right_x = absolute_right_x * std::cos(body_pose[4]) * std::cos(body_pose[5]) -
+                           absolute_right_z * std::sin(body_pose[4]) +
+                           absolute_right_y * std::cos(body_pose[4]) * std::sin(body_pose[5]);
+        relative_right_y = absolute_right_y * std::cos(body_pose[3]) * std::cos(body_pose[5]) +
+                           absolute_right_z * std::cos(body_pose[4]) * std::sin(body_pose[3]) -
+                           absolute_right_x * std::cos(body_pose[3]) * std::sin(body_pose[5]) +
+                           absolute_right_x * std::cos(body_pose[5]) * std::sin(body_pose[4]) * std::sin(body_pose[3]) +
+                           absolute_right_y * std::sin(body_pose[4]) * std::sin(body_pose[3]) * std::sin(body_pose[5]);
+        relative_right_z = absolute_right_z * std::cos(body_pose[4]) * std::cos(body_pose[3]) -
+                           absolute_right_y * std::cos(body_pose[5]) * std::sin(body_pose[3]) +
+                           absolute_right_x * std::sin(body_pose[3]) * std::sin(body_pose[5]) +
+                           absolute_right_x * std::cos(body_pose[3]) * std::cos(body_pose[5]) * std::sin(body_pose[4]) +
+                           absolute_right_y * std::cos(body_pose[3]) * std::sin(body_pose[4]) * std::sin(body_pose[5]);
+
+
+        /** 两脚的x加入 **/
+        vector_for_left.emplace_back(relative_left_x);
+        vector_for_right.emplace_back(relative_right_x);
+        /** 两脚的y加入 **/
+        vector_for_left.emplace_back(relative_left_y);
+        vector_for_right.emplace_back(relative_right_y);
+        /** 两脚的z加入 **/
+        vector_for_left.emplace_back(relative_left_z);
+        vector_for_right.emplace_back(relative_right_z);
+
+
+        /** 两脚的r加入 **/
+        vector_for_left.emplace_back(dmotion::Rad2Deg(relative_r));
+        vector_for_right.emplace_back(dmotion::Rad2Deg(relative_r));
+        /** 两脚的p加入 **/
+        vector_for_left.emplace_back(dmotion::Rad2Deg(relative_p));
+        vector_for_right.emplace_back(dmotion::Rad2Deg(relative_p));
+        /** 两脚的y加入 **/
+        vector_for_left.emplace_back(dmotion::Rad2Deg(relative_y));
+        vector_for_right.emplace_back(dmotion::Rad2Deg(relative_y));
+
+        dmotion::PrintVector(vector_for_left);
+        dmotion::PrintVector(vector_for_right);
+        angles_for_left = left_leg_.LegInvKin(vector_for_left);
+        angles_for_right = right_leg_.LegInvKin(vector_for_right);
+
+        /** 按照先左腿后右腿的顺序加入最终的vector **/
+        legs_finals.insert(legs_finals.end(), angles_for_left.begin(), angles_for_left.end());
+        legs_finals.insert(legs_finals.end(), angles_for_right.begin(), angles_for_right.end());
+
+        return legs_finals;
+
+    }
+
+    void WholeBodyIK::ChangeFootPos(const double new_foot_x, const double new_foot_y, const double new_foot_z) {
+        ankle_distance_x_ = new_foot_x;
+        ankle_distance_y_ = new_foot_y;
+        ankle_distance_z_ = new_foot_z;
+        offset_x = ankle_distance_x_ / 2.0;
+        offset_y = ankle_distance_y_ / 2.0;
+        offset_z = ankle_distance_z_ / 2.0;
 
     }
 

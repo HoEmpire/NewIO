@@ -7,12 +7,12 @@
 #include "dmotion/Common/Parameters.h"
 using namespace dynamixel;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
-// #define PORT_NAME "/dev/Servo"
-// #define BAUDRATE  1000000
-#define PORT_NAME "/dev/ttyUSB0"
-#define BAUDRATE  3000000
+#define PORT_NAME "/dev/Servo"
+#define BAUDRATE  1000000
+// #define PORT_NAME "/dev/ttyUSB0"
+// #define BAUDRATE  3000000
 #define PROTOCOL_VERSION 2.0
-#define IS_TIME_BASE true //set time based profile
+#define IS_TIME_BASE false //set time based profile
 
 #if IS_TIME_BASE
   #define INIT_TICKS 0 //the total time that keep low speed | unit:10ms
@@ -25,6 +25,7 @@ using namespace dynamixel;
 #define SAFE_MODE_SPEED 50
 #define checkPowerID 11 // id of left_hip_yaw
 #define READ_OUTPUT false// print the read result of position and velocity from encoder
+#define LEG_ONLY true
 
 namespace Motion
 {
@@ -113,10 +114,24 @@ void ServoIO::initServoPositions()
             }
         }
 
+        bool state = true;
         if(!m_reader_inited)
         {
-            bool state = m_pos_reader->addParam(_cfg.id);
-            state = m_pos_reader2->addParam(_cfg.id);//TODO
+            if(LEG_ONLY)
+            {
+              if(!(joint.first ==  "right_arm_upper" || joint.first ==  "right_arm_lower" ||
+                   joint.first ==  "left_arm_upper" || joint.first ==  "left_arm_lower"||
+                   joint.first ==  "head_pitch" || joint.first ==  "head_yaw"))
+                   {
+                       state = m_pos_reader->addParam(_cfg.id);
+                       state = m_pos_reader2->addParam(_cfg.id);//TODO
+                   }
+            }
+            else
+            {
+              state = m_pos_reader->addParam(_cfg.id);
+              state = m_pos_reader2->addParam(_cfg.id);//TODO
+            }
             if (!state)
             {
                 ROS_ERROR_STREAM("ServoIO::initServoPositions: id " << _cfg.id << " add read position param error");
@@ -170,9 +185,9 @@ void ServoIO::sendServoPositions()
             else{
               if(IS_TIME_BASE)
               {
-                setAllServoSpeed(10);
+                setAllServoSpeed(20);
                 timer::delay_ms(10);
-                setAllServoAcc(5);
+                setAllServoAcc(10);
                 timer::delay_ms(10);
               }
               else
@@ -380,7 +395,11 @@ bool ServoIO::checkPower(){
 
 void ServoIO::setAllServoTimeBase(bool flag)
 {
-    std::cout << "ServoIO::setAllServoTimeBase: set all servo to time based mode " << std::endl;
+    if(flag)
+        std::cout << "ServoIO::setAllServoTimeBase: set all profile to time based mode " << std::endl;
+    else
+        std::cout << "ServoIO::setAllServoTimeBase: set all profile to position based mode " << std::endl;
+
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;

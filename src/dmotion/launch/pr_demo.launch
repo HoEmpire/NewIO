@@ -1,7 +1,7 @@
 <launch>
     <node pkg="dmotion"
-          name="state_test"
-          type="state_test"
+          name="pr_demo"
+          type="pr_demo"
           output="screen"
           respawn="false"
           required="true"
