@@ -2,14 +2,13 @@
 // Created by zjudancer on 18-12-18.
 //
 
-#include "../../include/dmotion/PendulumWalk/PendulumWalk.h"
+#include "PendulumWalk.h"
 
 using namespace dmotion;
 namespace dmotion {
 
 
     PendulumWalk::PendulumWalk() {
-
         com_ac_x = 0;
         com_ac_y = 0;
         support_is_right = false;
@@ -210,7 +209,7 @@ namespace dmotion {
     }
 
 
-   std::vector<double> PendulumWalk::GiveATick() {
+    std::vector<double> PendulumWalk::GiveATick() {
 
 
         motion_tick tmptick;
@@ -238,7 +237,7 @@ namespace dmotion {
         tick_num++;
 
 
-        return  (Support->GetOneStep(tmptick.hang_foot, tmptick.whole_com, tmptick.yaw, false));
+      return (Support->GetOneStep(tmptick.hang_foot, tmptick.whole_com, tmptick.yaw, false));
 
     }
 

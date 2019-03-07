@@ -1,15 +1,13 @@
 //
 // Created by zjudancer on 18-10-29.
 // E-mail: zjufanwu@zju.edu.cn
-// TODO 这个类希望实现脚和身体的逆运动学
+//
 
 #ifndef PROJECT_INVERSEKINEMATICS_H
 #define PROJECT_INVERSEKINEMATICS_H
 
 #include <vector>
 #include <Eigen/Dense>
-
-
 namespace dmotion {
 
     class InvKin {

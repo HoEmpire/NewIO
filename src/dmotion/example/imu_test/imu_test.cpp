@@ -3,7 +3,7 @@
 #include <ros/ros.h>
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
-#include "../../include/dmotion/IO/IMUReader.h"
+#include "dmotion/IO/IMUReader.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -32,7 +32,7 @@ int main(int argc, char ** argv)
       imu.readIMUData();
       //a.toc();
       //imu.test_imu();
-        imu.getIMUData();
+      imu.getIMUData();
       //timer::delay_ms(6);
 
     }

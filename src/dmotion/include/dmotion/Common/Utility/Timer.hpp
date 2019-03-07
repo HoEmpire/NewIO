@@ -53,7 +53,7 @@ public:
         return std::chrono::steady_clock::now();
     }
 
-    void smartDelay_ms(double ms)
+    void SmartDelayMs(double ms)
     {
         end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
@@ -64,7 +64,7 @@ public:
         }
         else
         {
-           std::cout << "smart ticks overflow:" << time_past << " ms > " << ms << " ms" << std::endl;
+           std::cout << "SmartDelayMs ticks overflow:" << time_past << " ms > " << ms << " ms" << std::endl;
           // std::abort();
         }
 

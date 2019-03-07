@@ -16,6 +16,6 @@ int main(int argc, char ** argv)
     while(ros::ok()){
       a.tic();
       Feet.readPressureData();
-      a.smartDelay_ms(10.0);
+      a.SmartDelayMs(10.0);
     }
 }

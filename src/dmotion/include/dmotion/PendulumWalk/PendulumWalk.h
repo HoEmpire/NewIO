@@ -3,8 +3,8 @@
 // author Wu Fan
 // E-mail zjufanwu@zju.edu.cn
 // This is the demo version of straight walk
-#include "../OneFootLanding/OneFootLanding.h"
-#include "../ThreeInterpolation/ThreeInterpolation.h"
+#include "OneFootLanding.h"
+#include "ThreeInterpolation.h"
 #include <iostream>
 #include <time.h>
 #include <cmath>
@@ -82,7 +82,7 @@ namespace dmotion {
         std::vector<double> akY;
         std::vector<double> akYaw;
 
-        dmotion::OneFootLanding * Support;
+        OneFootLanding * Support;
 
 
 

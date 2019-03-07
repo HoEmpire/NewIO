@@ -3,7 +3,7 @@
 #include <ros/ros.h>
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
-#include "../../include/dmotion/IO/FeetSensorIO.h"
+#include "dmotion/IO/FeetSensorIO.h"
 #include <thread>
 #include "dmotion/IO/IOManager3.h"
 #define workplace "/home/ubuntu/test/NewIO/test_data/test1"
@@ -23,7 +23,7 @@ int main(int argc, char ** argv)
       b.tic();
       fsio.readPressureData();
       b.toc();
-      b.smartDelay_ms(10.0);
+      b.SmartDelayMs(10.0);
     }
 
 }

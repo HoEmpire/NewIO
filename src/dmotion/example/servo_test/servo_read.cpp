@@ -70,7 +70,7 @@ int main(int argc, char ** argv)
       INFO("*****************************");
       a.toc();
       INFO("*****************************");
-      b.smartDelay_ms(10.0);
+      b.SmartDelayMs(10.0);
     }
 
 }

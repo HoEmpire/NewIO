@@ -1,4 +1,4 @@
-#include "dmotion/State/imu_filter_new.hpp"
+#include "dmotion/State/IMUFilter.hpp"
 
 #define FILTER_FREQUENCE 0.01 // 5ms //change for test
 #define LPF_FREQ 50

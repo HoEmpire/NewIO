@@ -75,7 +75,6 @@ bool IMUReader::checkPower()
     }
     return false;
 }
-
 #endif
 
 void IMUReader::clearPort()
@@ -240,8 +239,7 @@ bool IMUReader::readIMUData()
       int same_cnt = 0;
       bool read_flag = 0;
       int power_tick = 0;
-      int ms_cnt = 0;
-      int us_cnt = 0;
+
       std::chrono::time_point<std::chrono::steady_clock> m_imu_readBegin_tmp;
       timer a;
       while(true)
@@ -257,13 +255,6 @@ bool IMUReader::readIMUData()
           }
         }
         power_tick = 0;
-        // tp =std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());
-        // us_cnt = tp.time_since_epoch().count() % 1000;
-        // ms_cnt = (tp.time_since_epoch().count() / 1000) % 1000;
-        // std::cout << "time point--" << ms_cnt << "ms ," << us_cnt << "us" ;
-        //
-        // printf("   %02x\n", byte_buffer);
-
         switch(state)
         {
           case 0:

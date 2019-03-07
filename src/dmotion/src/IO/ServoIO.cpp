@@ -1,8 +1,5 @@
 #include "dmotion/IO/ServoIO.h"
-
-//#include "dmotion/IO/IOManager2.h"
 #include "dmotion/IO/IOManager3.h"
-
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
 using namespace dynamixel;
@@ -23,7 +20,7 @@ using namespace dynamixel;
 #endif
 
 #define SAFE_MODE_SPEED 50
-#define checkPowerID 11 // id of left_hip_yaw
+#define CHECK_POWER_ID 11 // id of left_hip_yaw
 #define READ_OUTPUT false// print the read result of position and velocity from encoder
 #define LEG_ONLY true
 
@@ -46,7 +43,7 @@ ServoIO::ServoIO()
     m_pos_reader = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_CURR_POSITION, LENGTH_POSITION);
     m_pos_reader2 = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_CURR_VELOCITY, 2*LENGTH_POSITION);
     m_pos_power = new GroupSyncRead(m_servo_port, m_servo_protocol, ADDR_LED, LENGTH_LED);
-    m_pos_power->addParam(checkPowerID);
+    m_pos_power->addParam(CHECK_POWER_ID);
 }
 
 ServoIO::~ServoIO()
@@ -383,7 +380,7 @@ bool ServoIO::checkPower(){
     uint8_t dxl_error = 0;
     uint8_t data = 0;
 
-    bool state = m_servo_protocol->read1ByteTxRx(m_servo_port, checkPowerID, ADDR_LED, &data, &dxl_error);
+    bool state = m_servo_protocol->read1ByteTxRx(m_servo_port, CHECK_POWER_ID, ADDR_LED, &data, &dxl_error);
     if (state != COMM_SUCCESS)
     {
        INFO ("ServoIO::checkPower: check power failed once");

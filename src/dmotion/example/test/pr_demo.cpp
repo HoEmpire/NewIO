@@ -8,7 +8,7 @@
 #include "../../include/dmotion/IO/IOManager3.h"
 #include "dmotion/State/StateManager.hpp"
 #include "dmotion/ForwardKinematics/ForwardKinematics.h"
-#include "../../include/dmotion/PendulumWalk/PendulumWalk.h"
+#include "PendulumWalk.h"
 
 #include <thread>
 #include <fstream>
@@ -56,13 +56,16 @@ void tt()
     Motion::IOManager3 io;
     io.setAllspeed(30);
     std::vector<double> fucking;
-//    io.setAllJointValue(fucking);
+    PendulumWalk pen;
+    pen.GiveAStep(0,0,0);
+    fucking = pen.GiveATick();
+    io.setAllJointValue(fucking);
     io.spinOnce();
     sleep(2);
     io.setAllspeed(0);//after 4 seconds, servo ini finished
-    PendulumWalk pen;
 
     double E;
+    int E_flag = 0;
     int ticks = 0;
     while(ros::ok()){
 
@@ -71,15 +74,25 @@ void tt()
         if(E < -0.1)
         {
           INFO("too slow");
-          // if(ticks == 0)
-          //   pen.GiveAStep(5,0,0);
-          // if(ticks < 35)
-          // {
-          //   fucking = pen.GiveATick();
-          //   ticks++;
-          // }
-          // else
-          //   ticks = 0;
+          E_flag = 1;
+        }
+
+
+        if(E_flag)
+        {
+          if(ticks == 0)
+            pen.GiveAStep(5,0,0);
+          if(ticks < 35)
+          {
+            fucking = pen.GiveATick();
+            io.setAllJointValue(fucking);
+            ticks++;
+          }
+          else
+          {
+            ticks = 0;
+            E_flag = 0;
+          }
         }
 
         if(E > 0.8)
@@ -155,7 +168,6 @@ int main(int argc, char ** argv)
     ofstream feet_pitchv("feet_pitchv.txt", ios::out|ios::trunc);
     ofstream feet_yawv("feet_yawv.txt", ios::out|ios::trunc);
 
-
     std::vector<float> roll,pitch,yaw;
     std::vector<float> ax,ay,az;
     std::vector<float> wx,wy,wz;
@@ -185,7 +197,6 @@ int main(int argc, char ** argv)
     Eigen::Matrix<double,3,3> R_new, dR, R_old;
     R_old.setIdentity();
 
-
     std::thread t1(tt);
     sleep(4);
     t1.detach();
@@ -199,7 +210,7 @@ int main(int argc, char ** argv)
       sm.servo_initialized = servo_state;
       sm.pressure_data = pressure_data;
       sm.working();
-      a.smartDelay_ms(10.0);//暂时回到10ms
+      a.SmartDelayMs(10.0);//暂时回到10ms
       if(sm.imu_initialized == Motion::INITED && sm.pressure_initialized == Motion::INITED)
       {
          roll.push_back(sm.roll);

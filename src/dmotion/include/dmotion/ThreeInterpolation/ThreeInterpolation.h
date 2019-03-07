@@ -9,14 +9,17 @@
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/LU>
-#include "../Polynomial/Polynomial.hpp"
+#include "Polynomial.hpp"
 
+#define DEFAULT_POINT_INTERVAL 100   //默认的发值时间间隔
+#define DEFAULT_BOUNDARY_SLOPE 1.0
 
 namespace dmotion {
 
     class ThreeInterpolation {
     private:
         int piece_num_;
+        double time_interval_;
         std::vector<dmotion::Polynomial<3>> poly_;
         std::vector<double> x_array_;
         std::vector<double> y_array_;
@@ -25,6 +28,7 @@ namespace dmotion {
         std::vector<double> y_samples_;
 
     public:
+        bool is_order = false;
         //参数健全的构造函数
         ThreeInterpolation(const std::vector<double> &x_array,
                            const std::vector<double> &y_array,
@@ -42,7 +46,7 @@ namespace dmotion {
         double EvalHere(double x0) const;
 
         //获得固定时间间隔下样本点的Eval序列，时间t0是这个间隔时间，单位是ms,有默认毫秒数20ms
-        void CalculatePoints(int t0_in = 20);
+        void CalculatePoints(int t0_in = DEFAULT_POINT_INTERVAL);
 
         //获取t0时间间隔下的分段函数值点序列
         std::vector<double> &GetPoints();
@@ -63,6 +67,9 @@ namespace dmotion {
         //经过这一步计算，算出这些分段多项式的Polynomial对象
         void Calculate();
 
+        //单独一个piece的计算过程
+        Eigen::Matrix<double, 4, 1> OnePiece(const double &x_r, const double &y_r, const double &s_r,
+                                              const double &x_l, const double &y_l, const double &s_l);
     };
 
 }

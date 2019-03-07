@@ -107,7 +107,7 @@ int flag = 0;
 //                     ini_ticks);
 //       }
 //       start = timer::getCurrentSystemTime();
-//       a.smartDelay_ms(2.0);
+//       a.SmartDelayMs(2.0);
 //       a.tic();
 //     }
 //
@@ -168,7 +168,7 @@ int flag = 0;
 //
 //       count++;
 //
-//       a.smartDelay_ms(2.0);
+//       a.SmartDelayMs(2.0);
 //       a.tic();
 //     }
 //
@@ -429,7 +429,7 @@ int main(int argc, char ** argv)
       sm.servo_initialized = servo_state;
       sm.pressure_data = pressure_data;
       sm.working();
-      a.smartDelay_ms(10.0);//暂时回到10ms
+      a.SmartDelayMs(10.0);//暂时回到10ms
       if(sm.imu_initialized == Motion::INITED && sm.pressure_initialized == Motion::INITED)
       {
          roll.push_back(sm.roll);

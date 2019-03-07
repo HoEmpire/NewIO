@@ -1,5 +1,4 @@
 #include "dmotion/State/StateManager.hpp"
-
 #include <ros/ros.h>
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/Common/Utility/Utility.h"
@@ -274,8 +273,6 @@ void StateManager::iniPressureSensor()
 void StateManager::checkSupportState()
 {
   float left_sum_ = 0, right_sum_ = 0;
-  float support_sum_ = 0;
-  static float sum_, average_;
 
   // sum pressure data of each feet
   for(int i = 0; i < 4; i++)

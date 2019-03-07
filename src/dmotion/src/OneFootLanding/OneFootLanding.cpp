@@ -4,7 +4,6 @@
 
 #include "OneFootLanding.h"
 
-
 namespace dmotion {
     //暂时给这些参数赋予一些差不多的值
     const double OneFootLanding::ankle_offset_x = 0;

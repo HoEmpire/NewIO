@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
         a.tic();
         io.readPosVel();
         a.toc();
-        a.smartDelay_ms(10.0);
+        a.SmartDelayMs(10.0);
         //cunt++;
       }
 

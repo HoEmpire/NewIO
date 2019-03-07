@@ -6,6 +6,7 @@
 #include "dmotion/InverseKinematics/InverseKinematics.h"
 #include "dmotion/ForwardKinematics/ForwardKinematics.h"
 #include "dmotion/Utility/dmotion_math.hpp"
+#include "PendulumWalk.h"
 #include <iostream>
 using namespace std;
 using namespace dmotion;
@@ -45,6 +46,8 @@ int main(int argc, char **argv)
 
     parameters.init(&nh);
     Motion::IOManager3 io;
+    PendulumWalk pen;
+    OneFootLanding a(false);
 
     std::vector<int> servo_id = {6,7};
     io.setServoPI(servo_id, 800, 0);

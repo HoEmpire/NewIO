@@ -9,7 +9,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <cmath>
-#include "../../include/dmotion/dmotion_math.hpp"
+#include "dmotion_math.hpp"
 #include "InverseKinematics.h"
 
 namespace dmotion {

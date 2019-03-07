@@ -95,7 +95,7 @@ int main(int argc, char ** argv)
                     ini_ticks);
       }
       start = timer::getCurrentSystemTime();
-      a.smartDelay_ms(2.0);
+      a.SmartDelayMs(2.0);
       a.tic();
     }
 
@@ -141,7 +141,7 @@ int main(int argc, char ** argv)
 
       count++;
 
-      a.smartDelay_ms(2.0);
+      a.SmartDelayMs(2.0);
       a.tic();
     }
 

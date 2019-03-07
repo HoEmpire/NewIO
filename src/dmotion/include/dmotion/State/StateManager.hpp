@@ -1,7 +1,7 @@
 #pragma once
 //#include "dmotion/Common/Common.h"
 
-#include "dmotion/State/imu_filter_new.hpp"
+#include "IMUFilter.hpp"
 #include <ros/ros.h>
 #include "dmotion/Common/Type.h"
 namespace Motion{
@@ -28,14 +28,18 @@ class StateManager
     void working();
 
     IMUData imu_data;
-    PowerState m_power_state;
-    PressureData pressure_data;
+
+
+
     float roll, pitch, yaw;
     float ax_wog, ay_wog, az_wog;
-    IniState imu_initialized;
-    IniState pressure_initialized;
-    bool servo_initialized;
     SupportState m_support_state;
+    IniState imu_initialized;
+    PressureData pressure_data;
+    IniState pressure_initialized;
+    PowerState m_power_state;
+    bool servo_initialized;
+
 
 
   private:

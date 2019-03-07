@@ -97,79 +97,6 @@ void IOManager3::initZJUJoint()
     }
 }
 
-#ifdef old
-void IOManager3::spinOnce()
-{
-    static int imu_failures = 0;
-    if (ON == m_power_state)
-    {
-        // read imu
-        if(POWER_DETECTER)
-        {
-            if (!m_imu_reader.readIMUData())
-            {
-                if (imu_failures++ > 10)
-                {
-                    m_power_state = OFF;
-                    ROS_WARN("IOManager3::spinOnce: power off detected...");
-                    return;
-                }
-            }
-            else
-            {
-                imu_failures = 0;
-            }
-        }
-
-        // read pressure data
-        if (parameters.global.using_pressure)
-        {
-            if (!m_feet_io.readPressureData())
-            {
-                ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
-            }
-        }
-        a.toc();
-
-        // use internal clock to calculate waiting time
-        std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_sync_time);
-        double ticks = duration_.count()*1000;
-
-        //set delay
-        if (ticks > DATA_FREQUENCY)
-        {
-            ROS_WARN_STREAM("IOManager3::spinOnce:  motion ticks overflow..." << ticks);
-        }
-        else
-        {
-            timer::delay_ms(DATA_FREQUENCY - ticks - 0.1);
-        }
-
-        m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
-        m_servo_io.sendServoPositions();
-
-    }
-
-    else if (OFF == m_power_state)
-    {
-        checkIOPower();
-
-        if (ON == m_power_state)
-        {
-            m_servo_io.initServoPositions();
-            m_servo_inited = true;
-            m_power_state = ON;
-            return;
-        }
-        timer::delay_ms(500);
-    }
-    else
-    {
-        ROS_ERROR("IOManager3::Surprise mother fucker....");
-    }
-
-}
-#else
 void IOManager3::spinOnce()
 {
     //static int imu_failures = 0;
@@ -203,7 +130,6 @@ void IOManager3::spinOnce()
 
         m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
         m_servo_io.sendServoPositions();
-
     }
     else if (OFF == m_power_state)
     {
@@ -223,7 +149,6 @@ void IOManager3::spinOnce()
     }
 
 }
-#endif
 
 void IOManager3::setAllJointValue(const std::vector<double>& values_)
 {
@@ -364,20 +289,7 @@ void IOManager3::readPosVel()
 //     m_servo_io.setAllServoTimeBase(true);
 // }
 
-#ifdef old
-void IOManager3::checkIOPower()
-{
-    ROS_INFO("IOManager3::checkIOPower: checking whether power is on by imu");
-    if (m_imu_reader.checkPower())
-    {
-        m_power_state = ON;
-    }
-    else
-    {
-        m_power_state = OFF;
-    }
-}
-#else
+
 void IOManager3::checkIOPower()
 {
     ROS_INFO("IOManager3::checkIOPower: checking whether power is on by servo");
@@ -390,53 +302,7 @@ void IOManager3::checkIOPower()
         m_power_state = OFF;
     }
 }
-#endif
 
-#ifdef old
-void IOManager3::readIMU(){
-  while(ros::ok())
-  {
-      m_imu_sync_time = timer::getCurrentSystemTime();
-
-      if(m_power_state == ON){
-          //INFO("*****POWER ON*****");
-          if (!m_imu_reader.readIMUData())
-          {
-              if (m_imu_failures++ > 10)
-              {
-                  m_power_state = OFF;
-                  ROS_WARN("IOManager3::readIMU: power off detected...");
-              }
-          }
-          else
-          {
-              m_imu_failures = 0;
-          }
-      }
-      else if(m_power_state == OFF){
-          //INFO("*****POWER OFF*****");
-          if (m_imu_reader.checkPower())
-          {
-              m_power_state = REOPEN;
-          }
-          else
-          {
-              m_power_state = OFF;
-          }
-      }
-      else if(m_power_state == REOPEN){
-      }
-      else
-      {
-          ROS_ERROR("IOManager3::Surprise mother fucker....");
-      }
-      std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_imu_sync_time);
-      double ticks = duration_.count()*1000;
-
-      timer::delay_ms(IMU_FREQUENCY - ticks - 0.1);
-  }
-}
-#else
 void IOManager3::readIMU(){
     while(ros::ok())
     {
@@ -460,7 +326,6 @@ void IOManager3::readIMU(){
           //  timer::delay_us(6000);
     }
 }
-#endif
 
 void IOManager3::checkPower(){
     int PowerChangeTick = 0;

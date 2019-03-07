@@ -153,8 +153,7 @@ public:
 
     void readPosVel();
 
-public:
-    bool m_servo_inited;
+
 
 private:
     dynamixel::PortHandler* _initPort(const std::string portname, const int baudrate);
@@ -172,6 +171,9 @@ private:
     int m_imu_failures = 0;
 
     PowerState m_power_state;
+
+public:
+      bool m_servo_inited;
 };
 
 }

@@ -2,7 +2,7 @@
 // Created by fw on 18/10/17.
 // E-mail: zjufanwu@zju.edu.cn
 //
-#include "dmotion/ThreeInterpolation/ThreeInterpolation.h"
+#include "ThreeInterpolation.h"
 #include <cmath>
 #include <vector>
 #include <iostream>
@@ -20,10 +20,12 @@ namespace dmotion {
         x_array_ = x_array;
         y_array_ = y_array;
         s_angle_ = s_angle;
+        time_interval_ = DEFAULT_POINT_INTERVAL;
 
         if (isInOrder(x_array_)) {
             piece_num_ = static_cast<int>(x_array_.size() - 1);
             Calculate();
+            CalculatePoints(time_interval_);
         } else
             std::cerr << "The x_array is not available!" << std::endl;
     }
@@ -38,19 +40,48 @@ namespace dmotion {
                                            const std::vector<double> &y_array) {
         x_array_ = x_array;
         y_array_ = y_array;
-        std::vector<double> s_tmp(x_array_.size(), 0);
-        s_angle_ = s_tmp;
+        time_interval_ = DEFAULT_POINT_INTERVAL;
+
+        if (y_array_[0] > y_array_[1])
+            s_angle_.emplace_back(-DEFAULT_BOUNDARY_SLOPE);
+        else if (y_array_[0] < y_array_[1])
+            s_angle_.emplace_back(DEFAULT_BOUNDARY_SLOPE);
+        else
+            s_angle_.emplace_back(0);
+
+        for (unsigned i = 1; i < (x_array.size() - 1); i++) {
+            if ((y_array_[i - 1] <= y_array_[i] && y_array_[i] <= y_array_[i + 1]) ||
+                (y_array_[i - 1] >= y_array_[i] && y_array_[i] >= y_array_[i + 1])) {
+                s_angle_.emplace_back((y_array_[i + 1] - y_array_[i - 1]) / (x_array_[i + 1] - x_array_[i - 1]));
+                continue;
+            } else {
+                s_angle_.emplace_back(0);
+            }
+        }
+
+        if (y_array_[y_array.size() - 2] > y_array_[y_array.size() - 1])
+            s_angle_.emplace_back(-DEFAULT_BOUNDARY_SLOPE);
+        else if(y_array_[y_array.size() - 2] < y_array_[y_array.size() - 1])
+            s_angle_.emplace_back(DEFAULT_BOUNDARY_SLOPE);
+        else
+            s_angle_.emplace_back(0);
+
+
         if (isInOrder(x_array_)) {
             piece_num_ = static_cast<int>(x_array_.size() - 1);
             Calculate();
+            CalculatePoints(time_interval_);
         } else
             std::cerr << "The x_array is not available!" << std::endl;
+
+
     }
 
     /**
      * 默认的析构函数，留在这里以防备用
      */
     ThreeInterpolation::~ThreeInterpolation() = default;
+
     /**
      * 判定输入的x_array序列是否合格
      * @param x_ar 输入的x_array序列
@@ -59,15 +90,18 @@ namespace dmotion {
     bool ThreeInterpolation::isInOrder(std::vector<double> &x_ar) {
         unsigned i = 0;
         do {
-            if (x_ar[i] > x_ar[i + 1])
+            if (x_ar[i] > x_ar[i + 1]) {
+                is_order = false;
                 return false;
+            }
             else if (x_ar[i] == x_ar[i + 1]) {
-                x_ar.erase(x_ar.begin() + i);
+                x_array_.erase(x_array_.begin() + i);
                 y_array_.erase(y_array_.begin() + i);
                 s_angle_.erase(s_angle_.begin() + i);
             } else
                 i++;
         } while (i < (x_ar.size() - 1));
+        is_order = true;
         return true;
     }
 
@@ -77,17 +111,13 @@ namespace dmotion {
     void ThreeInterpolation::Calculate() {
         poly_.clear();
         for (int i = 0; i < piece_num_; i++) {
-            Eigen::Vector4d B(y_array_[i], s_angle_[i], y_array_[i + 1], s_angle_[i + 1]);
-            Eigen::Matrix4d A;
-            A << pow(x_array_[i], 3), pow(x_array_[i], 2), x_array_[i], 1,
-                    3 * pow(x_array_[i], 2), 2 * x_array_[i], 1, 0,
-                    pow(x_array_[i + 1], 3), pow(x_array_[i + 1], 2), x_array_[i + 1], 1,
-                    3 * pow(x_array_[i + 1], 2), 2 * x_array_[i + 1], 1, 0;
 
-            Eigen::Matrix<double, 4, 1> coef_solved = A.lu().solve(B);
+            Eigen::Matrix<double, 4, 1> coef_solved = OnePiece(x_array_[i], y_array_[i], s_angle_[i],
+                                                               x_array_[i + 1], y_array_[i + 1], s_angle_[i + 1]);
             poly_.emplace_back(coef_solved);
         }
     }
+
     /**
      * 获得分段三次插值曲线某一点的值
      * @param x0 欲获得坐标点的横坐标
@@ -108,6 +138,7 @@ namespace dmotion {
         return poly_[i].eval(x0);
 
     }
+
     /**
      * 用于获得固定时间间隔的分段三次曲线的值，无返回值
      * @param t0_in 时间序列的间隔，单位为ns
@@ -118,6 +149,7 @@ namespace dmotion {
         double t_tmp = x_array_[0];
         double t0;
         t0 = static_cast<double> (t0_in) / 1000;
+        time_interval_ = t0;
         do {
             y_samples_.emplace_back(EvalHere(t_tmp));
             x_samples_.emplace_back(t_tmp);
@@ -192,14 +224,9 @@ namespace dmotion {
          *  //  在确定了x_a在哪个空间后，分情况对这几种情况对已有的poly_ 进行改造
          */
         if (i == 0) {
-            //std::cout << std::endl << "this is good:" << i << std::endl;
-            Eigen::Vector4d B(y_a, s_a, y_array_[0], s_angle_[0]);
-            Eigen::Matrix4d A;
-            A << pow(x_a, 3), pow(x_a, 2), x_a, 1,
-                    3 * pow(x_a, 2), 2 * x_a, 1, 0,
-                    pow(x_array_[0], 3), pow(x_array_[0], 2), x_array_[0], 1,
-                    3 * pow(x_array_[0], 2), 2 * x_array_[0], 1, 0;
-            Eigen::Matrix<double, 4, 1> coef_solved = A.lu().solve(B);
+
+            Eigen::Matrix<double, 4, 1> coef_solved = OnePiece(x_a, y_a, s_a, x_array_[0],
+                                                               y_array_[0], s_angle_[0]);
 
             poly_.insert(poly_.begin(), Polynomial<3>(coef_solved));
             x_samples_.clear();
@@ -209,14 +236,9 @@ namespace dmotion {
             s_angle_.insert(s_angle_.begin(), s_a);
             piece_num_++;
         } else if (i == piece_num_ + 1) {
-            //std::cout << std::endl << "this is good:" << i << std::endl;
-            Eigen::Vector4d B(y_a, s_a, y_array_[piece_num_], s_angle_[piece_num_]);
-            Eigen::Matrix4d A;
-            A << pow(x_a, 3), pow(x_a, 2), x_a, 1,
-                    3 * pow(x_a, 2), 2 * x_a, 1, 0,
-                    pow(x_array_[piece_num_], 3), pow(x_array_[piece_num_], 2), x_array_[piece_num_], 1,
-                    3 * pow(x_array_[piece_num_], 2), 2 * x_array_[piece_num_], 1, 0;
-            Eigen::Matrix<double, 4, 1> coef_solved = A.lu().solve(B);
+
+            Eigen::Matrix<double, 4, 1> coef_solved = OnePiece(x_a, y_a, s_a, x_array_[piece_num_],
+                                                               y_array_[piece_num_], s_angle_[piece_num_]);
 
             poly_.emplace_back(coef_solved);
             x_samples_.clear();
@@ -226,23 +248,11 @@ namespace dmotion {
             s_angle_.emplace_back(s_a);
             piece_num_++;
         } else {
-            //std::cout << std::endl << "this is good:" << i << std::endl;
-            Eigen::Vector4d B_up(y_a, s_a, y_array_[i - 1], s_angle_[i - 1]);
-            Eigen::Matrix4d A_up;
-            A_up << pow(x_a, 3), pow(x_a, 2), x_a, 1,
-                    3 * pow(x_a, 2), 2 * x_a, 1, 0,
-                    pow(x_array_[i - 1], 3), pow(x_array_[i - 1], 2), x_array_[i - 1], 1,
-                    3 * pow(x_array_[i - 1], 2), 2 * x_array_[i - 1], 1, 0;
-            Eigen::Matrix<double, 4, 1> coef_solved_up = A_up.lu().solve(B_up);
 
-            Eigen::Vector4d B_down(y_a, s_a, y_array_[i], s_angle_[i]);
-            Eigen::Matrix4d A_down;
-            A_down << pow(x_a, 3), pow(x_a, 2), x_a, 1,
-                    3 * pow(x_a, 2), 2 * x_a, 1, 0,
-                    pow(x_array_[i], 3), pow(x_array_[i], 2), x_array_[i], 1,
-                    3 * pow(x_array_[i], 2), 2 * x_array_[i], 1, 0;
-            Eigen::Matrix<double, 4, 1> coef_solved_down = A_down.lu().solve(B_down);
-
+            Eigen::Matrix<double, 4, 1> coef_solved_up = OnePiece(x_a, y_a, s_a, x_array_[i - 1], y_array_[i - 1],
+                                                                  s_angle_[i - 1]);
+            Eigen::Matrix<double, 4, 1> coef_solved_down = OnePiece(x_a, y_a, s_a, x_array_[i], y_array_[i],
+                                                                    s_angle_[i]);
             poly_.erase(poly_.begin() + i - 1);
             poly_.insert(poly_.begin() + i - 1, Polynomial<3>(coef_solved_up));
             poly_.insert(poly_.begin() + i, Polynomial<3>(coef_solved_down));
@@ -253,6 +263,19 @@ namespace dmotion {
             s_angle_.insert(s_angle_.begin() + i, s_a);
             piece_num_++;
         }
+    }
+
+    Eigen::Matrix<double, 4, 1>
+    ThreeInterpolation::OnePiece(const double &x_r, const double &y_r, const double &s_r, const double &x_l,
+                                 const double &y_l, const double &s_l) {
+        Eigen::Vector4d B(y_r, s_r, y_l, s_l);
+        Eigen::Matrix4d A;
+        A << pow(x_r, 3), pow(x_r, 2), x_r, 1,
+                3 * pow(x_r, 2), 2 * x_r, 1, 0,
+                pow(x_l, 3), pow(x_l, 2), x_l, 1,
+                3 * pow(x_l, 2), 2 * x_l, 1, 0;
+        Eigen::Matrix<double, 4, 1> coef_tmp = A.lu().solve(B);
+        return coef_tmp;
     }
 
 

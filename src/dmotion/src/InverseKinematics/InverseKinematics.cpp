@@ -1,14 +1,14 @@
 //
 // Created by zjudancer on 18-10-29.
 // E-mail: zjufanwu@zju.edu.cn
-// TODO 站在地上的机器人逆运动学
 //
 
-#include "dmotion/InverseKinematics/InverseKinematics.h"
+#include "InverseKinematics.h"
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include "dmotion/Utility/dmotion_math.hpp"
+#include "dmotion_math.hpp"
+using namespace dmotion;
 
 namespace dmotion {
 
@@ -83,9 +83,9 @@ namespace dmotion {
         ankle_x_to_hip = foot_pose[0] - foot_vertical_x - hip_x_from_origin;
         ankle_y_to_hip = foot_pose[1] - foot_vertical_y - (isRight_ ? (-half_hip_width) : half_hip_width);
         ankle_z_to_hip = foot_pose[2] - foot_vertical_z + hip_z_from_origin;
-        // std::cout << "x : " << ankle_x_to_hip << std::endl;
-        // std::cout << "y : " << ankle_y_to_hip << std::endl;
-        // std::cout << "z : " << ankle_z_to_hip << std::endl;
+//        std::cout << "x : " << ankle_x_to_hip << std::endl;
+//        std::cout << "y : " << ankle_y_to_hip << std::endl;
+//        std::cout << "z : " << ankle_z_to_hip << std::endl;
         ankle_norm = std::sqrt(
                 ankle_x_to_hip * ankle_x_to_hip + ankle_y_to_hip * ankle_y_to_hip + ankle_z_to_hip * ankle_z_to_hip);
         /** 获得了knee_pitch的角度 **/
@@ -180,7 +180,6 @@ namespace dmotion {
                              foot_vertical_x * std::cos(-hip_pitch_absolute) * std::sin(-hip_roll_) *
                              std::sin(-hip_yaw_);
             ankle_pitch_absolute = dmotion::Atan(foot_hip_rpy_x, -foot_hip_rpy_z);
-
 
             ankle_pitch_ =
                     ankle_pitch_absolute + dmotion::CosineTheorem(lower_leg_length, ankle_norm, upper_leg_length);
