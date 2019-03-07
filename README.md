@@ -1,5 +1,5 @@
 # NewIO
-New version of IO for dancing cock
+New version of IO for dancing 
 ## Pre-Requirement 
 + ROS is a must for IOManager and the other part.**BUT** ist not necessary ServoIO, which means you can make some change of the files then use cmake instead to build files.
 + but ROS is suggested 
@@ -30,19 +30,19 @@ If one day  the hardware is changed, you should learn to change the rules accord
 
 ## Tips
 
-+ All IO is finished 
-+ Read the description function of the code in  
+1. All IO is finished 
+2. Read the description function of the code in  
   + src/dmotion/include/dmotion/IO/SeroIO.h  
   + src/dmotion/include/dmotion/IO/IOManager.h
   + src/dmotion/include/dmotion/IO/FeetSensorIO.h
   + src/dmotion/include/dmotion/IO/IMUReader.h
-+ example show how to use servo and iomanager and the sensors to read and write Servo 
-+ if it's the first time that you used this code, make sure you have checked the Macro definition in the following files is correct(especially the port and baud rate)
+3. example show how to use servo and iomanager and the sensors to read and write Servo 
+4. if it's the first time that you used this code, make sure you have checked the Macro definition in the following files is correct(especially the port and baud rate)
   + src/dmotion/src/IO/SeroIO.cpp
   + src/dmotion/src/IO/IOManager.cpp
   + src/dmotion/src/IO/FeetSensorIO.cpp
   + src/dmotion/src/IO/IMUReader.cpp
-+ **In the issue some solutions of some tricky bugs is recorded.**
+5. **In the issue some solutions of some tricky bugs is recorded.**
 
 ## What's new
 + you can find it yourself
