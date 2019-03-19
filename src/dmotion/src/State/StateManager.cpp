@@ -2,9 +2,10 @@
 #include <ros/ros.h>
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/Common/Utility/Utility.h"
-#define IMUFILTER_INITICKS 1000 //Unit:5ms
-#define PRESSURE_INITICKS 200 //Unit:5ms
+#define IMUFILTER_INITICKS 1000 //Unit:10ms  --> 10000ms = 10s
+#define PRESSURE_INITICKS 200 //Unit:10ms
 #define STABLE_COUNT 10
+#define IMU_INI_DOUBLE_SUPPORT_COUNT 100
 #define PRESSURE_THRESHOLD 1.0
 
 using namespace std;
@@ -125,7 +126,6 @@ void StateManager::checkStableState()
         // TODO hard code ....
         if (deg_pitch > 60.0 && deg_pitch < 120.0)
         {
-            // std::cout << "fuck" << std::endl;
             frontcount++;
             m_stable_state = UNSTABLE;
         }
@@ -199,6 +199,7 @@ void StateManager::checkStableState()
 
 void StateManager::checkIniState()
 {
+  static int count_support_both = 0;
   if(servo_initialized)
   {
     if(pressure_initialized == INITED && imu_initialized == WAIT)
@@ -207,9 +208,15 @@ void StateManager::checkIniState()
         {
           if(m_support_state == SUPPORT_BOTH)
           {
-              imu_initialized = INITING;
-              m_imu_filter.clearData();
-              ini_ticks = 1;
+              if(count_support_both < IMU_INI_DOUBLE_SUPPORT_COUNT)
+                count_support_both++;
+              else
+              {
+                imu_initialized = INITING;
+                m_imu_filter.clearData();
+                count_support_both = 0;
+                ini_ticks = 1;
+              }
           }
         }
        else
@@ -305,7 +312,8 @@ void StateManager::checkSupportState()
   }
   else
   {
-      ROS_INFO("unkown support");
+      m_support_state = SUPPORT_NONE;
+      //ROS_INFO("unknown support");
   }
 }
 

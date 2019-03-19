@@ -3,6 +3,7 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/Common/Parameters.h"
 using namespace dynamixel;
+using namespace std;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
 #define PORT_NAME "/dev/Servo"
 #define BAUDRATE  1000000
@@ -15,14 +16,16 @@ using namespace dynamixel;
   #define INIT_TICKS 0 //the total time that keep low speed | unit:10ms
   #define INIT_VELLOCITY 3000//the ini speed of servo
 #else
-  #define INIT_TICKS 100 //the total time that keep low speed | unit:10ms
+  #define INIT_TICKS 1 //the total time that keep low speed | unit:10ms
   #define INIT_VELLOCITY 30//the ini speed of servo
 #endif
 
 #define SAFE_MODE_SPEED 50
 #define CHECK_POWER_ID 11 // id of left_hip_yaw
 #define READ_OUTPUT false// print the read result of position and velocity from encoder
-#define LEG_ONLY true
+#define READ_LEG_ONLY true
+#define IO_TIME 0.01//0.01s = 10ms
+
 
 namespace Motion
 {
@@ -114,7 +117,7 @@ void ServoIO::initServoPositions()
         bool state = true;
         if(!m_reader_inited)
         {
-            if(LEG_ONLY)
+            if(READ_LEG_ONLY)
             {
               if(!(joint.first ==  "right_arm_upper" || joint.first ==  "right_arm_lower" ||
                    joint.first ==  "left_arm_upper" || joint.first ==  "left_arm_lower"||
@@ -201,12 +204,24 @@ void ServoIO::sendServoPositions()
         }
     }
 
+    double v2;
     for (auto& joint:m_joints)
     {
         const Joint& _j = joint.second;
         const JointConfig& _cfg = _j.cfg;
-
-        goal_position_ = _cfg.init + static_cast<int>(_j.goal_pos*_cfg.factor);
+        if(IS_TIME_BASE)
+        {
+            if(_j.is_time_base_on)
+                v2 = 2.0 * _j.delta_pos / IO_TIME - _j.goal_vel;
+            else
+                v2 = 0;
+            double send_position = _j.goal_pos + 0.5 * IO_TIME * v2;
+          //  cout << "send:" << send_position << "real:" <<  _j.goal_pos << endl;
+            joint.second.goal_vel = v2;
+            goal_position_ = _cfg.init + static_cast<int>(send_position*_cfg.factor);
+        }
+        else
+            goal_position_ = _cfg.init + static_cast<int>(_j.goal_pos*_cfg.factor);
         //std::cout << "goal:" << goal_position_ << std::endl;
 
         goal_position_buffer[0] = DXL_LOBYTE(DXL_LOWORD(goal_position_));
@@ -216,7 +231,7 @@ void ServoIO::sendServoPositions()
 
         m_pos_writer->changeParam(_cfg.id, goal_position_buffer);
     }
-
+    //cout << endl;
     m_pos_writer->txPacket();
 }
 
@@ -345,6 +360,8 @@ void ServoIO::setSingleServoPosition(std::string name, double position)
     it = m_joints.find(name);
     if(it != m_joints.end())
     {
+        if(IS_TIME_BASE)
+            (*it).second.delta_pos = position - (*it).second.goal_pos;
         (*it).second.goal_pos = position;
     }
     else
@@ -353,6 +370,24 @@ void ServoIO::setSingleServoPosition(std::string name, double position)
     }
 }
 
+void ServoIO::SetSingleServoPositionTimeBase(std::string name, double position, bool is_time_base_on)
+{
+    std::map<std::string, Joint>::iterator it = m_joints.begin();
+    it = m_joints.find(name);
+    if(it != m_joints.end())
+    {
+        if(IS_TIME_BASE)
+        {
+          (*it).second.delta_pos = position - (*it).second.goal_pos;
+          (*it).second.is_time_base_on = is_time_base_on;
+        }
+        (*it).second.goal_pos = position;
+    }
+    else
+    {
+        std::cout << "WARNING:" << name << " not found!" << std::endl;
+    }
+}
 
 void ServoIO::setServoPIMode(std::vector<int> servo_id, const int P, const int I)
 {
@@ -434,6 +469,13 @@ void ServoIO::readServoVelocity()
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
+        if(READ_LEG_ONLY)
+        {
+          if(joint.first ==  "right_arm_upper" || joint.first ==  "right_arm_lower" ||
+               joint.first ==  "left_arm_upper" || joint.first ==  "left_arm_lower"||
+               joint.first ==  "head_pitch" || joint.first ==  "head_yaw")
+          continue;
+        }
         if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_VELOCITY, LENGTH_POSITION))
         {
            INFO ("ServoIO::readServoVelocity: get current joint value error");
@@ -480,7 +522,7 @@ void ServoIO::readServoPositions_test()
 void ServoIO::readServoPosVel()
 {
     if(READ_OUTPUT)
-      INFO("ServoIO::readServoVelocity: read servo velocities");
+      INFO("ServoIO::readServoPosVel: read servo velocities");
 
     auto dxl_comm_result = m_pos_reader2->txRxPacket();
 
@@ -495,9 +537,16 @@ void ServoIO::readServoPosVel()
     for (auto& joint:m_joints)
     {
         const JointConfig& _cfg = joint.second.cfg;
+        if(READ_LEG_ONLY)
+        {
+          if(joint.first ==  "right_arm_upper" || joint.first ==  "right_arm_lower" ||
+               joint.first ==  "left_arm_upper" || joint.first ==  "left_arm_lower"||
+               joint.first ==  "head_pitch" || joint.first ==  "head_yaw")
+          continue;
+        }
         if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_VELOCITY, LENGTH_POSITION))
         {
-           INFO ("ServoIO::readServoVelocity: get current joint value error");
+           INFO ("ServoIO::readServoPosVel: get current joint value error");
         }
         else
         {
@@ -514,14 +563,21 @@ void ServoIO::readServoPosVel()
       }
 
       if(READ_OUTPUT)
-        INFO("ServoIO::readServoPositions_test: read servo positions");
+        INFO("ServoIO::readServoPosVel: read servo positions");
 
       for (auto& joint:m_joints)
       {
           const JointConfig& _cfg = joint.second.cfg;
+          if(READ_LEG_ONLY)
+          {
+            if(joint.first ==  "right_arm_upper" || joint.first ==  "right_arm_lower" ||
+                 joint.first ==  "left_arm_upper" || joint.first ==  "left_arm_lower"||
+                 joint.first ==  "head_pitch" || joint.first ==  "head_yaw")
+            continue;
+          }
           if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
           {
-             INFO ("ServoIO::readServoPositions_test: get current joint value error");
+             INFO ("ServoIO::readServoPosVel: get current velocity value error");
           }
           else
           {

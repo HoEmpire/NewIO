@@ -86,8 +86,9 @@ int main(int argc, char **argv)
       fucking[j] = servo_points[j];
       pos[j] = servo_points[j];
     }
-    io.setAllJointValue(fucking);
+    io.SetAllJointValueTimeBase(fucking, false);
     io.spinOnce();
+
     sleep(5);
 
     while (ros::ok())
@@ -99,15 +100,20 @@ int main(int argc, char **argv)
             manipulate_points = {tmp_x, -4.5, tmp_z, 0, 0, 0};
             servo_points = leg.LegInvKin(manipulate_points);
 
+            // for(int j = 0;j <= 5; j++)
+            // {
+            //   fucking[j] = 2 * servo_points[j] - pos[j] - vel[j] * 0.005;
+            //   vel[j] = 2 * (servo_points[j] - pos[j]) / 0.01 - vel[j];
+            //   pos[j] = servo_points[j];
+            // }
+
             for(int j = 0;j <= 5; j++)
             {
-              fucking[j] = 2 * servo_points[j] - pos[j] - vel[j] * 0.005;
-              vel[j] = 2 * (servo_points[j] - pos[j]) / 0.01 - vel[j];
-              pos[j] = servo_points[j];
+              fucking[j] = servo_points[j];
             }
 
-
-            io.setAllJointValue(fucking);
+            //io.SetAllJointValueTimeBase(fucking, true);
+            io.SetAllJointValue(fucking);
             io.spinOnce();
             io.readPosVel();
             // heihei = io.readAllVel();

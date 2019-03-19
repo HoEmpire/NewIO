@@ -1,11 +1,11 @@
+/*
+目前工作良好，前走补偿好于后走
+ */
 #include "dmotion/Common/Utility/Utility.h"
-#include "dmotion/State/imu_filter_new.hpp"
-
 #include <Eigen/Geometry>
-//
 #include "dmotion/Common/Parameters.h"
-#include "../../include/dmotion/IO/IMUReader.h"
-#include "../../include/dmotion/IO/IOManager3.h"
+#include "dmotion/IO/IMUReader.h"
+#include "dmotion/IO/IOManager3.h"
 #include "dmotion/State/StateManager.hpp"
 #include "dmotion/ForwardKinematics/ForwardKinematics.h"
 #include "PendulumWalk.h"
@@ -59,52 +59,101 @@ void tt()
     PendulumWalk pen;
     pen.GiveAStep(0,0,0);
     fucking = pen.GiveATick();
-    io.setAllJointValue(fucking);
+    // io.setAllJointValue(fucking);
+    io.SetAllJointValueTimeBase(fucking,false);
     io.spinOnce();
     sleep(2);
     io.setAllspeed(0);//after 4 seconds, servo ini finished
 
     double E;
     int E_flag = 0;
+    bool is_stable = true;
     int ticks = 0;
+    int ticks_push_recovery = 0;
+
+    bool is_support_double = true;
     while(ros::ok()){
-
-
-        E = 0.0001*(0.5*vx_real*vx_real-14*x_real*x_real);
-        if(E < -0.1)
+      if(flag >= 500)
+      {
+        if(is_stable)
         {
-          INFO("too slow");
-          E_flag = 1;
-        }
+            E = 0.0001*(0.5*vx_real*vx_real-14*x_real*x_real);
+            cout << E << endl;
+           if((E < -0.02 ||  E  > 0.8)&&(!is_support_double))//不稳定的条件是能量小且非双足支撑
+           {
+             INFO("Unstale");
+             cout << E << endl;
+             E_flag++;
+            }
+          else
+          E_flag = 0;
 
 
-        if(E_flag)
-        {
           if(ticks == 0)
             pen.GiveAStep(5,0,0);
           if(ticks < 35)
           {
             fucking = pen.GiveATick();
-            io.setAllJointValue(fucking);
+            // io.setAllJointValue(fucking);
+            io.SetAllJointValueTimeBase(fucking, true);
             ticks++;
-          }
-          else
-          {
-            ticks = 0;
-            E_flag = 0;
+            cout << "stable: ticks now:" << ticks << endl;
           }
         }
 
-        if(E > 0.8)
-            INFO("too fast");
-        io.spinOnce();
-        io.readPosVel();
-        imu_data = io.getIMUData();
-        power_data = io.getPowerState();
-        pressure_data = io.getPressureData();
-        servo_state = io.m_servo_inited;
-        read_pos = io.readAllPosition();
-        read_vel = io.readAllVel();
+        if(ticks >= 35)
+        {
+          if(E_flag > 5)
+          {
+            is_stable = false;
+            if(ticks_push_recovery == 0)
+            {
+              if(pen.support_is_right)
+                    pen.GiveAStep(-8,3,0);
+              else
+                    pen.GiveAStep(-8,-3,0);
+            }
+            if(ticks_push_recovery < 35)
+            {
+              fucking = pen.GiveATick();
+              // io.setAllJointValue(fucking);
+              io.SetAllJointValueTimeBase(fucking, true);
+              ticks_push_recovery++;
+            }
+            else if(ticks_push_recovery < 200)
+              ticks_push_recovery++;
+            else if(ticks_push_recovery < 235)
+            {
+              if(ticks_push_recovery == 200)
+                 pen.GiveAStep(0,0,0);
+              fucking = pen.GiveATick();
+              // io.setAllJointValue(fucking);
+              io.SetAllJointValueTimeBase(fucking, true);
+              ticks_push_recovery++;
+            }
+            else if(ticks_push_recovery < 400)
+              ticks_push_recovery++;
+            else
+            {
+              ticks_push_recovery = 0;
+              E_flag = 0;
+              is_stable = true;
+              ticks = 0;
+            }
+          }
+          else
+              ticks = 0;
+        }
+      }
+
+      io.spinOnce();
+      io.readPosVel();
+      imu_data = io.getIMUData();
+      power_data = io.getPowerState();
+      pressure_data = io.getPressureData();
+      servo_state = io.m_servo_inited;
+      read_pos = io.readAllPosition();
+      read_vel = io.readAllVel();
     }
 }
 
@@ -113,6 +162,7 @@ int main(int argc, char ** argv)
     ros::init(argc, argv, "testing");
     ros::NodeHandle nh("~");
     parameters.init(&nh);
+
 
 
     if(chdir(workplace))
@@ -186,7 +236,7 @@ int main(int argc, char ** argv)
     double x_old = 0, y_old = 0, z_old = 0;
     double x_new = 0, y_new = 0, z_new = 0;
     Eigen::Matrix3d rotation_matrix_OA, rotation_matrix_BA, rotation_matrix_OB, rotation_matrix_body;
-    bool isRight;
+
     double temp_vx, temp_vy, temp_wx, temp_wy, temp_wz, temp_roll, temp_pitch, temp_yaw;
     Eigen::Matrix<double,3,1> temp_vel;
     Eigen::Matrix<double,3,1> vel_ref, vel_co;
@@ -269,7 +319,6 @@ int main(int argc, char ** argv)
         // if(leg_left.vx_result > leg_right.vx_result)
         if(support_flag == 0)
         {
-            isRight = false;
             temp_vx = leg_left.vx_result;
             temp_vy = leg_left.vy_result;
             temp_wx = leg_left.vroll_result;
@@ -300,7 +349,6 @@ int main(int argc, char ** argv)
         }
         else
         {
-            isRight = true;
             temp_vx = leg_right.vx_result;
             temp_vy = leg_right.vy_result;
             temp_wx = leg_right.vroll_result;

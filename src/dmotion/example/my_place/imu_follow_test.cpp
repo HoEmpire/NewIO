@@ -1,29 +1,33 @@
-#include <thread>
-#include <fstream>
-#include <iostream>
-
 #include "dmotion/Common/Utility/Utility.h"
-#include "dmotion/State/IMUFilter.hpp"
+
+#include <Eigen/Geometry>
+//
 #include "dmotion/Common/Parameters.h"
+#include "dmotion/IO/IMUReader.h"
 #include "dmotion/IO/IOManager3.h"
 #include "dmotion/State/StateManager.hpp"
 #include "dmotion/ForwardKinematics/ForwardKinematics.h"
-#include <Eigen/Geometry>
+#include "PendulumWalk.h"
 
+#include <thread>
+#include <fstream>
+#include <iostream>
 
 #define workplace "/home/ubuntu/test/NewIO/test_data/test1"
 
 using namespace std;
 using namespace Eigen;
-using namespace dmotion;
-using namespace Motion;
-
 Motion::IMUData imu_data;
 Motion::PowerState power_data;
 Motion::PressureData pressure_data;
+double vx_real;
+double x_real;
 bool servo_state;
 std::vector<double> read_pos(12,0);
 std::vector<double> read_vel(12,0);
+
+using namespace dmotion;
+using namespace Motion;
 int flag = 0;
 
 static inline void cross(
@@ -36,104 +40,86 @@ static inline void cross(
   z(2) = x(0) * y(1) - x(1) * y(0);
 }
 
+template <typename T>
+void AddElements(std::vector<T> &master, std::vector<T> slave)
+{
+    for (unsigned int i = 0; i < slave.size(); i++)
+    {
+        master.emplace_back(slave[i]);
+    }
+}
+
+
 void tt()
 {
     Motion::IOManager3 io;
-    std::vector<double> fucking;
-    ifstream af("/home/ubuntu/walk_c.txt");
-    std::vector<double> left;
-    std::vector<double> right;
-    std::vector<std::vector<double>> rc_left;
-    std::vector<std::vector<double>> rc_right;
-    int cunt = 0;
-    while (!af.eof())
-    {
-        double tmp;
-        af >> tmp;
-        if (6 == cunt)
-        {
-            rc_right.push_back(right);
-            right.clear();
-            left.push_back(tmp);
-            cunt++;
-        }
-        else if (12 == cunt)
-        {
-            rc_left.push_back(left);
-            left.clear();
-            right.push_back(tmp);
-            cunt = 1;
-        }
-        else if (cunt >= 0 && cunt <= 5)
-        {
-            right.push_back(tmp);
-            cunt++;
-        }
-        else if (cunt >= 7 && cunt <= 11)
-        {
-            left.push_back(tmp);
-            cunt++;
-        }
-    }
-
-    int num = rc_left.size();
-    cout << "num: " << num << endl;
-
-    std::vector<double> arm = {0, 30, 0, 30};
-    std::vector<int> changeP = {6,7,13,14};
-    io.setServoPI(changeP,800,0);
-    sleep(2);
-
-    fucking.clear();
-    AddElements(fucking, rc_right[0]);
-    AddElements(fucking, rc_left[0]);
-    AddElements(fucking, arm);
-    //io.setAllspeed(30);
-    //io.setAllJointValue(fucking);
-    io.SetAllJointValueTimeBase(fucking, false);
+    io.setAllspeed(30);
+    std::vector<double> fucking(18,0);
+    PendulumWalk pen;
+    pen.GiveAStep(0,0,0);
+    //fucking = pen.GiveATick();
+    io.setAllJointValue(fucking);
     io.spinOnce();
     sleep(2);
-    //io.setAllspeed(0);
+    io.setAllspeed(0);//after 4 seconds, servo ini finished
 
-    cunt = 0;
+    double E;
+    int E_flag = 0;
+    bool is_stable = true;
+    int ticks = 0;
+    int ticks_push_recovery = 0;
+    std::vector<double> y(35,0);
+    double T = 35.0;
+    for(int i = 0; i < 35; i++)
+    {
+      y[i] = cos(2*M_PI/T*i);
+    }
+
+    InvKin left(false);
+    InvKin right(true);
+    std::vector<double> left_pos = {2, 4.5, -27, 0, 0, 0};
+    std::vector<double> right_pos = {-2, -4.5, -27, 0, 0, 0};
+
+    std::vector<double> left_servo(6,0);
+    std::vector<double> right_servo(6,0);
+    left_servo = left.LegInvKin(left_pos);
+    right_servo = right.LegInvKin(right_pos);
+
+    for(int i = 0; i < 6; i++)
+        fucking[i] = right_servo[i];
+
+    for(int i = 6; i < 12; i++)
+        fucking[i] = left_servo[i-6];
+
+
+    io.setAllJointValue(fucking);
+    io.setAllspeed(30);
+    io.spinOnce();
+    sleep(3);
+    io.setAllspeed(0);
+
     while(ros::ok()){
-        if(flag >= 1000)
-        {
-            if(cunt == 2*num)
-            {
-                cunt = 0;
-            }
+      if(flag >= 2000)
+      {
+          if(ticks < 35)
+          {
+            fucking[2] = y[ticks];
+            fucking[8] = y[ticks];
+            io.setAllJointValue(fucking);
+            ticks++;
+          }
+        else
+              ticks = 0;
+      }
 
-            if(cunt < num)
-            {
-                fucking.clear();
-                AddElements(fucking, rc_right[cunt]);
-                AddElements(fucking, rc_left[cunt]);
-                AddElements(fucking, arm);
-                //io.setAllJointValue(fucking);
-                io.SetAllJointValueTimeBase(fucking, false);
-            }
-            else if(cunt < 2 * num && cunt >= num)
-            {
-                fucking.clear();
-                AddElements(fucking, rc_left[cunt - num]);
-                AddElements(fucking, rc_right[cunt - num]);
-                AddElements(fucking, arm);
-                //io.setAllJointValue(fucking);
-                io.SetAllJointValueTimeBase(fucking, false);
-            }
-            cunt++;
-        }
-
-        io.spinOnce();
-        io.readPosVel();
-        power_data = io.getPowerState();
-        imu_data = io.getIMUData();
-        pressure_data = io.getPressureData();
-        servo_state = io.m_servo_inited;
-        read_pos = io.readAllPosition();
-        read_vel = io.readAllVel();
-        //read_vel = io.readAllVel();
+      io.spinOnce();
+      io.readPosVel();
+      imu_data = io.getIMUData();
+      power_data = io.getPowerState();
+      pressure_data = io.getPressureData();
+      servo_state = io.m_servo_inited;
+      read_pos = io.readAllPosition();
+      read_vel = io.readAllVel();
     }
 }
 
@@ -142,11 +128,13 @@ int main(int argc, char ** argv)
     ros::init(argc, argv, "testing");
     ros::NodeHandle nh("~");
     parameters.init(&nh);
-    Motion::IOManager3 io;
+
+
 
     if(chdir(workplace))
         exit(0);  //设置工作路径，也就是B显示的路径
 
+ //open files
     ofstream out1("roll.txt", ios::out|ios::trunc);
     ofstream out2("pitch.txt", ios::out|ios::trunc);
     ofstream out3("yaw.txt", ios::out|ios::trunc);
@@ -182,6 +170,9 @@ int main(int argc, char ** argv)
     ofstream vx_w("vx_w.txt", ios::out|ios::trunc);
     ofstream vy_w("vy_w.txt", ios::out|ios::trunc);
 
+    ofstream vx_pos("vx_pos.txt", ios::out|ios::trunc);
+    ofstream vy_pos("vy_pos.txt", ios::out|ios::trunc);
+
     ofstream feet_roll("feet_roll.txt", ios::out|ios::trunc);
     ofstream feet_pitch("feet_pitch.txt", ios::out|ios::trunc);
     ofstream feet_yaw("feet_yaw.txt", ios::out|ios::trunc);
@@ -193,10 +184,10 @@ int main(int argc, char ** argv)
     ofstream feet_pitchv("feet_pitchv.txt", ios::out|ios::trunc);
     ofstream feet_yawv("feet_yawv.txt", ios::out|ios::trunc);
 
-    std::vector<float> roll, pitch, yaw;
-    std::vector<float> ax, ay, az;
-    std::vector<float> wx, wy, wz;
-    std::vector<float> ax_wog, ay_wog, az_wog;
+    std::vector<float> roll,pitch,yaw;
+    std::vector<float> ax,ay,az;
+    std::vector<float> wx,wy,wz;
+    std::vector<float> ax_wog,ay_wog,az_wog;
     std::vector<double> data_right_x, data_right_y, data_right_yaw;
     std::vector<double> data_right_vx, data_right_vy, data_right_vyaw;
     std::vector<double> data_left_x, data_left_y, data_left_yaw;
@@ -208,16 +199,22 @@ int main(int argc, char ** argv)
     std::vector<double> data_x, data_y, data_z;
 
     std::vector<int> support_now;
-    double x_temp = 0, y_temp = 0, z_temp = 0;
-    Eigen::Matrix3d rotation_matrix_OA, rotation_matrix_BA, rotation_matrix_OB;
-    double temp_vx, temp_vy, temp_vz, temp_wx, temp_wy, temp_wz, temp_roll, temp_pitch, temp_yaw;
-    Eigen::Matrix<double,3,1> temp_vel;
-    Eigen::Matrix<double,3,1> temp_pos;
-    Eigen::Matrix<double,3,1> w1, w2, w3;
+    double x_old = 0, y_old = 0, z_old = 0;
+    double x_new = 0, y_new = 0, z_new = 0;
+    Eigen::Matrix3d rotation_matrix_OA, rotation_matrix_BA, rotation_matrix_OB, rotation_matrix_body;
 
+    double temp_vx, temp_vy, temp_wx, temp_wy, temp_wz, temp_roll, temp_pitch, temp_yaw;
+    Eigen::Matrix<double,3,1> temp_vel;
+    Eigen::Matrix<double,3,1> vel_ref, vel_co;
+    Eigen::Matrix<double,3,1> temp_pos, pos_real;
+    Eigen::Matrix<double,3,1> pos_old, pos_new;
+    Eigen::Matrix<double,3,1> w1, w2, w3;
+    Eigen::Matrix<double,3,1> Pd;
+    Eigen::Matrix<double,3,3> R_new, dR, R_old;
+    R_old.setIdentity();
 
     std::thread t1(tt);
-    sleep(6);
+    sleep(4);
     t1.detach();
 
     Motion::StateManager sm;
@@ -290,7 +287,6 @@ int main(int argc, char ** argv)
         {
             temp_vx = leg_left.vx_result;
             temp_vy = leg_left.vy_result;
-            temp_vz = leg_left.vz_result;
             temp_wx = leg_left.vroll_result;
             temp_wy = leg_left.vpitch_result;
             temp_wz = leg_left.vyaw_result;
@@ -313,28 +309,27 @@ int main(int argc, char ** argv)
             data_feet_pitchv.push_back(leg_left.vpitch_result);
             data_feet_yawv.push_back(leg_left.vyaw_result);
 
-            x_temp = leg_left.x_result;
-            y_temp = leg_left.y_result;
-            z_temp = leg_left.z_result;
+            x_new = leg_left.x_result;
+            y_new = leg_left.y_result;
+            z_new = leg_left.z_result;
         }
         else
         {
             temp_vx = leg_right.vx_result;
             temp_vy = leg_right.vy_result;
-            temp_vz = leg_right.vz_result;
             temp_wx = leg_right.vroll_result;
             temp_wy = leg_right.vpitch_result;
             temp_wz = leg_right.vyaw_result;
             temp_roll = leg_right.roll_result;
             temp_pitch = leg_right.pitch_result;
             temp_yaw = leg_right.yaw_result;
-            Eigen::Vector3d eulerAngle_BA(leg_right.yaw_result / 180 * M_PI,
-                                          leg_right.pitch_result / 180 * M_PI,
-                                          leg_right.roll_result / 180 * M_PI);
+            Eigen::Vector3d eulerAngle_BA(leg_right.yaw_result/180*M_PI,
+                                          leg_right.pitch_result/180*M_PI,
+                                          leg_right.roll_result/180*M_PI);
             Eigen::AngleAxisd rollAngle(AngleAxisd(eulerAngle_BA(2),Vector3d::UnitX()));
             Eigen::AngleAxisd pitchAngle(AngleAxisd(eulerAngle_BA(1),Vector3d::UnitY()));
             Eigen::AngleAxisd yawAngle(AngleAxisd(eulerAngle_BA(0),Vector3d::UnitZ()));
-            rotation_matrix_BA = yawAngle * pitchAngle * rollAngle;
+            rotation_matrix_BA = yawAngle*pitchAngle*rollAngle;
 
             data_feet_roll.push_back(leg_right.roll_result);
             data_feet_pitch.push_back(leg_right.pitch_result);
@@ -344,26 +339,44 @@ int main(int argc, char ** argv)
             data_feet_pitchv.push_back(leg_right.vpitch_result);
             data_feet_yawv.push_back(leg_right.vyaw_result);
 
-            x_temp = leg_right.x_result;
-            y_temp = leg_right.y_result;
-            z_temp = leg_right.z_result;
+            x_new = leg_right.x_result;
+            y_new = leg_right.y_result;
+            z_new = leg_right.z_result;
         }
 
 
         Eigen::Vector3d eulerAngle_OA(sm.yaw, sm.pitch, sm.roll);
-        Eigen::AngleAxisd rollAngleIMU(AngleAxisd(eulerAngle_OA(2),Vector3d::UnitX()));
-        Eigen::AngleAxisd pitchAngleIMU(AngleAxisd(eulerAngle_OA(1),Vector3d::UnitY()));
-        Eigen::AngleAxisd yawAngleIMU(AngleAxisd(eulerAngle_OA(0),Vector3d::UnitZ()));
-        rotation_matrix_OA = yawAngleIMU * pitchAngleIMU * rollAngleIMU;
+        Eigen::AngleAxisd rollAngle2(AngleAxisd(eulerAngle_OA(2),Vector3d::UnitX()));
+        Eigen::AngleAxisd pitchAngle2(AngleAxisd(eulerAngle_OA(1),Vector3d::UnitY()));
+        Eigen::AngleAxisd yawAngle2(AngleAxisd(eulerAngle_OA(0),Vector3d::UnitZ()));
+        rotation_matrix_OA = yawAngle2*pitchAngle2*rollAngle2;
+
         rotation_matrix_OB = rotation_matrix_OA * rotation_matrix_BA.transpose();
-
-
         temp_vel(0) = temp_vx;
         temp_vel(1) = temp_vy;
-        temp_vel(2) = temp_vz;
+        temp_vel(2) = 0;
         temp_vel = rotation_matrix_OB * temp_vel;
         data_vx.push_back(temp_vel(0));
         data_vy.push_back(temp_vel(1));
+        vel_ref = temp_vel;
+
+        pos_new(0) = x_new;
+        pos_new(1) = y_new;
+        pos_new(2) = z_new;
+        pos_new = rotation_matrix_OB * pos_new;
+
+        pos_old(0) = x_old;
+        pos_old(1) = y_old;
+        pos_old(2) = z_old;
+        pos_old = rotation_matrix_OB * pos_old;
+
+        temp_vel = (pos_new - pos_old)/0.01;
+        data_vx_pos.push_back(temp_vel(0));
+        data_vy_pos.push_back(temp_vel(1));
+
+        x_old = x_new;
+        y_old = y_new;
+        z_old = z_new;
 
         w2(0) = -temp_wy*sin(temp_yaw) + temp_wx*cos(temp_yaw)*cos(temp_pitch);
         w2(1) =  temp_wy*cos(temp_yaw) + temp_wx*sin(temp_yaw)*cos(temp_pitch);
@@ -377,16 +390,27 @@ int main(int argc, char ** argv)
 
         w1 = w3 - w2;
 
-        temp_pos << x_temp, y_temp, z_temp;
-        cross(w1, rotation_matrix_OB * temp_pos, temp_vel);
+        cross(w1, rotation_matrix_OB * pos_new, temp_vel);
         data_vx_w.push_back(temp_vel(0));
         data_vy_w.push_back(temp_vel(1));
+        vel_co = temp_vel;
 
-        data_x.push_back(x_temp);
-        data_y.push_back(y_temp);
-        data_z.push_back(z_temp);
+        data_x.push_back(x_new);
+        data_y.push_back(y_new);
+        data_z.push_back(z_new);
+
+        rotation_matrix_body = yawAngle2;
+        temp_vel = rotation_matrix_body.transpose() * (vel_co + vel_ref);
+        vx_real = temp_vel(0);
+
+        temp_pos(0) = x_new;
+        temp_pos(1) = y_new;
+        temp_pos(2) = z_new;
+        pos_real = rotation_matrix_body.transpose() * (rotation_matrix_OB * temp_pos);
+        x_real =  pos_real(0); //update x
+
+        R_old = rotation_matrix_BA;
       }
-
     }
 
     INFO("***********************");
@@ -432,6 +456,9 @@ int main(int argc, char ** argv)
       vx_w << data_vx_w[i] << " ";
       vy_w << data_vy_w[i] << " ";
 
+      vx_pos << data_vx_pos[i] << " ";
+      vy_pos << data_vy_pos[i] << " ";
+
       feet_roll << data_feet_roll[i] << " ";
       feet_pitch << data_feet_pitch[i] << " ";
       feet_yaw << data_feet_yaw[i] << " ";
@@ -446,7 +473,7 @@ int main(int argc, char ** argv)
     }
     cout << i << endl;
 
-    cout << "writing data done" << endl;
+    cout << "writing datas done" << endl;
 
 
       out1.close();
@@ -483,6 +510,9 @@ int main(int argc, char ** argv)
 
       vx_w.close();
       vy_w.close();
+
+      vx_pos.close();
+      vy_pos.close();
 
       feet_yaw.close();
       feet_pitch.close();

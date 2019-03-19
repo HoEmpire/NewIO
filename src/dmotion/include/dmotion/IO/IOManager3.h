@@ -153,6 +153,8 @@ public:
 
     void readPosVel();
 
+    void SetAllJointValueTimeBase(const std::vector<double>& values_, bool is_time_base_on);
+
 
 
 private:

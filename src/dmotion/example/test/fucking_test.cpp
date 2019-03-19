@@ -174,11 +174,12 @@ int main(int argc, char **argv)
     //  cout << vel[j] << endl;
     }
     //abort();
-
+    io.setAllspeed(30);
     io.setAllJointValue(fucking);
     io.spinOnce();
     sleep(5);
-    double Kp = 600,Kd = 100,Kpv = 5000;
+    io.setAllspeed(0);
+    double Kp = 600,Kd = 100,Kpv = 200;
     int flag = 0;
 
      while (ros::ok())
@@ -194,12 +195,12 @@ int main(int argc, char **argv)
             //
             for(int j = 0;j <= 5; j++)
             {
-              fucking[j] = 2 * tmp[j] - pos[j] - vel[j] * 0.005;
+              //fucking[j] = 2 * tmp[j] - pos[j] - vel[j] * 0.005;
               //vel[j] = 2 * (tmp[j] - pos[j]) / 0.01 - vel[j];
-              pos[j] = tmp[j];
+              //pos[j] = tmp[j];
               if(flag == 1)
               {
-                fucking[j] = fucking[j] - da[j] * 0.01* 0.01;
+              //  fucking[j] = fucking[j] - da[j] * 0.01* 0.01;
                 cout << "fuck" << endl;
               }
             }
@@ -343,11 +344,11 @@ int main(int argc, char **argv)
               dx[k] = pos_desire[k] - pos_real[k];
               dv[k] = vel_desire[k] - vel_real[k];
 
-              if(abs(dx[k]) > 2)
+              if(abs(dx[k]) > 5)
               {
                 cout << "第" << k << "个超了, dx = " << dx[k] <<endl;
                 cout << "理论位置：" << pos[k] << "应到位置：" << read_pos[k] <<endl;
-                temp_acc(k) = Kp * dx[k]; //+ Kd * dv[k];
+              //  temp_acc(k) = Kp * dx[k]; //+ Kd * dv[k];
                 // da[k] = Kp * dx[k] + Kd * dv[k];
 
                 // cout << "修正加速度：" << da[k] << "位置修正量：" << da[k] * 0.01* 0.01 <<endl;
@@ -381,7 +382,7 @@ int main(int argc, char **argv)
               {
                 cout << "第" << k << "个超了, dx = " << dx[k] * 180 / M_PI << endl;
                 // cout << "理论位置：" << pos[k] << "应到位置：" << read_pos[k] <<endl;
-                temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
+                 temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
                 // da[k] = Kp * dx[k] + Kd * dv[k];
 
                 // cout << "修正加速度：" << da[k] << "位置修正量：" << da[k] * 0.01* 0.01 <<endl;

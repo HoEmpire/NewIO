@@ -27,9 +27,6 @@ namespace dmotion {
      */
     void PendulumWalk::GiveAStep(double dx, double dy, double d_yaw) {
 
-
-        cout << endl;
-
         delete Support;
         Support = new OneFootLanding(support_is_right);
 

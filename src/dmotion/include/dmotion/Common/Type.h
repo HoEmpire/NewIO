@@ -93,9 +93,12 @@ struct Joint
     }
 
     const JointConfig& cfg;
-    double goal_pos;
-    double real_pos;
-    double real_vel;
+    double goal_pos = 0;
+    double delta_pos = 0;
+    double real_pos = 0;
+    double goal_vel = 0;
+    double real_vel = 0;
+    bool is_time_base_on = false;
 };
 
 
@@ -133,7 +136,8 @@ enum SupportState
 {
   SUPPORT_BOTH,
   SUPPORT_LEFT,
-  SUPPORT_RIGHT
+  SUPPORT_RIGHT,
+  SUPPORT_NONE
 };
 
 enum IniState

@@ -67,18 +67,28 @@ add_subdirectory(src/State)
 #add_executable(power_test example/IOManager_test/power_test.cpp)
 #target_link_libraries(power_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
-add_executable(imu_test example/imu_test/imu_test.cpp)
-target_link_libraries(imu_test
-                      ${catkin_LIBRARIES}
-                      dmotion_io
-                      dmotion_common
-)
+#add_executable(imu_test example/imu_test/imu_test.cpp)
+#target_link_libraries(imu_test
+#                      ${catkin_LIBRARIES}
+#                      dmotion_io
+#                      dmotion_common
+#)
 
 #add_executable(make_a_circle example/test/circle.cpp)
-#target_link_libraries(make_a_circle ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics dmotion_kinematics_forward)
+#target_link_libraries(make_a_circle
+#                      ${catkin_LIBRARIES}
+#                      dmotion_io
+#                      dmotion_common
+#                      neo_dmotion_lib)
 
 #add_executable(state_test example/test/state_test.cpp)
-#target_link_libraries(state_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state dmotion_kinematics_forward)
+#target_link_libraries(state_test
+#                      ${catkin_LIBRARIES}
+#                      dmotion_io
+#                      dmotion_common
+#                      dmotion_state
+#                      neo_dmotion_lib
+#)
 
 #add_executable(pr_demo example/test/pr_demo.cpp)
 #target_link_libraries(pr_demo
@@ -89,6 +99,15 @@ target_link_libraries(imu_test
 #                      neo_dmotion_lib
 #                      )
 
+add_executable(imu_follow_test example/my_place/imu_follow_test.cpp)
+target_link_libraries(imu_follow_test
+                      ${catkin_LIBRARIES}
+                      dmotion_io
+                      dmotion_common
+                      dmotion_state
+                     neo_dmotion_lib
+                      )
+
 #add_executable(filter_test example/test/filter_test.cpp)
 #target_link_libraries(filter_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state)
 
@@ -97,17 +116,14 @@ target_link_libraries(imu_test
 #                      ${catkin_LIBRARIES}
 #                      dmotion_io
 #                      dmotion_common
-#                      dmotion_kinematics
-#                      dmotion_state
-#                      dmotion_kinematics_forward
-#                      dmotion_OneFootLanding
-#                      dmotion_PendulumWalk
-#                      dmotion_chazhi
-                      #neo_dmotion_lib
-                      #)
+#                      neo_dmotion_lib
+#)
 
 #add_executable(math_test example/test/math_test.cpp)
-#target_link_libraries(math_test ${catkin_LIBRARIES} dmotion_kinematics dmotion_kinematics_forward)
+#target_link_libraries(math_test
+#                      ${catkin_LIBRARIES}
+#                      neo_dmotion_lib
+#                      )
 
 #add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
 #target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)

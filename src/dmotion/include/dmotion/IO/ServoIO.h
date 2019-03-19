@@ -159,6 +159,8 @@ public:
 
     void readServoPosVel();
 
+    void SetSingleServoPositionTimeBase(std::string name, double position, bool is_time_base_on);
+
 private:
     bool m_writer_inited, m_reader_inited, m_servo_inited;
 

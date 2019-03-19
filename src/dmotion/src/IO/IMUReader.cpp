@@ -11,8 +11,7 @@
 #define BAUDRATE  576000
 // #define PORT_NAME "/dev/ttyUSB0"
 // #define BAUDRATE  3000000
-#define IMU_BLOCK 1
-//#define old 1
+
 
 namespace Motion
 {
@@ -31,30 +30,7 @@ IMUReader::~IMUReader()
     m_imu_port->closePort();
     INFO("IMU failures");
 }
-#if 0
-bool IMUReader::checkPower()
-{
-    ROS_DEBUG("IMUReader::checkPower: entering checkpower");
-    if (m_imu_port->waitUntilReadable(100))
-    {
-        ROS_DEBUG("IMUReader::checkPower: first buffer reading passed, going to double check");
-        timer::delay_ms(2.0);
 
-        m_imu_port->clearPort();
-        if (m_imu_port->waitUntilReadable(100))
-        {
-            ROS_DEBUG("IMUReader::checkPower: second buffer received");
-            if (readIMUData())
-            {
-                ROS_DEBUG("IMUReader::checkPower: read imu data success, power is on");
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-#else
 bool IMUReader::checkPower()
 {
     int m_imu_success = 0;
@@ -75,148 +51,12 @@ bool IMUReader::checkPower()
     }
     return false;
 }
-#endif
 
 void IMUReader::clearPort()
 {
     m_imu_port->clearPort();
 }
 
-#ifdef old
-bool IMUReader::readIMUData()
-{
-    //static int failure_ = 0;
-    uint8_t recBuffer[28];
-    char type;
-    bool readRes_;
-    int ticks_failing_ = 0;
-
-    while (true)
-    {
-        // if cannot get complete packet for some time
-        // lower board might not on power...
-        if (ticks_failing_++ > WaitingTicks)    //TODO() hardcode
-        {
-            // m_isPowerOn = false;
-            m_failures++;
-            ROS_WARN("IMUReader::readIMUData: IMU Reading failure...going to exit....");
-            return false;
-        }
-
-        // step 1. receive head
- #ifdef IMU_BLOCK
-        // std::cout << "fuck imu block" << std::endl;
-        readRes_ = m_imu_port->readPort(recBuffer, 1);
- #else
-        readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
- #endif
-        if ( !readRes_ || recBuffer[0] != (uint8_t)0xee)
-        {
-            continue;
-        }
-
-        // try set time point here
-        m_sync_time = timer::getCurrentSystemTime();
-
-#ifdef IMU_BLOCK
-        readRes_ = m_imu_port->readPort(recBuffer, 1);
- #else
-        readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
- #endif
-        if ( !readRes_ || recBuffer[0] != (uint8_t)0xee)
-        {
-            // ROS_INFO_STREAM("not head " << int(recBuffer[0]));
-            ROS_DEBUG("IMUReader::readIMUData: not head 2");
-            continue;
-        }
-
-        // step 2. receiveype
-#ifdef IMU_BLOCK
-        readRes_ = m_imu_port->readPort(recBuffer, 1);
-#else
-        readRes_ = m_imu_port->readData1Byte(recBuffer, 1, 3.0);
-#endif
-
-        type = recBuffer[0];
-        if ((type & 0x00) != 0)
-        {
-            ROS_DEBUG("IMUReader::readIMUData: type error");
-        }
-        if (!readRes_ || (type & 0x10) == 0 || (type & 0x40) == 0)
-            continue;
-
-        // step 3. gypo type
-        if ((type & 0x10) != 0)
-        {
-            uint8_t checksum = 0;
-#ifdef IMU_BLOCK
-            if(!m_imu_port->readPort(recBuffer, 13))
-            {
-                ROS_WARN("IMUReader::readIMUData: read imu packet incomplete...");
-                continue;
-            }
-#else
-            if(!m_imu_port->readData1Byte(recBuffer, 13, 3.0))
-            {
-                ROS_WARN("IMUReader::readIMUData: read imu packet incomplete...");
-                continue;
-            }
-#endif
-            // checksum
-            for (int i = 0; i < 13; i++)
-            {
-                checksum += recBuffer[i];
-            }
-            if ((checksum & 0xff) != 0xff)
-            {
-                ROS_WARN("IMUReader::readIMUData: imu checksum error!");
-                continue;
-            }
-            remapIMUData(recBuffer);
-        }
-
-        // step 4. extra data
-        if ((type & 0x40) != 0)
-        {
-            uint8_t checksum = 0;
-#ifdef IMU_BLOCK
-            if(!m_imu_port->readPort(recBuffer, 9))
-            {
-                ROS_WARN("IMUReader::readIMUData: read end buffer incomplete...");
-                continue;
-            }
-#else
-            if(!m_imu_port->readData1Byte(recBuffer, 9, 3.0))
-            {
-                ROS_WARN("IMUReader::readIMUData: read end buffer incomplete...");
-                continue;
-            }
-#endif
-            // checksum
-            for (int i = 0; i < 9; i++)
-            {
-                checksum += recBuffer[i];
-            }
-            if ((checksum & 0xff) != 0xff)
-            {
-                ROS_WARN("IMUReader::readIMUData: packet end checksum error");
-                continue;
-            }
-        }
-
-        // step 5. packet end
-#ifdef IMU_BLOCK
-        readRes_ = m_imu_port->readPort(recBuffer, 3);
- #else
-        readRes_ = m_imu_port->readData1Byte(recBuffer, 3, 3.0);
- #endif
-
-        break;
-    }
-
-    return true;
-}
-#else
 bool IMUReader::readIMUData()
 {
 
@@ -268,7 +108,7 @@ bool IMUReader::readIMUData()
             }
             else
             {
-              printf("Gyro:Read Byte %2x, number: %d, state: %d \n",byte_buffer,same_cnt,state);
+              //printf("Gyro:Read Byte %2x, number: %d, state: %d \n",byte_buffer,same_cnt,state);
               //std::cout << "Gyro:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
               m_imu_port->clearPort();
             }
@@ -353,8 +193,6 @@ bool IMUReader::readIMUData()
       }
 
 }
-#endif
-
 
 
 inline bool IMUReader::remapIMUData(const uint8_t* buffer)

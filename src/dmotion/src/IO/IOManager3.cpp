@@ -8,7 +8,7 @@
 
 using namespace dynamixel;
 
-#define LEG_ONLY true //ONLY USE LEGS OF ZJU DANCER
+#define LEG_ONLY false //ONLY USE LEGS OF ZJU DANCER
 
 #define DATA_FREQUENCY 10.0    // 100hz data stream
 #define IMU_FREQUENCY 10.0    // 100hz data stream
@@ -171,6 +171,34 @@ void IOManager3::setAllJointValue(const std::vector<double>& values_)
       m_servo_io.setSingleServoPosition("right_arm_lower", values_[13]);
       m_servo_io.setSingleServoPosition("left_arm_upper", values_[14]);
       m_servo_io.setSingleServoPosition("left_arm_lower", values_[15]);
+      m_servo_io.setSingleServoPosition("head_pitch", values_[16]);
+      m_servo_io.setSingleServoPosition("head_yaw", values_[17]);
+    }
+}
+
+void IOManager3::SetAllJointValueTimeBase(const std::vector<double>& values_, bool is_time_base_on)
+{
+    m_servo_io.SetSingleServoPositionTimeBase("right_hip_yaw", values_[0], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("right_hip_roll", values_[1], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("right_hip_pitch", values_[2], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("right_knee", values_[3], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("right_ankle_pitch", values_[4], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("right_ankle_roll", values_[5], is_time_base_on);
+
+    m_servo_io.SetSingleServoPositionTimeBase("left_hip_yaw", values_[6], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("left_hip_roll", values_[7], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("left_hip_pitch", values_[8], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("left_knee", values_[9], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("left_ankle_pitch", values_[10], is_time_base_on);
+    m_servo_io.SetSingleServoPositionTimeBase("left_ankle_roll", values_[11], is_time_base_on);
+
+    if(!LEG_ONLY){
+      m_servo_io.SetSingleServoPositionTimeBase("right_arm_upper", values_[12], is_time_base_on);
+      m_servo_io.SetSingleServoPositionTimeBase("right_arm_lower", values_[13], is_time_base_on);
+      m_servo_io.SetSingleServoPositionTimeBase("left_arm_upper", values_[14], is_time_base_on);
+      m_servo_io.SetSingleServoPositionTimeBase("left_arm_lower", values_[15], is_time_base_on);
+      m_servo_io.SetSingleServoPositionTimeBase("head_pitch", values_[16], is_time_base_on);
+      m_servo_io.SetSingleServoPositionTimeBase("head_yaw", values_[17], is_time_base_on);
     }
 }
 
