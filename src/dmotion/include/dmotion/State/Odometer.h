@@ -1,0 +1,8 @@
+namespace Motion
+{
+  class Odemeter
+  {
+      
+
+  };
+}

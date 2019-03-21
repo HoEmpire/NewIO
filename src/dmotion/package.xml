@@ -8,6 +8,8 @@
     <license>TODO</license>
     <buildtool_depend>catkin</buildtool_depend>
 
+    <build_depend>dmsgs</build_depend>
+
     <run_depend>message_runtime</run_depend>
     <run_depend>geometry_msgs</run_depend>
     <run_depend>dcommon</run_depend>

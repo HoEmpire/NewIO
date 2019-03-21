@@ -1,0 +1,23 @@
+<launch>
+    <node pkg="dmotion"
+          name="main"
+          type="main"
+          output="screen"
+          respawn="false"
+          required="true"
+          cwd="node"
+          args="">
+
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/motion.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/motor.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/pvhipY.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/kick.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/sidekick.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/fastkick.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/goalie.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/1/dmotion/setup.yml"/>
+
+    </node>
+    <!--Global parameters-->
+    <rosparam command="load" file="$(find dmotion)/config/global.yml"/>
+</launch>

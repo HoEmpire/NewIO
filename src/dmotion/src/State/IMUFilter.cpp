@@ -2,8 +2,8 @@
 
 #define FILTER_FREQUENCE 0.01 // 5ms //change for test
 #define LPF_FREQ 50
-#define Ki 0.001
-#define Kp 2
+#define Ki 0.1
+#define Kp 1.5
 
 using namespace std;
 using namespace Eigen;

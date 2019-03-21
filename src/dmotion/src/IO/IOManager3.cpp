@@ -317,7 +317,6 @@ void IOManager3::readPosVel()
 //     m_servo_io.setAllServoTimeBase(true);
 // }
 
-
 void IOManager3::checkIOPower()
 {
     ROS_INFO("IOManager3::checkIOPower: checking whether power is on by servo");
