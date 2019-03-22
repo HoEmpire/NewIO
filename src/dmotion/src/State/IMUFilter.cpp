@@ -132,6 +132,7 @@ void ImuFilter::Lowpass_Filter(
   float &ax_old, float &ay_old, float &az_old)
 {
   static float coe = 1.0 / (1.0 + 2 * M_PI * LPF_FREQ * FILTER_FREQUENCE);
+  coe = 1.0;
   if(ax_old == 0.0 || ay_old == 0.0 || az_old == 0.0)
   {
     ax_old = ax_new;

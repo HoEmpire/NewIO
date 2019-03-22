@@ -171,7 +171,7 @@ namespace dmotion {
         //脚踝的yaw起点终点的插值
         std::vector<double> akYaw_t = {0,0.35};
         std::vector<double> akYaw_p = {Rad2Deg( - hang_foot[2]), d_yaw};
-        double slope_akYaw = (ak_y_t - ak_y_0) / 0.35;
+        double slope_akYaw = (akYaw_p[1] - akYaw_p[0]) / TAO / 2;
         std::vector<double> akYaw_s = {slope_akYaw, slope_akYaw};
         ThreeInterpolation ak_yaw(akYaw_t, akYaw_p, akYaw_s);
         ak_yaw.CalculatePoints(10);

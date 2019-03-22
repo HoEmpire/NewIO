@@ -180,6 +180,7 @@ int main(int argc, char ** argv)
     Eigen::Matrix<double,3,1> w1, w2, w3;
     Eigen::Matrix<double,3,1> Pd;
     Eigen::Matrix<double,3,3> R_new, dR, R_old;
+    double support_flag = 1;
     R_old.setIdentity();
 
     std::thread t1(tt);
@@ -207,9 +208,9 @@ int main(int argc, char ** argv)
          wx.push_back(imu_data.gypo.x);
          wy.push_back(imu_data.gypo.y);
          wz.push_back(imu_data.gypo.z);
-         ax_wog.push_back(imu_data.gypo.x);
-         ay_wog.push_back(imu_data.gypo.y);
-         az_wog.push_back(imu_data.gypo.z);
+         ax_wog.push_back(sm.ax_wog);
+         ay_wog.push_back(sm.ax_wog);
+         az_wog.push_back(sm.ax_wog);
 
          std::vector<double> right_p(read_pos.begin(), read_pos.begin() + 6);
          std::vector<double> right_v(read_vel.begin(), read_vel.begin() + 6);
@@ -224,7 +225,7 @@ int main(int argc, char ** argv)
 
          std::vector<double> left_p(read_pos.begin() + 6, read_pos.begin() + 12);
          std::vector<double> left_v(read_vel.begin() + 6, read_vel.begin() + 12);
-         double support_flag = 1;
+
          ForKin  leg_left(left_p,false);
          data_left_x.push_back(leg_left.x_result);
          data_left_y.push_back(leg_left.y_result);

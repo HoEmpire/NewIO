@@ -102,16 +102,6 @@ void IOManager3::spinOnce()
     //static int imu_failures = 0;
     if (ON == m_power_state)
     {
-
-        // read pressure data
-        if (parameters.global.using_pressure)
-        {
-            if (!m_feet_io.readPressureData())
-            {
-                ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
-            }
-        }
-
         //
         // use internal clock to calculate waiting time
         std::chrono::duration<double> duration_ = (timer::getCurrentSystemTime() - m_sync_time);
@@ -129,7 +119,17 @@ void IOManager3::spinOnce()
         }
 
         m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
+
         m_servo_io.sendServoPositions();
+        // read pressure data
+        if (parameters.global.using_pressure)
+        {
+            if (!m_feet_io.readPressureData())
+            {
+                ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
+            }
+        }
+
     }
     else if (OFF == m_power_state)
     {

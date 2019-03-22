@@ -4,8 +4,8 @@ add_definitions(-std=c++11 -Wall -O2)
 
 find_package(catkin REQUIRED
     COMPONENTS
-    dmsgs
     roscpp
+    dmsgs
    )
 
 find_package(Eigen3 REQUIRED)
@@ -51,7 +51,7 @@ add_subdirectory(src/IO)
 add_subdirectory(src/Common)
 add_subdirectory(src/State)
 
-target_link_libraries(com_dmotion_lib neo_dmotion_lib dmotion_common dmotion_io dmotion_state)
+target_link_libraries(com_dmotion_lib dmotion_common dmotion_io dmotion_state neo_dmotion_lib)
 
 #add_executable(climb_read example/test/climb_read.cpp)
 #target_link_libraries(climb_read ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
@@ -91,8 +91,8 @@ target_link_libraries(com_dmotion_lib neo_dmotion_lib dmotion_common dmotion_io 
 add_executable(state_test example/test/state_test.cpp)
 target_link_libraries(state_test
                       ${catkin_LIBRARIES}
-                      dmotion_io
                       dmotion_common
+                      dmotion_io
                       dmotion_state
                       neo_dmotion_lib
 )

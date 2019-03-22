@@ -6,7 +6,7 @@
 #define PRESSURE_INITICKS 200 //Unit:10ms
 #define STABLE_COUNT 10
 #define IMU_INI_DOUBLE_SUPPORT_COUNT 100
-#define PRESSURE_THRESHOLD 1.0
+#define PRESSURE_THRESHOLD 0.1
 
 using namespace std;
 namespace Motion{
