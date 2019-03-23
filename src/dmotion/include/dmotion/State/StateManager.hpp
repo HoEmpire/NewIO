@@ -39,13 +39,12 @@ class StateManager
     IniState pressure_initialized;
     PowerState m_power_state;
     bool servo_initialized;
-
+    StableState m_stable_state;
 
 
   private:
 
-    ImuFilter m_imu_filter;
-    StableState m_stable_state;
+    ImuFilter m_imu_filter;  
     float PressureBiasLeft = 0.0;
     float PressureBiasRight = 0.0;
     timer a;

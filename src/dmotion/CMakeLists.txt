@@ -129,8 +129,9 @@ target_link_libraries(state_test
 #add_executable(math_test example/test/math_test.cpp)
 #target_link_libraries(math_test
 #                      ${catkin_LIBRARIES}
+#                      dmotion_common
 #                      neo_dmotion_lib
-#                      )
+#                     )
 
 #add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
 #target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
@@ -140,3 +141,9 @@ target_link_libraries(main
                       ${catkin_LIBRARIES}
                       com_dmotion_lib
 )
+
+add_executable(dmotion_node src/main.cpp)
+target_link_libraries(dmotion_node
+                      com_dmotion_lib
+                      ${catkin_LIBRARIES}
+                      )

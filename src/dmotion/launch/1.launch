@@ -1,0 +1,29 @@
+<launch>
+    <node pkg="dmotion"
+          name="dmotion_1"
+          type="dmotion_node"
+          output="screen"
+          respawn="false"
+          required="true"
+          cwd="node"
+          args="">
+
+        <!--Set log level-->
+        <env name="ROSCONSOLE_CONFIG_FILE" value="$(find dlaunch)/drosconsole.conf"/>
+
+        <!--Private parameters-->
+        <param name="RobotId" type="int" value="1" />
+
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/motion.yml"/>
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/motor.yml"/>
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/pvhipY.yml"/>
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/kick.yml"/>
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/sidekick.yml"/>
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/fastkick.yml"/>
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/goalie.yml"/>
+        <rosparam command="load" file="$(find dconfig)/1/dmotion/setup.yml"/>
+    </node>
+
+    <!--Global parameters-->
+    <rosparam command="load" file="$(find dconfig)/global.yml"/>
+</launch>

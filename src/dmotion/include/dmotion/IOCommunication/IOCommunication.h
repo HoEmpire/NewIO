@@ -1,6 +1,7 @@
 #pragma once
 #include <thread>
 #include <iostream>
+#include <string>
 
 #include "dmotion/IO/IOManager3.h"
 #include "dmotion/State/StateManager.hpp"
@@ -11,6 +12,7 @@
 
 #include <std_msgs/Float64MultiArray.h>
 #include "dmsgs/MotionInfo.h"
+#include "dmsgs/ActionCommand.h"
 namespace Motion
 {
 
@@ -35,6 +37,10 @@ public:
 
      void SetJointValue(const std_msgs::Float64MultiArray & msg);
 
+     void ReadHeadServoValue(const dmsgs::ActionCommand & msg);
+
+     void SetHeadServoValue();
+
      dmsgs::MotionInfo m_motion_info;
 
      std_msgs::Float64MultiArray m_motion_hub;
@@ -44,15 +50,19 @@ private:
      IOManager3 io;
      StateManager sm;
      std::vector<double> m_joint_value;
+     std::string m_status;
 
      Motion::IMUData imu_data;
      Motion::PowerState power_data;
      Motion::PressureData pressure_data;
      std::vector<double> read_pos;
      std::vector<double> read_vel;
+     float target_pitch, target_yaw;
+     float desire_pitch, desire_yaw;
+     float pitch_speed, yaw_speed;
 
      ros::Publisher m_pub_motion_info, m_pub_motion_hub;
-     ros::Subscriber m_sub_motion_hub, m_sub_vision;
+     ros::Subscriber m_sub_motion_hub, m_sub_vision, m_sub_action_command;
 };
 
 }

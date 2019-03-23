@@ -1,6 +1,9 @@
 #include "dmotion/IOCommunication/IOCommunication.h"
 #define STATE_MANAGER_LOOP_TIME 10.0
 #define IMU_LOOP_TIME 10.0
+const float  MAX_PLAT_YAW  = 135;
+const float MAX_PLAT_PITCH  = 50;
+const float  MIN_PLAT_PITCH  = 0;
 
 namespace Motion
 {
@@ -26,6 +29,7 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
     //INFO("sm loop done");
 
     m_sub_motion_hub = m_nh->subscribe("/ServoInfo", 1, &IOCommunication::SetJointValue, this);//TODO
+    m_sub_action_command = m_nh->subscribe("/ActionCommand", 1, &IOCommunication::ReadHeadServoValue, this);//TODO
    // m_sub_vision = m_nh->subscribe("/humanoid/ReloadMotionConfig", 1, &IOCommunication::SetJointValue, this);//TODO
     m_pub_motion_info = m_nh->advertise<dmsgs::MotionInfo>("MotionInfo", 1);
     // m_pub_motion_hub = m_nh->advertise<dmsgs::MotionDebugInfo>("MotionHub", 1);
@@ -47,6 +51,12 @@ void IOCommunication::IniIO()
     PendulumWalk pen;
     pen.GiveAStep(0,0,0);
     m_joint_value = pen.GiveATick();
+    m_joint_value.push_back(0);
+    m_joint_value.push_back(30);
+    m_joint_value.push_back(0);
+    m_joint_value.push_back(30);
+    m_joint_value.push_back(0);
+    m_joint_value.push_back(0);
     io.setAllJointValue(m_joint_value);
     io.spinOnce();
     INFO("ini io done again");
@@ -79,6 +89,7 @@ void IOCommunication::IOLoop()
     }
     else
     {
+      SetHeadServoValue();
       io.setAllJointValue(m_joint_value);
       io.spinOnce();
       io.readPosVel();
@@ -107,19 +118,131 @@ void IOCommunication::SetJointValue(const std_msgs::Float64MultiArray & msg)
 {
    if(sm.imu_initialized == INITED)
    {
-     m_joint_value = msg.data;
-     PrintVector(m_joint_value);
+     for(int i = 0; i < 16; i++)
+         m_joint_value[i] = msg.data[i];
+     m_status = msg.layout.dim[0].label;
+     //PrintVector(m_joint_value);
    }
+}
+
+void IOCommunication::ReadHeadServoValue(const dmsgs::ActionCommand & msg)
+{
+    desire_pitch = msg.headCmd.pitch;
+    desire_yaw = msg.headCmd.yaw;
+
+    pitch_speed = msg.headCmd.pitchSpeed;
+    yaw_speed = msg.headCmd.yawSpeed;
+}
+
+void IOCommunication::SetHeadServoValue()
+{
+
+
+    desire_yaw = min(desire_yaw, MAX_PLAT_YAW);
+    desire_yaw = max(desire_yaw, -MAX_PLAT_YAW);
+
+    desire_pitch = max(desire_pitch, MIN_PLAT_PITCH);
+    desire_pitch = min(desire_pitch, MAX_PLAT_PITCH);
+
+    //set head yaw
+    if(fabs(desire_yaw - target_yaw) < yaw_speed)
+    {
+        target_yaw = desire_yaw;
+    }
+    else
+    {
+        if(desire_yaw > target_yaw)
+        {
+            target_yaw += yaw_speed;
+        }
+        else
+        {
+            target_yaw -= yaw_speed;
+        }
+    }
+
+    //set head pitch
+    if(fabs(desire_pitch - target_pitch) < pitch_speed || target_pitch < 0)
+    {
+        target_pitch = desire_pitch;
+    }
+    else
+    {
+        if(desire_pitch > target_pitch)
+        {
+            target_pitch += pitch_speed;
+        }
+        else
+        {
+            target_pitch -= pitch_speed;
+        }
+    }
+
+    //head protecter
+    if(sm.m_stable_state == BACKDOWN)
+    {
+        target_yaw = 0;
+        target_pitch = 30;
+    }
+    else if(sm.m_stable_state == FRONTDOWN)
+    {
+        target_yaw = 0;
+        target_pitch = -30;
+    }
+    m_joint_value[16] = target_pitch;
+    m_joint_value[17] = target_yaw;
 }
 
 void IOCommunication::Publisher()
 {
     ros::Rate loop_rata(100.0);
+    int lower_board_success_flag = 0;
     while(ros::ok())
     {
-      m_motion_info.imuRPY.x = sm.roll;
-      m_motion_info.imuRPY.y = sm.pitch;
-      m_motion_info.imuRPY.z = sm.yaw;
+      if(sm.imu_initialized == INITED)
+      {
+        if(lower_board_success_flag > 5)
+        {
+          //stable
+          if(sm.m_stable_state == STABLE)
+              m_motion_info.stable = true;
+          else
+              m_motion_info.stable = false;
+
+          //timestamp
+          m_motion_info.timestamp = ros::Time::now();
+
+          //lower_board_connected
+          m_motion_info.lower_board_connected = true;
+
+          //curPlat
+          m_motion_info.curPlat.pitch = target_pitch;
+          m_motion_info.curPlat.yaw = target_yaw;
+
+          //imuRPY
+          m_motion_info.imuRPY.x = sm.roll;
+          m_motion_info.imuRPY.y = sm.pitch;
+          m_motion_info.imuRPY.z = sm.yaw;
+
+          //status
+          if(m_status == "STANDBY")
+              m_motion_info.status = m_motion_info.STANDBY;
+          else if(m_status == "WALK" || m_status == "GETUP")
+              m_motion_info.status = m_motion_info.WALKING;
+          else if(m_status == "KICK" )
+              m_motion_info.status = m_motion_info.KICKING;
+        }
+        else
+        {
+          m_motion_info.lower_board_connected = false;
+          lower_board_success_flag++;
+        }
+      }
+      else
+      {
+        m_motion_info.lower_board_connected = false;
+        lower_board_success_flag = 0;
+      }
       m_pub_motion_info.publish(m_motion_info);
     //  m_pub_motion_hub.publish(m_motion_hub);
       loop_rata.sleep();
@@ -130,7 +253,7 @@ void IOCommunication::Publisher()
 
 void IOCommunication::Subscriber() //TODO
 {
-    ros::AsyncSpinner spinner(2); // Use 2 threads
+    ros::AsyncSpinner spinner(3); // Use 3 threads
     spinner.start();
     ros::waitForShutdown();
 }

@@ -1,0 +1,32 @@
+<launch>
+    <node pkg="dmotion"
+          name="dmotion_$(env ZJUDANCER_ROBOTID)"
+          type="dmotion_node"
+          output="screen"
+          respawn="false"
+          required="true"
+          cwd="node"
+          args="">
+
+        <!--Set log level-->
+        <!-- <env name="ROSCONSOLE_CONFIG_FILE" value="$(find dlaunch)/drosconsole.conf"/> -->
+
+        <!--Private parameters-->
+        <param name="RobotId" value="$(env ZJUDANCER_ROBOTID)" />
+
+        <rosparam command="load" file="$(find config)/$(env ZJUDANCER_ROBOTID)/dmotion/motion.yml"/>
+        <rosparam command="load" file="$(find dmotion)/config/$(env ZJUDANCER_ROBOTID)/dmotion/motor.yml"/>
+        <rosparam command="load" file="$(find config)/$(env ZJUDANCER_ROBOTID)/dmotion/pvhipY.yml"/>
+        <rosparam command="load" file="$(find config)/$(env ZJUDANCER_ROBOTID)/dmotion/kick.yml"/>
+        <rosparam command="load" file="$(find config)/$(env ZJUDANCER_ROBOTID)/dmotion/sidekick.yml"/>
+        <rosparam command="load" file="$(find config)/$(env ZJUDANCER_ROBOTID)/dmotion/fastkick.yml"/>
+        <rosparam command="load" file="$(find config)/$(env ZJUDANCER_ROBOTID)/dmotion/goalie.yml"/>
+        <rosparam command="load" file="$(find config)/$(env ZJUDANCER_ROBOTID)/dmotion/setup.yml"/>
+
+    </node>
+
+    <node pkg="rosbag" type="record" name="rosbag" args="-O /tmp/test.bag /dmotion_$(env ZJUDANCER_ROBOTID)/MotionInfo"/>
+
+    <!--Global parameters-->
+    <rosparam command="load" file="$(find dconfig)/global.yml"/>
+</launch>
