@@ -203,11 +203,17 @@ void IOCommunication::Publisher()
       {
         if(lower_board_success_flag > 5)
         {
-          //stable
+          //stable & forward_or_backward
           if(sm.m_stable_state == STABLE)
               m_motion_info.stable = true;
           else
-              m_motion_info.stable = false;
+          {
+            m_motion_info.stable = false;
+            if(sm.m_stable_state == FRONTDOWN)
+               m_motion_info.forward_or_backward = true;
+            else
+               m_motion_info.forward_or_backward = false;
+          }
 
           //timestamp
           m_motion_info.timestamp = ros::Time::now();
@@ -218,6 +224,11 @@ void IOCommunication::Publisher()
           //curPlat
           m_motion_info.curPlat.pitch = target_pitch;
           m_motion_info.curPlat.yaw = target_yaw;
+
+          //odometry
+          m_motion_info.odometry.x = sm.x_now;
+          m_motion_info.odometry.y = sm.y_now;
+          m_motion_info.odometry.z = sm.yaw;
 
           //imuRPY
           m_motion_info.imuRPY.x = sm.roll;

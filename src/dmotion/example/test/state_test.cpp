@@ -65,21 +65,46 @@ void tt()
     sleep(2);
 
     int ticks = 0;
-
+    int step = 0;
     while(ros::ok()){
       if(flag >= 500)
       {
-          if(ticks == 0)
-            pen.GiveAStep(5,0,0);
-          if(ticks < 35)
+          if(step < 20 || step > 40)
           {
-            fucking = pen.GiveATick();
-            io.setAllJointValue(fucking);
-            ticks++;
-          }
-          if(ticks >= 35)
+            if(ticks == 0)
+              pen.GiveAStep(5,0,0);
+            if(ticks < 35)
+            {
+              fucking = pen.GiveATick();
+              fucking.push_back(0);
+              fucking.push_back(30);
+              fucking.push_back(0);
+              fucking.push_back(30);
+              fucking.push_back(0);
+              fucking.push_back(0);
+              io.setAllJointValue(fucking);
+              ticks++;
+            }
+            if(ticks >= 35)
+            {
               ticks = 0;
+              step++;
+            }
+          }
+          else
+          {
+            if(ticks < 35)
+            {
+              ticks++;
+            }
+            if(ticks >= 35)
+            {
+              ticks = 0;
+              step++;
+            }
+          }
       }
+
 
       io.spinOnce();
       io.readPosVel();
@@ -153,6 +178,9 @@ int main(int argc, char ** argv)
     ofstream feet_pitchv("feet_pitchv.txt", ios::out|ios::trunc);
     ofstream feet_yawv("feet_yawv.txt", ios::out|ios::trunc);
 
+    ofstream left_pressure("left_pressure.txt", ios::out|ios::trunc);
+    ofstream right_pressure("right_pressure.txt", ios::out|ios::trunc);
+
     std::vector<float> roll,pitch,yaw;
     std::vector<float> ax,ay,az;
     std::vector<float> wx,wy,wz;
@@ -166,13 +194,14 @@ int main(int argc, char ** argv)
     std::vector<double> data_vx_pos, data_vy_pos;
     std::vector<double> data_vx_w, data_vy_w;
     std::vector<double> data_x, data_y, data_z;
+    std::vector<double> data_left_pressure, data_right_pressure;
 
     std::vector<int> support_now;
     double x_old = 0, y_old = 0, z_old = 0;
     double x_new = 0, y_new = 0, z_new = 0;
     Eigen::Matrix3d rotation_matrix_OA, rotation_matrix_BA, rotation_matrix_OB, rotation_matrix_body;
 
-    double temp_vx, temp_vy, temp_wx, temp_wy, temp_wz, temp_roll, temp_pitch, temp_yaw;
+    double temp_vx, temp_vy, temp_wx, temp_wy, temp_wz, temp_pitch, temp_yaw;
     Eigen::Matrix<double,3,1> temp_vel;
     Eigen::Matrix<double,3,1> vel_ref, vel_co;
     Eigen::Matrix<double,3,1> temp_pos, pos_real;
@@ -195,6 +224,8 @@ int main(int argc, char ** argv)
       sm.m_power_state = power_data;
       sm.servo_initialized = servo_state;
       sm.pressure_data = pressure_data;
+      sm.servo_pos = read_pos;
+      sm.servo_vel = read_vel;
       sm.working();
       a.SmartDelayMs(10.0);//暂时回到10ms
       if(sm.imu_initialized == Motion::INITED && sm.pressure_initialized == Motion::INITED)
@@ -209,8 +240,11 @@ int main(int argc, char ** argv)
          wy.push_back(imu_data.gypo.y);
          wz.push_back(imu_data.gypo.z);
          ax_wog.push_back(sm.ax_wog);
-         ay_wog.push_back(sm.ax_wog);
-         az_wog.push_back(sm.ax_wog);
+         ay_wog.push_back(sm.ay_wog);
+         az_wog.push_back(sm.az_wog);
+
+         data_left_pressure.push_back(sm.left_pressure);
+         data_right_pressure.push_back(sm.right_pressure);
 
          std::vector<double> right_p(read_pos.begin(), read_pos.begin() + 6);
          std::vector<double> right_v(read_vel.begin(), read_vel.begin() + 6);
@@ -260,7 +294,6 @@ int main(int argc, char ** argv)
             temp_wx = leg_left.vroll_result;
             temp_wy = leg_left.vpitch_result;
             temp_wz = leg_left.vyaw_result;
-            temp_roll = leg_left.roll_result;
             temp_pitch = leg_left.pitch_result;
             temp_yaw = leg_left.yaw_result;
             Eigen::Vector3d eulerAngle_BA(leg_left.yaw_result/180*M_PI,
@@ -290,7 +323,6 @@ int main(int argc, char ** argv)
             temp_wx = leg_right.vroll_result;
             temp_wy = leg_right.vpitch_result;
             temp_wz = leg_right.vyaw_result;
-            temp_roll = leg_right.roll_result;
             temp_pitch = leg_right.pitch_result;
             temp_yaw = leg_right.yaw_result;
             Eigen::Vector3d eulerAngle_BA(leg_right.yaw_result/180*M_PI,
@@ -312,6 +344,8 @@ int main(int argc, char ** argv)
             x_new = leg_right.x_result;
             y_new = leg_right.y_result;
             z_new = leg_right.z_result;
+
+
         }
 
 
@@ -380,6 +414,7 @@ int main(int argc, char ** argv)
         x_real =  pos_real(0); //update x
 
         R_old = rotation_matrix_BA;
+        cout << "x: " << sm.x_now << ", y:" << sm.y_now << endl;
       }
     }
 
@@ -440,6 +475,9 @@ int main(int argc, char ** argv)
       x << data_x[i] << " ";
       y << data_y[i] << " ";
       z << data_z[i] << " ";
+
+      left_pressure << data_left_pressure[i] << " ";
+      right_pressure << data_right_pressure[i] << " ";
     }
     cout << i << endl;
 

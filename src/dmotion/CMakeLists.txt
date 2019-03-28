@@ -34,6 +34,8 @@ include_directories(
         ./include/dmotion/Polynomial
         ./include/dmotion/ForwardKinematics
         ./include/dmotion/IOCommunication
+        ./include/dmotion/State
+        ./include/Common
 )
 
 add_library(neo_dmotion_lib ./src/OneFootLanding/OneFootLanding.cpp
@@ -41,17 +43,17 @@ add_library(neo_dmotion_lib ./src/OneFootLanding/OneFootLanding.cpp
                             ./src/InverseKinematics/InverseKinematics.cpp
                             ./src/ThreeInterpolation/ThreeInterpolation.cpp
                             ./src/ForwardKinematics/ForwardKinematics.cpp
+                            ./src/State/IMUFilter.cpp
+                            ./src/State/StateManager.cpp
+                            ./src/State/Odometer.cpp
+                            ./src/Common/Parameters.cpp
                             ./src/IOCommunication/IOCommunication.cpp
 )
 
-add_library(com_dmotion_lib ./src/IOCommunication/IOCommunication.cpp
-)
 
 add_subdirectory(src/IO)
-add_subdirectory(src/Common)
-add_subdirectory(src/State)
-
-target_link_libraries(com_dmotion_lib dmotion_common dmotion_io dmotion_state neo_dmotion_lib)
+target_link_libraries(neo_dmotion_lib dmotion_io)
+#add_subdirectory(src/Common)
 
 #add_executable(climb_read example/test/climb_read.cpp)
 #target_link_libraries(climb_read ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_chazhi dmotion_kinematics)
@@ -91,9 +93,8 @@ target_link_libraries(com_dmotion_lib dmotion_common dmotion_io dmotion_state ne
 add_executable(state_test example/test/state_test.cpp)
 target_link_libraries(state_test
                       ${catkin_LIBRARIES}
-                      dmotion_common
+#                      dmotion_common
                       dmotion_io
-                      dmotion_state
                       neo_dmotion_lib
 )
 
@@ -126,12 +127,13 @@ target_link_libraries(state_test
 #                      neo_dmotion_lib
 #)
 
-#add_executable(math_test example/test/math_test.cpp)
-#target_link_libraries(math_test
-#                      ${catkin_LIBRARIES}
+add_executable(math_test example/test/math_test.cpp)
+target_link_libraries(math_test
+                      ${catkin_LIBRARIES}
 #                      dmotion_common
-#                      neo_dmotion_lib
-#                     )
+                      dmotion_io
+                      neo_dmotion_lib
+                     )
 
 #add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
 #target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
@@ -139,11 +141,12 @@ target_link_libraries(state_test
 add_executable(main src/Node/MotionIO.cpp)
 target_link_libraries(main
                       ${catkin_LIBRARIES}
-                      com_dmotion_lib
+                      dmotion_io
+                      neo_dmotion_lib
 )
 
-add_executable(dmotion_node src/main.cpp)
-target_link_libraries(dmotion_node
-                      com_dmotion_lib
-                      ${catkin_LIBRARIES}
-                      )
+#add_executable(dmotion_node src/main.cpp)
+#target_link_libraries(dmotion_node
+#                      com_dmotion_lib
+#                      ${catkin_LIBRARIES}
+#                      )

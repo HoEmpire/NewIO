@@ -7,8 +7,10 @@
 #define STABLE_COUNT 10
 #define IMU_INI_DOUBLE_SUPPORT_COUNT 100
 #define PRESSURE_THRESHOLD 0.1
+#define VISION_COMPENSATE_ON false
 
 using namespace std;
+using namespace dmotion;
 namespace Motion{
 
 StateManager::StateManager()
@@ -17,6 +19,7 @@ StateManager::StateManager()
   , pressure_initialized(WAIT)
   , m_power_state(OFF)
   , m_stable_state(STABLE)
+  , right_support_flag(true)
 {
     ROS_DEBUG("RobotStatus::RobotStatus: init RobotStatus instance");
 }
@@ -214,6 +217,7 @@ void StateManager::checkIniState()
               {
                 imu_initialized = INITING;
                 m_imu_filter.clearData();
+                m_odometer.ClearEstimate();
                 count_support_both = 0;
                 ini_ticks = 1;
               }
@@ -223,6 +227,7 @@ void StateManager::checkIniState()
        {
          imu_initialized = INITING;
          m_imu_filter.clearData();
+         m_odometer.ClearEstimate();
          ini_ticks = 1;
        }
     }
@@ -241,16 +246,16 @@ void StateManager::checkIniState()
 
 void StateManager::iniPressureSensor()
 {
-  float left_sum_ = 0, right_sum_ = 0;
-
   // sum pressure data of each feet
+  float left_sum = 0;
+  float right_sum = 0;
   for(int i = 0; i < 4; i++)
   {
-      left_sum_ += pressure_data.left[i];
+      left_sum += pressure_data.left[i];
   }
   for(int i = 0; i < 4; i++)
   {
-      right_sum_ += pressure_data.right[i];
+      right_sum += pressure_data.right[i];
   }
 
 
@@ -263,8 +268,8 @@ void StateManager::iniPressureSensor()
 
   if(ini_ticks <= PRESSURE_INITICKS)
   {
-    PressureBiasLeft = 1.0 * (ini_ticks - 1) / ini_ticks * PressureBiasLeft + 1.0 / ini_ticks * left_sum_;
-    PressureBiasRight = 1.0 * (ini_ticks - 1) / ini_ticks * PressureBiasRight + 1.0 / ini_ticks * right_sum_;
+    PressureBiasLeft = 1.0 * (ini_ticks - 1) / ini_ticks * PressureBiasLeft + 1.0 / ini_ticks * left_sum;
+    PressureBiasRight = 1.0 * (ini_ticks - 1) / ini_ticks * PressureBiasRight + 1.0 / ini_ticks * right_sum;
     ini_ticks++;
   }
   else{
@@ -279,35 +284,40 @@ void StateManager::iniPressureSensor()
 
 void StateManager::checkSupportState()
 {
-  float left_sum_ = 0, right_sum_ = 0;
+  float left_sum = 0;
+  float right_sum = 0;
 
   // sum pressure data of each feet
   for(int i = 0; i < 4; i++)
   {
-      left_sum_ += pressure_data.left[i];
-      //std::cout << "left_sum：" << left_sum_ << std::endl;
+      left_sum += pressure_data.left[i];
+      //std::cout << "left_sum：" << left_sum << std::endl;
   }
   for(int i = 0; i < 4; i++)
   {
-      right_sum_ += pressure_data.right[i];
-      //std::cout << "right_sum：" << right_sum_ << std::endl;
+      right_sum += pressure_data.right[i];
+      //std::cout << "right_sum：" << right_sum << std::endl;
   }
-//  std::cout << "left：" << left_sum_ - PressureBiasLeft << std::endl;
-//  std::cout << "right：" << right_sum_ - PressureBiasRight << std::endl;
+//  std::cout << "left：" << left_sum - PressureBiasLeft << std::endl;
+//  std::cout << "right：" << right_sum - PressureBiasRight << std::endl;
+  left_pressure = left_sum - PressureBiasLeft;
+  right_pressure = right_sum - PressureBiasRight;
 
-  if((left_sum_ - PressureBiasLeft > PRESSURE_THRESHOLD) && (right_sum_ - PressureBiasRight > PRESSURE_THRESHOLD))
+  if((left_sum - PressureBiasLeft > PRESSURE_THRESHOLD) && (right_sum - PressureBiasRight > PRESSURE_THRESHOLD))
   {
       m_support_state = SUPPORT_BOTH;
     //  ROS_INFO("support both");
   }
-  else if(left_sum_ - PressureBiasLeft > PRESSURE_THRESHOLD)
+  else if(left_sum - PressureBiasLeft > PRESSURE_THRESHOLD)
   {
       m_support_state = SUPPORT_LEFT;
+      right_support_flag = false;
     //  ROS_INFO("support left");
   }
-  else if(right_sum_ - PressureBiasRight > PRESSURE_THRESHOLD)
+  else if(right_sum - PressureBiasRight > PRESSURE_THRESHOLD)
   {
       m_support_state = SUPPORT_RIGHT;
+      right_support_flag = true;
     //  ROS_INFO("support right");
   }
   else
@@ -333,11 +343,81 @@ void StateManager::working()
   {
     calIMUFilter();
     checkStableState();
+    CalOdometer(VISION_COMPENSATE_ON);
   }
   else if(imu_initialized == INITING)
   {
     iniIMUFilter();
   }
+}
+
+void StateManager::GetEncoderVel()
+{
+  std::vector<double> pos;
+  std::vector<double> vel;
+  if(right_support_flag)
+  {
+    pos.assign(servo_pos.begin(), servo_pos.begin() + 6);
+    vel.assign(servo_vel.begin(), servo_vel.begin() + 6);
+  }
+  else
+  {
+    pos.assign(servo_pos.begin() + 6, servo_pos.begin() + 12);
+    vel.assign(servo_vel.begin() + 6, servo_vel.begin() + 12);
+  }
+
+  ForKin leg(pos, right_support_flag);
+  leg.calVelocity(vel);
+
+  vx_encoder = leg.vx_result;
+  vy_encoder = leg.vy_result;
+  vz_encoder = leg.vz_result;
+  roll_feet = leg.roll_result;
+  pitch_feet = leg.pitch_result;
+  yaw_feet = leg.yaw_result;
+}
+
+void StateManager::UpdateVisionYaw(float vision_yaw_)
+{
+  vision_yaw = vision_yaw_;
+}
+
+void StateManager::CalOdometer(bool vision_compensate_on)
+{
+  GetEncoderVel();
+  Eigen::Matrix<double,3,1> acc_wog;
+  acc_wog << ax_wog, ay_wog, az_wog;
+
+  if(vision_compensate_on)
+  {
+    acc_wog = m_odometer.VisionCompensate(vision_yaw, yaw, acc_wog);
+    encoder_vel_global = m_odometer.CalEncoderSpeedToGlobal(roll, pitch, vision_yaw,
+                                                            roll_feet, pitch_feet ,yaw_feet,
+                                                            vx_encoder, vy_encoder, vz_encoder);
+  }
+  else
+  {
+    encoder_vel_global = m_odometer.CalEncoderSpeedToGlobal(roll, pitch, yaw,
+                                                            roll_feet, pitch_feet ,yaw_feet,
+                                                            vx_encoder, vy_encoder, vz_encoder);
+  }
+  //calculate x
+  m_odometer.UpdateEstimate(acc_wog(0), encoder_vel_global(0), true);
+
+  //calculate y
+  m_odometer.UpdateEstimate(acc_wog(1), encoder_vel_global(1), false);
+
+  //Update center vel
+  if(vision_compensate_on)
+    m_odometer.CalVelToCenter(vision_yaw);
+  else
+    m_odometer.CalVelToCenter(yaw);
+
+  //Update Odometer
+  m_odometer.UpdateOdometer();
+
+  x_now = m_odometer.x_displacement;
+  y_now = m_odometer.y_displacement;
 }
 
 }

@@ -39,6 +39,20 @@ std::vector<T1> twointerpolation(std::vector<T1> points, T1 v0, int time_points,
   return x;
 }
 
+template <class T2>
+double findmax(Eigen::Matrix<T2,6,1> v)
+{
+  double max = 0;
+  for(int i = 0; i < 6; i++)
+  {
+     if(abs(v(i)) > max)
+        max = abs(v(i));
+  }
+  cout << max << endl;
+  return max;
+}
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "gg");
@@ -95,12 +109,12 @@ int main(int argc, char **argv)
     {
         tmp_x = valuex[j];
         tmp_z = valuez[j];
-        manipulate_points = {tmp_x, -4.5, tmp_z, 0, 0, 0};
+        manipulate_points = {0, -4.5, tmp_z, 0, 0, 0};
         servo_points = leg.LegInvKin(manipulate_points);
 
         tmp_x = valuedx[j];
         tmp_z = valuedz[j];
-        manipulate_vel = {tmp_x, -4.5, tmp_z, 0, 0, 0};
+        manipulate_vel = {0, -4.5, tmp_z, 0, 0, 0};
         ForKin right(manipulate_points, true);
         right.calVelocity(manipulate_vel);
         servo_vel =  right.resultv_vector;
@@ -172,14 +186,16 @@ int main(int argc, char **argv)
       pos[j] = joint_value[j][0];
       vel[j] = joint_vel[j][0];
     //  cout << vel[j] << endl;
+    //cout << "2号pitch" << endl;
     }
+
     //abort();
     io.setAllspeed(30);
     io.setAllJointValue(fucking);
     io.spinOnce();
     sleep(5);
     io.setAllspeed(0);
-    double Kp = 600,Kd = 100,Kpv = 200;
+    double Kp = 10000, Kpv = 200000;
     int flag = 0;
 
      while (ros::ok())
@@ -197,10 +213,10 @@ int main(int argc, char **argv)
             {
               //fucking[j] = 2 * tmp[j] - pos[j] - vel[j] * 0.005;
               //vel[j] = 2 * (tmp[j] - pos[j]) / 0.01 - vel[j];
-              //pos[j] = tmp[j];
+              pos[j] = tmp[j];
               if(flag == 1)
               {
-              //  fucking[j] = fucking[j] - da[j] * 0.01* 0.01;
+                fucking[j] = fucking[j] - da[j] * 0.01* 0.01;
                 cout << "fuck" << endl;
               }
             }
@@ -226,24 +242,6 @@ int main(int argc, char **argv)
             ForKin leg_real(servo_real,true);
             ForKin leg_desire(servo_desire,true);
 
-            //**旧版读速度
-            // Eigen::Matrix<double,6,6> J_real = leg_real.Jacobian();
-            // Eigen::Matrix<double,6,6> J_desire = leg_desire.Jacobian();
-            //
-            // Eigen::Matrix<double,6,1> temp;
-            //
-            // for(int i = 0; i < 6; i++)
-            // {
-            //   temp(i) = servo_vel_real[i] / 180 * M_PI;
-            // }
-            // vel_real = J_real * temp;
-            //
-            // for(int i = 0; i < 6; i++)
-            // {
-            //   temp(i) = servo_vel_desire[i];
-            // }
-            // vel_desire = J_desire * temp;
-
             //**新版读速度
             leg_real.calVelocity(servo_vel_real);
             vel_real = leg_real.resultv_vector;
@@ -253,91 +251,7 @@ int main(int argc, char **argv)
             leg_desire.calVelocity(servo_vel_desire);
             vel_desire = leg_desire.resultv_vector;
             pos_desire = leg_desire.result_vector;
-            // cout << "理论位置" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_desire[m] << ",";
-            // }
-            // cout << endl;
-            // cout << "实际位置" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_real[m] << ",";
-            // }
-            // cout << endl;
 
-            /////**输出质心情况
-            // cout << "理论位置" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_desire[m] << ",";
-            // }
-            // cout << endl;
-            //
-            // cout << "实际位置" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_real[m] << ",";
-            // }
-            // cout << endl;
-            // cout << "偏差" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_desire[m] - pos_real[m] << ",";
-            // }
-            // cout << endl;
-
-
-            /////**输出速度误差
-            // cout << std::setprecision (2);
-            // cout << "理论速度" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << vel_desire(m) << ",";
-            // }
-            // cout << endl;
-            // cout << "实际速度" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << vel_real[m] << ",";
-            // }
-            // cout << endl;
-
-            /////**输出位置误差
-            // cout << "理论位置" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_desire[m] << ",";
-            // }
-            // cout << endl;
-            // cout << "实际位置" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_real[m] << ",";
-            // }
-            // cout << endl;
-            // cout << "偏差" << endl;
-            // for(int m = 0; m < 6; m++ )
-            // {
-            //   cout << pos_desire[m] - pos_real[m] << ",";
-            // }
-            // cout << endl;
-            //
-
-
-            // for(int k = 0; k < 6; k++)
-            // {
-            //   dx[k] = pos[k] - read_pos[k];
-            //   dv[k] = vel[k] - read_vel[k];
-            //   if(abs(dx[k]) > 6)
-            //   {
-            //     cout << "第" << k << "个超了, dx = " << dx[k] <<endl;
-            //     cout << "理论位置：" << pos[k] << "应到位置：" << read_pos[k] <<endl;
-            //     da[k] = Kp * dx[k] + Kd* dv[k];
-            //     cout << "修正加速度：" << da[k] << "位置修正量：" << da[k] * 0.01* 0.01 <<endl;
-            //     flag = 1;
-            //   }
-            // }
             temp_acc << 0,0,0,0,0,0;
             for(int k = 0; k < 2; k++)
             {
@@ -347,11 +261,7 @@ int main(int argc, char **argv)
               if(abs(dx[k]) > 5)
               {
                 cout << "第" << k << "个超了, dx = " << dx[k] <<endl;
-                cout << "理论位置：" << pos[k] << "应到位置：" << read_pos[k] <<endl;
-              //  temp_acc(k) = Kp * dx[k]; //+ Kd * dv[k];
-                // da[k] = Kp * dx[k] + Kd * dv[k];
-
-                // cout << "修正加速度：" << da[k] << "位置修正量：" << da[k] * 0.01* 0.01 <<endl;
+                cout << "理论位置：" << pos_desire[k] << "应到位置：" << pos_real[k] <<endl;
                 flag = 1;
               }
             }
@@ -361,14 +271,19 @@ int main(int argc, char **argv)
               dx[k] = pos_desire[k] - pos_real[k];
               dv[k] = vel_desire[k] - vel_real[k];
 
-              if(abs(dx[k]) > 1)
+              int K_test = 10000;
+              temp_acc(2) = 0;
+              temp_acc(3) = 0;
+              temp_acc(4) = 0;
+              if(dx[k] > 0.6)
               {
                 cout << "第" << k << "个超了, dx = " << dx[k] <<endl;
-                cout << "理论位置：" << pos[k] << "应到位置：" << read_pos[k] <<endl;
-                temp_acc(k) = Kp * dx[k]; //+ Kd * dv[k];
-                // da[k] = Kp * dx[k] + Kd * dv[k];
-
-                // cout << "修正加速度：" << da[k] << "位置修正量：" << da[k] * 0.01* 0.01 <<endl;
+                cout << "理论位置：" << pos_desire[k] << "应到位置：" << pos_real[k] <<endl;
+                //temp_acc(k) = Kp * dx[k]; //+ Kd * dv[k];
+                cout << "ang1: " << read_pos[2] << "ang2: " << read_pos[3] << endl;
+                temp_acc(2) = K_test*dx[k]*(-12*sin(read_pos[2])+12*sin(read_pos[3]-read_pos[2]));
+                temp_acc(3) = K_test*dx[k]*(-12*sin(read_pos[3]-read_pos[2]));
+                temp_acc(4) = temp_acc(3) - temp_acc(2);
                 flag = 1;
               }
             }
@@ -380,24 +295,34 @@ int main(int argc, char **argv)
 
               if(abs(dx[k]) > 2.0 / 180 * M_PI)
               {
-                cout << "第" << k << "个超了, dx = " << dx[k] * 180 / M_PI << endl;
-                // cout << "理论位置：" << pos[k] << "应到位置：" << read_pos[k] <<endl;
-                 temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
-                // da[k] = Kp * dx[k] + Kd * dv[k];
+              //  cout << "第" << k << "个超了, dx = " << dx[k] * 180 / M_PI << endl;
+              //  temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
+              //flag = 1;
+              int K_test2 = 0;
+              if(k == 4)
+              {
+                temp_acc(2) = temp_acc(2) + dx[k]*K_test2;
+                temp_acc(3) = temp_acc(3) - dx[k]*K_test2;
+                temp_acc(4) = temp_acc(4) + dx[k]*K_test2;
+              }
 
-                // cout << "修正加速度：" << da[k] << "位置修正量：" << da[k] * 0.01* 0.01 <<endl;
-                flag = 1;
               }
             }
 
-              temp_acc = Jb.transpose() * temp_acc;
+              //temp_acc = Jb.transpose() * temp_acc;
             if(flag == 1)
             {
+              //temp_acc(0) = 0;
+              //temp_acc(1) = 0;
+              //temp_acc(5) = 0;
+              if(findmax(temp_acc)*0.01*0.01 > 10)
+                  temp_acc = temp_acc / (findmax(temp_acc)*0.01*0.01/20.0);
 
               for(int k = 0; k < 6; k++)
               {
                 da[k] = temp_acc(k);
                 cout << da[k] * 0.01 * 0.01 << endl;
+
               }
             }
             if(!ros::ok())
