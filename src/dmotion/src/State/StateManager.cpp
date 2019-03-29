@@ -20,6 +20,7 @@ StateManager::StateManager()
   , m_power_state(OFF)
   , m_stable_state(STABLE)
   , right_support_flag(true)
+  , vision_compensate_on(VISION_COMPENSATE_ON)
 {
     ROS_DEBUG("RobotStatus::RobotStatus: init RobotStatus instance");
 }
@@ -343,7 +344,7 @@ void StateManager::working()
   {
     calIMUFilter();
     checkStableState();
-    CalOdometer(VISION_COMPENSATE_ON);
+    CalOdometer();
   }
   else if(imu_initialized == INITING)
   {
@@ -377,12 +378,7 @@ void StateManager::GetEncoderVel()
   yaw_feet = leg.yaw_result;
 }
 
-void StateManager::UpdateVisionYaw(float vision_yaw_)
-{
-  vision_yaw = vision_yaw_;
-}
-
-void StateManager::CalOdometer(bool vision_compensate_on)
+void StateManager::CalOdometer()
 {
   GetEncoderVel();
   Eigen::Matrix<double,3,1> acc_wog;

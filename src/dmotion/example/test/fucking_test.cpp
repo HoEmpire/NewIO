@@ -195,7 +195,7 @@ int main(int argc, char **argv)
     io.spinOnce();
     sleep(5);
     io.setAllspeed(0);
-    double Kp = 10000, Kpv = 200000;
+    double Kp = 800000, Kpv = 500000;
     int flag = 0;
 
      while (ros::ok())
@@ -258,7 +258,7 @@ int main(int argc, char **argv)
               dx[k] = pos_desire[k] - pos_real[k];
               dv[k] = vel_desire[k] - vel_real[k];
 
-              if(abs(dx[k]) > 5)
+              if(abs(dx[k]) > 2)
               {
                 cout << "第" << k << "个超了, dx = " << dx[k] <<endl;
                 cout << "理论位置：" << pos_desire[k] << "应到位置：" << pos_real[k] <<endl;
@@ -271,7 +271,7 @@ int main(int argc, char **argv)
               dx[k] = pos_desire[k] - pos_real[k];
               dv[k] = vel_desire[k] - vel_real[k];
 
-              if(dx[k] > 2)
+              if(dx[k] > 0.8)
               {
                 cout << "第" << k << "个超了, dx = " << dx[k] <<endl;
                 cout << "理论位置：" << pos_desire[k] << "应到位置：" << pos_real[k] <<endl;
@@ -286,11 +286,11 @@ int main(int argc, char **argv)
               dx[k] = (pos_desire[k] - pos_real[k]) / 180 * M_PI;
               dv[k] = (vel_desire[k] - vel_real[k]) / 180 * M_PI;
 
-              if(abs(dx[k]) > 2.0 / 180 * M_PI)
+              if(abs(dx[k]) > 2.0  / 180 * M_PI)
               {
-               cout << "第" << k << "个超了, dx = " << dx[k] * 180 / M_PI << endl;
-               temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
-               flag = 1;
+               //cout << "第" << k << "个超了, dx = " << dx[k] * 180 / M_PI << endl;
+              // temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
+               //flag = 1;
               }
             }
 
@@ -298,7 +298,7 @@ int main(int argc, char **argv)
             if(flag == 1)
             {
               if(findmax(temp_acc)*0.01*0.01 > 10)
-                  temp_acc = temp_acc / (findmax(temp_acc)*0.01*0.01/20.0);
+                  temp_acc = temp_acc / (findmax(temp_acc)*0.01*0.01/10.0);
 
               for(int k = 0; k < 6; k++)
               {

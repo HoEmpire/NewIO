@@ -13,6 +13,8 @@
 #include <std_msgs/Float64MultiArray.h>
 #include "dmsgs/MotionInfo.h"
 #include "dmsgs/ActionCommand.h"
+#include "dmsgs/VisionInfo.h"
+
 namespace Motion
 {
 
@@ -39,6 +41,8 @@ public:
 
      void ReadHeadServoValue(const dmsgs::ActionCommand & msg);
 
+     void ReadVisionYaw(const dmsgs::VisionInfo & msg);
+
      void SetHeadServoValue();
 
      dmsgs::MotionInfo m_motion_info;
@@ -61,7 +65,7 @@ private:
      float desire_pitch, desire_yaw;
      float pitch_speed, yaw_speed;
 
-     ros::Publisher m_pub_motion_info, m_pub_motion_hub;
+     ros::Publisher m_pub_motion_info;
      ros::Subscriber m_sub_motion_hub, m_sub_vision, m_sub_action_command;
 };
 

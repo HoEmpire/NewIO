@@ -30,7 +30,7 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
 
     m_sub_motion_hub = m_nh->subscribe("/ServoInfo", 1, &IOCommunication::SetJointValue, this);//TODO
     m_sub_action_command = m_nh->subscribe("/ActionCommand", 1, &IOCommunication::ReadHeadServoValue, this);//TODO
-   // m_sub_vision = m_nh->subscribe("/humanoid/ReloadMotionConfig", 1, &IOCommunication::SetJointValue, this);//TODO
+    //m_sub_vision = m_nh->subscribe("/humanoid/ReloadMotionConfig", 1, &IOCommunication::SetJointValue, this);//TODO
     m_pub_motion_info = m_nh->advertise<dmsgs::MotionInfo>("MotionInfo", 1);
     // m_pub_motion_hub = m_nh->advertise<dmsgs::MotionDebugInfo>("MotionHub", 1);
 
@@ -90,7 +90,8 @@ void IOCommunication::IOLoop()
     else
     {
       SetHeadServoValue();
-      io.setAllJointValue(m_joint_value);
+      if(sm.m_stable_state == STABLE || m_status != "WALK")
+         io.setAllJointValue(m_joint_value);
       io.spinOnce();
       io.readPosVel();
       power_data = io.getPowerState();
@@ -258,6 +259,11 @@ void IOCommunication::Publisher()
     //  m_pub_motion_hub.publish(m_motion_hub);
       loop_rata.sleep();
     }
+}
+
+void IOCommunication::ReadVisionYaw(const dmsgs::VisionInfo & msg)
+{
+    sm.vision_yaw = msg.robot_pos.z;
 }
 
 

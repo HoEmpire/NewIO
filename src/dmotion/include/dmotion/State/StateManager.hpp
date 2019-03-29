@@ -31,9 +31,7 @@ class StateManager
 
     void GetEncoderVel();
 
-    void CalOdometer(bool vision_compensate_on);
-
-    void UpdateVisionYaw(float vision_yaw_);
+    void CalOdometer();
 
     void working();
 
@@ -85,6 +83,7 @@ class StateManager
     //里程计结果
     double x_now, y_now;
 
+    bool vision_compensate_on;
 
   private:
     Odometer m_odometer;

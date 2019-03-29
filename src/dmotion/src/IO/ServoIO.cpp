@@ -5,10 +5,10 @@
 using namespace dynamixel;
 using namespace std;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
-#define PORT_NAME "/dev/Servo"
-#define BAUDRATE  1000000
-// #define PORT_NAME "/dev/ttyUSB0"
-// #define BAUDRATE  3000000
+// #define PORT_NAME "/dev/Servo"
+// #define BAUDRATE  1000000
+#define PORT_NAME "/dev/ttyUSB0"
+#define BAUDRATE  3000000
 #define PROTOCOL_VERSION 2.0
 #define IS_TIME_BASE false //set time based profile
 

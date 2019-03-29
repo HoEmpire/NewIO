@@ -8,11 +8,11 @@
 
 using namespace dynamixel;
 
-#define LEG_ONLY false //ONLY USE LEGS OF ZJU DANCER
+#define LEG_ONLY true //ONLY USE LEGS OF ZJU DANCER
 
 #define DATA_FREQUENCY 10.0    // 100hz data stream
 #define IMU_FREQUENCY 10.0    // 100hz data stream
-#define POWER_DETECTER true   //whether open check power mode or not
+#define POWER_DETECTER false   //whether open check power mode or not
                               //only used in a complete Robot
 //#define old 1
 
