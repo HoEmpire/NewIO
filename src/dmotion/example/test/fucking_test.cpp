@@ -271,19 +271,12 @@ int main(int argc, char **argv)
               dx[k] = pos_desire[k] - pos_real[k];
               dv[k] = vel_desire[k] - vel_real[k];
 
-              int K_test = 10000;
-              temp_acc(2) = 0;
-              temp_acc(3) = 0;
-              temp_acc(4) = 0;
-              if(dx[k] > 0.6)
+              if(dx[k] > 2)
               {
                 cout << "第" << k << "个超了, dx = " << dx[k] <<endl;
                 cout << "理论位置：" << pos_desire[k] << "应到位置：" << pos_real[k] <<endl;
-                //temp_acc(k) = Kp * dx[k]; //+ Kd * dv[k];
+                temp_acc(k) = Kp * dx[k]; //+ Kd * dv[k];
                 cout << "ang1: " << read_pos[2] << "ang2: " << read_pos[3] << endl;
-                temp_acc(2) = K_test*dx[k]*(-12*sin(read_pos[2])+12*sin(read_pos[3]-read_pos[2]));
-                temp_acc(3) = K_test*dx[k]*(-12*sin(read_pos[3]-read_pos[2]));
-                temp_acc(4) = temp_acc(3) - temp_acc(2);
                 flag = 1;
               }
             }
@@ -295,26 +288,15 @@ int main(int argc, char **argv)
 
               if(abs(dx[k]) > 2.0 / 180 * M_PI)
               {
-              //  cout << "第" << k << "个超了, dx = " << dx[k] * 180 / M_PI << endl;
-              //  temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
-              //flag = 1;
-              int K_test2 = 0;
-              if(k == 4)
-              {
-                temp_acc(2) = temp_acc(2) + dx[k]*K_test2;
-                temp_acc(3) = temp_acc(3) - dx[k]*K_test2;
-                temp_acc(4) = temp_acc(4) + dx[k]*K_test2;
-              }
-
+               cout << "第" << k << "个超了, dx = " << dx[k] * 180 / M_PI << endl;
+               temp_acc(k) = Kpv * dx[k] ;// + Kd * dv[k];
+               flag = 1;
               }
             }
 
-              //temp_acc = Jb.transpose() * temp_acc;
+            temp_acc = Jb.inverse() * temp_acc;
             if(flag == 1)
             {
-              //temp_acc(0) = 0;
-              //temp_acc(1) = 0;
-              //temp_acc(5) = 0;
               if(findmax(temp_acc)*0.01*0.01 > 10)
                   temp_acc = temp_acc / (findmax(temp_acc)*0.01*0.01/20.0);
 

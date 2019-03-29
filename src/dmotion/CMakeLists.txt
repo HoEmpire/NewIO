@@ -90,13 +90,13 @@ target_link_libraries(neo_dmotion_lib dmotion_io)
 #                      dmotion_common
 #                      neo_dmotion_lib)
 
-add_executable(state_test example/test/state_test.cpp)
-target_link_libraries(state_test
-                      ${catkin_LIBRARIES}
+#add_executable(state_test example/test/state_test.cpp)
+#target_link_libraries(state_test
+#                      ${catkin_LIBRARIES}
 #                      dmotion_common
-                      dmotion_io
-                      neo_dmotion_lib
-)
+#                      dmotion_io
+#                      neo_dmotion_lib
+#)
 
 #add_executable(pr_demo example/test/pr_demo.cpp)
 #target_link_libraries(pr_demo
@@ -116,34 +116,33 @@ target_link_libraries(state_test
 #                     neo_dmotion_lib
 #)
 
-#add_executable(filter_test example/test/filter_test.cpp)
-#target_link_libraries(filter_test ${catkin_LIBRARIES} dmotion_io dmotion_common dmotion_state)
+add_executable(filter_test example/test/filter_test.cpp)
+target_link_libraries(filter_test ${catkin_LIBRARIES} dmotion_io neo_dmotion_lib)
 
-#add_executable(fucking_test example/test/fucking_test.cpp)
-#target_link_libraries(fucking_test
-#                      ${catkin_LIBRARIES}
-#                      dmotion_io
-#                      dmotion_common
-#                      neo_dmotion_lib
-#)
-
-add_executable(math_test example/test/math_test.cpp)
-target_link_libraries(math_test
-                      ${catkin_LIBRARIES}
-#                      dmotion_common
-                      dmotion_io
-                      neo_dmotion_lib
-                     )
-
-#add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
-#target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
-
-add_executable(main src/Node/MotionIO.cpp)
-target_link_libraries(main
+add_executable(fucking_test example/test/fucking_test.cpp)
+target_link_libraries(fucking_test
                       ${catkin_LIBRARIES}
                       dmotion_io
                       neo_dmotion_lib
 )
+
+#add_executable(math_test example/test/math_test.cpp)
+#target_link_libraries(math_test
+#                      ${catkin_LIBRARIES}
+#                      dmotion_common
+#                      dmotion_io
+#                      neo_dmotion_lib
+#                     )
+
+#add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
+#target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
+
+#add_executable(main src/Node/MotionIO.cpp)
+#target_link_libraries(main
+#                      ${catkin_LIBRARIES}
+#                      dmotion_io
+#                      neo_dmotion_lib
+#)
 
 #add_executable(dmotion_node src/main.cpp)
 #target_link_libraries(dmotion_node

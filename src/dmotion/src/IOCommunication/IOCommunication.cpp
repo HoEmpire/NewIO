@@ -228,12 +228,12 @@ void IOCommunication::Publisher()
           //odometry
           m_motion_info.odometry.x = sm.x_now;
           m_motion_info.odometry.y = sm.y_now;
-          m_motion_info.odometry.z = sm.yaw;
+          m_motion_info.odometry.z = sm.yaw * 180 / M_PI;
 
           //imuRPY
-          m_motion_info.imuRPY.x = sm.roll;
-          m_motion_info.imuRPY.y = sm.pitch;
-          m_motion_info.imuRPY.z = sm.yaw;
+          m_motion_info.imuRPY.x = sm.roll * 180 / M_PI;
+          m_motion_info.imuRPY.y = sm.pitch * 180 / M_PI;
+          m_motion_info.imuRPY.z = sm.yaw * 180 / M_PI;
 
           //status
           if(m_status == "STANDBY")

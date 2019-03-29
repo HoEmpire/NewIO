@@ -1,5 +1,5 @@
 #include "dmotion/Common/Utility/Utility.h"
-#include "dmotion/State/imu_filter_new.hpp"
+#include "dmotion/State/IMUFilter.hpp"
 
 #include <Eigen/Geometry>
 #include "dmotion/Common/Parameters.h"
