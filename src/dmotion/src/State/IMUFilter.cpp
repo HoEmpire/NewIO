@@ -73,7 +73,7 @@ static inline void QuaternionToEulerAngles(float qw, float qx, float qy, float q
         if(yaw > M_PI)
            yaw = yaw - 2 * M_PI;
         else if(yaw < -M_PI)
-           yaw = yaw + 2 * M_PI;  
+           yaw = yaw + 2 * M_PI;
 
         roll = 0;
     }

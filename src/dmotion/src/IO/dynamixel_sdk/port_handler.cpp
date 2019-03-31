@@ -85,10 +85,10 @@ bool PortHandler::readData1Byte(uint8_t* buffer, int length, double timeout)
   this->setPacketTimeout(timeout);
   while(!this->isPacketTimeout())
   {
-    //timer::delay_us(10);
     rx_length += this->readPort(&buffer[rx_length], length-rx_length);
     if (rx_length == length)
       return true;
+    timer::delay_us(10);
   }
   // std::cout << "PortHandler::readData1Byte: incomplete packete, actual length " << rx_length << std::endl;
   return false;

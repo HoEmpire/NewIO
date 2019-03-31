@@ -86,7 +86,10 @@ bool IMUReader::readIMUData()
       {
         while(!m_imu_port->readPort(&byte_buffer, 1))
         {
-          timer::delay_us(10);
+          if(state == 0)
+              timer::delay_us(500);
+          else
+              timer::delay_us(10);
           power_tick++;
           if(power_tick > 2000){
               INFO("tick overflow");

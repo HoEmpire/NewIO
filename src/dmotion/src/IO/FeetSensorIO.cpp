@@ -7,6 +7,7 @@
 #define BAUDRATE  1000000
 // #define PORT_NAME "/dev/ttyUSB0"
 // #define BAUDRATE  3000000
+#define old 1
 
 namespace Motion
 {
@@ -108,7 +109,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
 
     if (!com_res_){
       INFO("脚底读值失败!");
-      com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
+    //  com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
       //std::abort();
     }
 
@@ -149,7 +150,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
 
 #else
 bool FeetSensorIO::readSinglePackage(const bool isLeft)
-{
+
 
       /**************** buffer initial ****************/
       uint8_t byte_buffer;
@@ -198,7 +199,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
               cnt_read_num = 0;
               std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer;
               std::cout << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
-              m_port->clearPort();
+              //m_port->clearPort();//TODO 2019.3.31修改
             }
           }
           break;

@@ -15,6 +15,13 @@
 
 #define TEST_MODE 1 // 1为慢速测试，2为中速测试，3为快速测试，4为正弦，5为圆圈
 
+#define GPARAM(x, y)                                                                                                                                                                                   \
+    do {                                                                                                                                                                                               \
+        if (!m_nh->getParam(x, y)) {                                                                                                                                                                   \
+            MOTION_WARN("Motion get pararm " #x " error!");                                                                                                                                          \
+        }                                                                                                                                                                                              \
+    } while (0)
+
 using namespace std;
 using namespace Eigen;
 
@@ -64,55 +71,126 @@ void tt()
     int ticks = 0;
     int step = 0;
     int mode = TEST_MODE;
+
+    GPARAM("test_mode", mode);
+
     while(ros::ok()){
       if(flag >= 500)
       {
       switch(mode)
       {
         case 1:
-
+                if(step < 40)
+                {
+                  if(ticks == 0)
+                    pen.GiveAStep(3,0,0);
+                  if(ticks < 35)
+                  {
+                    fucking = pen.GiveATick();
+                    fucking.push_back(0);
+                    fucking.push_back(30);
+                    fucking.push_back(0);
+                    fucking.push_back(30);
+                    fucking.push_back(0);
+                    fucking.push_back(0);
+                    io.setAllJointValue(fucking);
+                    ticks++;
+                  }
+                  if(ticks >= 35)
+                  {
+                    ticks = 0;
+                    step++;
+                  }
+                }
+                else
+                {
+                  if(ticks < 35)
+                  {
+                    ticks++;
+                  }
+                  if(ticks >= 35)
+                  {
+                    ticks = 0;
+                    step++;
+                  }
+                }
                break;
         case 2:
+                if(step < 40)
+                {
+                  if(ticks == 0)
+                    pen.GiveAStep(5,0,0);
+                  if(ticks < 35)
+                  {
+                    fucking = pen.GiveATick();
+                    fucking.push_back(0);
+                    fucking.push_back(30);
+                    fucking.push_back(0);
+                    fucking.push_back(30);
+                    fucking.push_back(0);
+                    fucking.push_back(0);
+                    io.setAllJointValue(fucking);
+                    ticks++;
+                  }
+                  if(ticks >= 35)
+                  {
+                    ticks = 0;
+                    step++;
+                  }
+                }
+                else
+                {
+                  if(ticks < 35)
+                  {
+                    ticks++;
+                  }
+                  if(ticks >= 35)
+                  {
+                    ticks = 0;
+                    step++;
+                  }
+                }
+               break;
         case 3:
+                if(step < 40)
+                {
+                  if(ticks == 0)
+                    pen.GiveAStep(7,0,0);
+                  if(ticks < 35)
+                  {
+                    fucking = pen.GiveATick();
+                    fucking.push_back(0);
+                    fucking.push_back(30);
+                    fucking.push_back(0);
+                    fucking.push_back(30);
+                    fucking.push_back(0);
+                    fucking.push_back(0);
+                    io.setAllJointValue(fucking);
+                    ticks++;
+                  }
+                  if(ticks >= 35)
+                  {
+                    ticks = 0;
+                    step++;
+                  }
+                }
+                else
+                {
+                  if(ticks < 35)
+                  {
+                    ticks++;
+                  }
+                  if(ticks >= 35)
+                  {
+                    ticks = 0;
+                    step++;
+                  }
+                }
+               break;
         case 4:
         case 5:
       }
 
-
-          if(step < 20 || step > 40)
-          {
-            if(ticks == 0)
-              pen.GiveAStep(5,0,0);
-            if(ticks < 35)
-            {
-              fucking = pen.GiveATick();
-              fucking.push_back(0);
-              fucking.push_back(30);
-              fucking.push_back(0);
-              fucking.push_back(30);
-              fucking.push_back(0);
-              fucking.push_back(0);
-              io.setAllJointValue(fucking);
-              ticks++;
-            }
-            if(ticks >= 35)
-            {
-              ticks = 0;
-              step++;
-            }
-          }
-          else
-          {
-            if(ticks < 35)
-            {
-              ticks++;
-            }
-            if(ticks >= 35)
-            {
-              ticks = 0;
-              step++;
-            }
-          }
       }
 
 

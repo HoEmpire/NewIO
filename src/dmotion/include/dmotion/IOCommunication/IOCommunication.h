@@ -31,7 +31,7 @@ public:
 
      void IOLoop();//IO节点
 
-     void IMULoop();//读IMU节点，考虑到其周期和IO可能不一致
+    // void IMULoop();//读IMU节点，考虑到其周期和IO可能不一致
 
      void Publisher();
 

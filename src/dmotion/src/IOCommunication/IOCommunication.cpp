@@ -1,6 +1,7 @@
 #include "dmotion/IOCommunication/IOCommunication.h"
 #define STATE_MANAGER_LOOP_TIME 10.0
 #define IMU_LOOP_TIME 10.0
+#define ROS_TOPIC_FREQ 100.0
 const float  MAX_PLAT_YAW  = 135;
 const float MAX_PLAT_PITCH  = 50;
 const float  MIN_PLAT_PITCH  = 0;
@@ -19,13 +20,13 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
     IO_thread.detach();
     timer::delay_ms(100.0);
     //INFO("io loop done");
-    std::thread IMU_thread(&IOCommunication::IMULoop, this);
-    IMU_thread.detach();
-    timer::delay_ms(100.0);
+    // std::thread IMU_thread(&IOCommunication::IMULoop, this);
+    // IMU_thread.detach();
+    // timer::delay_ms(100.0);
     //INFO("imu loop done");
-    std::thread StateManager_thread(&IOCommunication::StateManagerLoop, this);
-    StateManager_thread.detach();
-    timer::delay_ms(100.0);
+    // std::thread StateManager_thread(&IOCommunication::StateManagerLoop, this);
+    // StateManager_thread.detach();
+    // timer::delay_ms(100.0);
     //INFO("sm loop done");
 
     m_sub_motion_hub = m_nh->subscribe("/ServoInfo", 1, &IOCommunication::SetJointValue, this);//TODO
@@ -37,9 +38,9 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
     std::thread pub_thread(&IOCommunication::Publisher, this);
     pub_thread.detach();
     timer::delay_ms(100.0);
-    std::thread sub_thread(&IOCommunication::Subscriber, this);
-    sub_thread.detach();
-    timer::delay_ms(100.0);
+    // std::thread sub_thread(&IOCommunication::Subscriber, this);
+    // sub_thread.detach();
+    // timer::delay_ms(100.0);
 }
 
 IOCommunication::~IOCommunication() = default;
@@ -64,21 +65,21 @@ void IOCommunication::IniIO()
 }
 
 
-void IOCommunication::StateManagerLoop()
-{
-    timer a;
-    while(ros::ok()){
-      a.tic();
-      sm.imu_data = imu_data;
-      sm.m_power_state = power_data;
-      sm.servo_initialized = io.m_servo_inited;
-      sm.pressure_data = pressure_data;
-      sm.servo_pos = read_pos;
-      sm.servo_vel = read_vel;
-      sm.working();
-      a.SmartDelayMs(STATE_MANAGER_LOOP_TIME);//TODO
-    }
-}
+// void IOCommunication::StateManagerLoop()
+// {
+//     timer a;
+//     while(ros::ok()){
+//       a.tic();
+//       sm.imu_data = imu_data;
+//       sm.m_power_state = power_data;
+//       sm.servo_initialized = io.m_servo_inited;
+//       sm.pressure_data = pressure_data;
+//       sm.servo_pos = read_pos;
+//       sm.servo_vel = read_vel;
+//       sm.working();
+//       a.SmartDelayMs(STATE_MANAGER_LOOP_TIME);//TODO
+//     }
+// }
 
 
 void IOCommunication::IOLoop()
@@ -96,10 +97,19 @@ void IOCommunication::IOLoop()
          io.setAllJointValue(m_joint_value);
       io.spinOnce();
       io.readPosVel();
-      power_data = io.getPowerState();
-      pressure_data = io.getPressureData();
-      read_pos = io.readAllPosition();
-      read_vel = io.readAllVel();
+      // power_data = io.getPowerState();
+      // pressure_data = io.getPressureData();
+      // read_pos = io.readAllPosition();
+      // read_vel = io.readAllVel();
+      // imu_data = io.getIMUData();
+
+      sm.imu_data = io.getIMUData();
+      sm.m_power_state = io.getPowerState();
+      sm.servo_initialized = io.m_servo_inited;
+      sm.pressure_data = io.getPressureData();
+      sm.servo_pos = io.readAllPosition();
+      sm.servo_vel = io.readAllVel();
+      sm.working();
     }
   }
 }
@@ -196,7 +206,7 @@ void IOCommunication::SetHeadServoValue()
 
 void IOCommunication::Publisher()
 {
-    ros::Rate loop_rata(100.0);
+    ros::Rate loop_rata(ROS_TOPIC_FREQ);
     int lower_board_success_flag = 0;
     while(ros::ok())
     {
@@ -256,6 +266,7 @@ void IOCommunication::Publisher()
         lower_board_success_flag = 0;
       }
       m_pub_motion_info.publish(m_motion_info);
+      ros::spinOnce();
     //  m_pub_motion_hub.publish(m_motion_hub);
       loop_rata.sleep();
     }
@@ -268,11 +279,11 @@ void IOCommunication::ReadVisionYaw(const dmsgs::VisionInfo & msg)
 
 
 
-void IOCommunication::Subscriber() //TODO
-{
-    ros::AsyncSpinner spinner(3); // Use 3 threads
-    spinner.start();
-    ros::waitForShutdown();
-}
+// void IOCommunication::Subscriber() //TODO
+// {
+//     ros::AsyncSpinner spinner(3); // Use 3 threads
+//     spinner.start();
+//     ros::waitForShutdown();
+// }
 
 }

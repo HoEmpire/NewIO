@@ -2,7 +2,7 @@
 #include <ros/ros.h>
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/Common/Utility/Utility.h"
-#define IMUFILTER_INITICKS 1000 //Unit:10ms  --> 10000ms = 10s
+#define IMUFILTER_INITICKS 500 //Unit:10ms  --> 10000ms = 10s
 #define PRESSURE_INITICKS 200 //Unit:10ms
 #define STABLE_COUNT 10
 #define IMU_INI_DOUBLE_SUPPORT_COUNT 100
