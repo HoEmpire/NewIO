@@ -58,7 +58,7 @@ Matrix<double,2,1> Odometer::CalGain(double k_state, double k_vel, double k_acc)
     //cout << count << endl;
   }
 
-  cout << K << endl;
+  //cout << K << endl;
   return K;
 }
 

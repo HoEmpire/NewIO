@@ -8,11 +8,11 @@
 
 using namespace dynamixel;
 
-#define LEG_ONLY true //ONLY USE LEGS OF ZJU DANCER
+#define LEG_ONLY false //ONLY USE LEGS OF ZJU DANCER
 
 #define DATA_FREQUENCY 10.0    // 100hz data stream
 #define IMU_FREQUENCY 10.0    // 100hz data stream
-#define POWER_DETECTER false   //whether open check power mode or not
+#define POWER_DETECTER true   //whether open check power mode or not
                               //only used in a complete Robot
 //#define old 1
 
@@ -120,7 +120,7 @@ void IOManager3::spinOnce()
 
         m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
 
-        m_servo_io.sendServoPositions();
+
         // read pressure data
         if (parameters.global.using_pressure)
         {
@@ -129,6 +129,8 @@ void IOManager3::spinOnce()
                 ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
             }
         }
+        
+        m_servo_io.sendServoPositions();
 
     }
     else if (OFF == m_power_state)
@@ -384,6 +386,11 @@ void IOManager3::checkPower(){
       // INFO("REOPENING...");
     timer::delay_ms(250);
     }
+}
+
+void IOManager3::ResetIniPosRead()
+{
+    m_servo_io.ResetIniPosRead();
 }
 
 

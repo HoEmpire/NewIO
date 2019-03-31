@@ -3,10 +3,10 @@
 #include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/IO/IOManager3.h"
 
-// #define PORT_NAME "/dev/Servo"
-// #define BAUDRATE  1000000
-#define PORT_NAME "/dev/ttyUSB0"
-#define BAUDRATE  3000000
+#define PORT_NAME "/dev/Servo"
+#define BAUDRATE  1000000
+// #define PORT_NAME "/dev/ttyUSB0"
+// #define BAUDRATE  3000000
 
 namespace Motion
 {
@@ -79,7 +79,7 @@ bool FeetSensorIO::readPressureData()
     {
       if(DEBUG_OUTPUT)
         INFO("左脚读值失败");
-        //return false;
+        return false;
     }
 
     //m_port->writePort(m_tx_packet.data(), m_tx_len);
@@ -175,11 +175,10 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
           timer::delay_us(10);
           EndTime = timer::getCurrentSystemTime();
           WaitTime = EndTime - StartTime;
-          if(WaitTime.count() * 1000 > 4.0){
-              INFO("pressure sensor:after 4ms read failed");
-              return false;// 4ms read failed
+          if(WaitTime.count() * 1000 > 2.0){
+              INFO("pressure sensor:after 2ms read failed");
+              return false;// 2ms read failed
           }
-
         }
 
         switch(state)

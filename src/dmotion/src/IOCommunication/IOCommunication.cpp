@@ -30,7 +30,7 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
 
     m_sub_motion_hub = m_nh->subscribe("/ServoInfo", 1, &IOCommunication::SetJointValue, this);//TODO
     m_sub_action_command = m_nh->subscribe("/ActionCommand", 1, &IOCommunication::ReadHeadServoValue, this);//TODO
-    //m_sub_vision = m_nh->subscribe("/humanoid/ReloadMotionConfig", 1, &IOCommunication::SetJointValue, this);//TODO
+    m_sub_vision = m_nh->subscribe("/VisionInfo", 1, &IOCommunication::ReadVisionYaw, this);//TODO
     m_pub_motion_info = m_nh->advertise<dmsgs::MotionInfo>("MotionInfo", 1);
     // m_pub_motion_hub = m_nh->advertise<dmsgs::MotionDebugInfo>("MotionHub", 1);
 
@@ -46,17 +46,17 @@ IOCommunication::~IOCommunication() = default;
 
 void IOCommunication::IniIO()
 {
-    while(!io.m_servo_inited)
+    while(!io.m_servo_inited && ros::ok())
        io.spinOnce();
     PendulumWalk pen;
     pen.GiveAStep(0,0,0);
     m_joint_value = pen.GiveATick();
-    m_joint_value.push_back(0);
-    m_joint_value.push_back(30);
-    m_joint_value.push_back(0);
-    m_joint_value.push_back(30);
-    m_joint_value.push_back(0);
-    m_joint_value.push_back(0);
+    m_joint_value.push_back(0.0);
+    m_joint_value.push_back(30.0);
+    m_joint_value.push_back(0.0);
+    m_joint_value.push_back(30.0);
+    m_joint_value.push_back(0.0);
+    m_joint_value.push_back(0.0);
     io.setAllJointValue(m_joint_value);
     io.spinOnce();
     INFO("ini io done again");
@@ -73,6 +73,8 @@ void IOCommunication::StateManagerLoop()
       sm.m_power_state = power_data;
       sm.servo_initialized = io.m_servo_inited;
       sm.pressure_data = pressure_data;
+      sm.servo_pos = read_pos;
+      sm.servo_vel = read_vel;
       sm.working();
       a.SmartDelayMs(STATE_MANAGER_LOOP_TIME);//TODO
     }
@@ -103,17 +105,17 @@ void IOCommunication::IOLoop()
 }
 
 
-void IOCommunication::IMULoop()
-{
-  timer b;
-  while(ros::ok())
-  {
-     b.tic();
-     if(io.m_servo_inited)
-        imu_data = io.getIMUData();
-     b.SmartDelayMs(IMU_LOOP_TIME);//TODO
-  }
-}
+// void IOCommunication::IMULoop()
+// {
+//   timer b;
+//   while(ros::ok())
+//   {
+//      b.tic();
+//      if(io.m_servo_inited)
+//         imu_data = io.getIMUData();
+//      b.SmartDelayMs(IMU_LOOP_TIME);//TODO
+//   }
+// }
 
 void IOCommunication::SetJointValue(const std_msgs::Float64MultiArray & msg)
 {
@@ -137,8 +139,6 @@ void IOCommunication::ReadHeadServoValue(const dmsgs::ActionCommand & msg)
 
 void IOCommunication::SetHeadServoValue()
 {
-
-
     desire_yaw = min(desire_yaw, MAX_PLAT_YAW);
     desire_yaw = max(desire_yaw, -MAX_PLAT_YAW);
 

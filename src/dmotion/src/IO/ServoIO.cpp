@@ -5,10 +5,10 @@
 using namespace dynamixel;
 using namespace std;
 #define SAFE_MODE false //if true, then if will move slower to avoid unexpected damadges
-// #define PORT_NAME "/dev/Servo"
-// #define BAUDRATE  1000000
-#define PORT_NAME "/dev/ttyUSB0"
-#define BAUDRATE  3000000
+#define PORT_NAME "/dev/Servo"
+#define BAUDRATE  1000000
+// #define PORT_NAME "/dev/ttyUSB0"
+// #define BAUDRATE  3000000
 #define PROTOCOL_VERSION 2.0
 #define IS_TIME_BASE false //set time based profile
 
@@ -259,7 +259,41 @@ void ServoIO::readServoPositions()
         else
         {
             joint.second.real_pos = (static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))-_cfg.init)/_cfg.factor;
-            if(DEBUG_OUTPUT){
+            if(READ_OUTPUT){
+              std::cout.setf(std::ios::left);
+              std::cout << std::setprecision (2);
+              std::cout.setf(std::ios::fixed,std::ios::floatfield);
+              std::cout << "ServoName：" << std::setfill(' ') << std::setw(17) << joint.first.c_str()
+                        << " | " << "pos:" << joint.second.real_pos << std::endl;
+            }
+        }
+    }
+}
+
+void ServoIO::ResetIniPosRead()
+{
+    INFO("ServoIO::readServoPositions: read servo positions");
+    auto dxl_comm_result = m_pos_reader->txRxPacket();
+
+    int cunt = 0;
+    while (dxl_comm_result != COMM_SUCCESS && cunt < 5)
+    {
+      INFO("fucking reading error");
+      dxl_comm_result = m_pos_reader->txRxPacket();
+      cunt ++;
+    }
+
+    for (auto& joint:m_joints)
+    {
+        const JointConfig& _cfg = joint.second.cfg;
+        if (!m_pos_reader->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
+        {
+           INFO ("ServoIO::readServoPositions: get current joint value error");
+        }
+        else
+        {
+            joint.second.real_pos = static_cast<int>(m_pos_reader->getData(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION)) / _cfg.factor * _cfg.cw;
+            if(READ_OUTPUT){
               std::cout.setf(std::ios::left);
               std::cout << std::setprecision (2);
               std::cout.setf(std::ios::fixed,std::ios::floatfield);

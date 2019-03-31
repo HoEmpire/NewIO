@@ -20,6 +20,8 @@ StateManager::StateManager()
   , m_power_state(OFF)
   , m_stable_state(STABLE)
   , right_support_flag(true)
+  , x_now(0.0)
+  , y_now(0.0)
   , vision_compensate_on(VISION_COMPENSATE_ON)
 {
     ROS_DEBUG("RobotStatus::RobotStatus: init RobotStatus instance");
@@ -414,6 +416,7 @@ void StateManager::CalOdometer()
 
   x_now = m_odometer.x_displacement;
   y_now = m_odometer.y_displacement;
+  //cout << "StateManager: " << "x: " << x_now << ", y: " << y_now << endl;
 }
 
 }

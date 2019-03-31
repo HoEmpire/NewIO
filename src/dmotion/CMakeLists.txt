@@ -71,7 +71,9 @@ target_link_libraries(neo_dmotion_lib dmotion_io)
 #target_link_libraries(servo_write ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
 #add_executable(IOManager_read_write example/IOManager_test/IOManager_read_write.cpp)
-#target_link_libraries(IOManager_read_write ${catkin_LIBRARIES} dmotion_io dmotion_common)
+#target_link_libraries(IOManager_read_write
+#                      ${catkin_LIBRARIES}
+#                      dmotion_io neo_dmotion_lib)
 
 #add_executable(power_test example/IOManager_test/power_test.cpp)
 #target_link_libraries(power_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
@@ -116,20 +118,19 @@ target_link_libraries(neo_dmotion_lib dmotion_io)
 #                     neo_dmotion_lib
 #)
 
-add_executable(filter_test example/test/filter_test.cpp)
-target_link_libraries(filter_test ${catkin_LIBRARIES} dmotion_io neo_dmotion_lib)
+#add_executable(filter_test example/test/filter_test.cpp)
+#target_link_libraries(filter_test ${catkin_LIBRARIES} dmotion_io neo_dmotion_lib)
 
-add_executable(fucking_test example/test/fucking_test.cpp)
-target_link_libraries(fucking_test
-                      ${catkin_LIBRARIES}
-                      dmotion_io
-                      neo_dmotion_lib
-)
+#add_executable(fucking_test example/test/fucking_test.cpp)
+#target_link_libraries(fucking_test
+#                      ${catkin_LIBRARIES}
+#                      dmotion_io
+#                      neo_dmotion_lib
+#)
 
 #add_executable(math_test example/test/math_test.cpp)
 #target_link_libraries(math_test
-#                      ${catkin_LIBRARIES}
-#                      dmotion_common
+#                     ${catkin_LIBRARIES}
 #                      dmotion_io
 #                      neo_dmotion_lib
 #                     )
@@ -137,12 +138,12 @@ target_link_libraries(fucking_test
 #add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
 #target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
-#add_executable(main src/Node/MotionIO.cpp)
-#target_link_libraries(main
-#                      ${catkin_LIBRARIES}
-#                      dmotion_io
-#                      neo_dmotion_lib
-#)
+add_executable(main src/Node/MotionIO.cpp)
+target_link_libraries(main
+                      ${catkin_LIBRARIES}
+                      dmotion_io
+                      neo_dmotion_lib
+)
 
 #add_executable(dmotion_node src/main.cpp)
 #target_link_libraries(dmotion_node

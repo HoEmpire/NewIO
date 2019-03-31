@@ -5,5 +5,8 @@ int main(int argc, char ** argv){
 
     parameters.init(&n);
     Motion::IOCommunication io_com(&n);
-    while(ros::ok()){}
+    while(ros::ok()){
+      if(!ros::ok())
+          std::abort();
+    }
 }

@@ -155,6 +155,8 @@ public:
 
     void SetAllJointValueTimeBase(const std::vector<double>& values_, bool is_time_base_on);
 
+    void ResetIniPosRead();
+
 
 
 private:

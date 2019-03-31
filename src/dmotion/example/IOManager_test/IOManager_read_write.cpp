@@ -38,8 +38,9 @@ int main(int argc, char ** argv)
       //read constantly
       while(ros::ok()){
         a.tic();
-        io.readPosVel();
-        a.toc();
+        //io.readPosVel();
+        io.ResetIniPosRead();
+        //a.toc();
         a.SmartDelayMs(10.0);
         //cunt++;
       }
