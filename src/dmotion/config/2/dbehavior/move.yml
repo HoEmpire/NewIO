@@ -1,0 +1,6 @@
+dbehavior:
+  move:
+    walk_x_p: 1.1
+    walk_y_p: 1.0
+    walk_t_p: 1.0
+

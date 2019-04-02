@@ -34,7 +34,7 @@
 #include <sys/poll.h>
 #include <iostream>
 
-#define LATENCY_TIMER  2  // msec (USB latency timer)
+#define LATENCY_TIMER  1  // msec (USB latency timer)
                            // You should adjust the latency timer value. From the version Ubuntu 16.04.2, the default latency timer of the usb serial is '16 msec'.
                            // When you are going to use sync / bulk read, the latency timer should be loosen.
                            // the lower latency timer value, the faster communication speed.
@@ -50,7 +50,7 @@
                            // $ cat /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
                            //
                            // Method 2. If you want to set it as be done automatically, and don't want to do above everytime, make rules file in /etc/udev/rules.d/. For example,
-                           // $ echo ACTION==\"add\", SUBSYSTEM==\"usb-serial\", DRIVER==\"ftdi_sio\", ATTR{latency_timer}=\"1\" > 99-dynamixelsdk-usb.rules
+                           // $ echo ACTION==\"add\", SUBSYSTEM==\"usb-serial\", DRIVER==\"ftdi_sio\", ATTR{latency_timer}=\"0\" > 99-dynamixelsdk-usb.rules
                            // $ sudo cp ./99-dynamixelsdk-usb.rules /etc/udev/rules.d/
                            // $ sudo udevadm control --reload-rules
                            // $ sudo udevadm trigger --action=add
@@ -295,6 +295,7 @@ bool PortHandler::setupPort(int cflag_baud, const bool block)
   // clean the buffer and activate the settings for the port
   tcflush(socket_fd_, TCIFLUSH);
   tcsetattr(socket_fd_, TCSANOW, &newtio);
+  //fcntl(socket_fd_,F_SETFL,FNDELAY);
 
   tx_time_per_byte = (1000.0 / (double)baudrate_) * 10.0;
   return true;

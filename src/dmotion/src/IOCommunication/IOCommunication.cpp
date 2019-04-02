@@ -39,7 +39,7 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
 
     m_sub_motion_hub = m_nh->subscribe("/ServoInfo", 1, &IOCommunication::SetJointValue, this);//TODO
     m_sub_action_command = m_nh->subscribe("/dbehavior_" + std::to_string(robotId) + "/ActionCommand", 1, &IOCommunication::ReadHeadServoValue, this);//TODO
-    m_sub_vision = m_nh->subscribe("/division_" + std::to_string(robotId) + "/VisionInfo", 1, &IOCommunication::ReadVisionYaw, this);//TODO
+    m_sub_vision = m_nh->subscribe("/dvision_" + std::to_string(robotId) + "/VisionInfo", 1, &IOCommunication::ReadVisionYaw, this);//TODO
     m_pub_motion_info = m_nh->advertise<dmsgs::MotionInfo>("/dmotion_" + std::to_string(robotId) + "/MotionInfo", 1);
     m_motion_server = m_nh->advertiseService("/dmotion_" + std::to_string(robotId) + "/set_motion_yaw", &IOCommunication::setFieldYaw, this); //这个服务暂时没什么用，纯属适应老体系,具体实现应该在IO实现
     // m_pub_motion_hub = m_nh->advertise<dmsgs::MotionDebugInfo>("MotionHub", 1);

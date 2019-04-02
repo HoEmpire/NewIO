@@ -1,0 +1,273 @@
+dvision:
+  calib:
+    calibOdometer:          false
+  kalman:
+    maxMissSec:             2
+    allowReset:             true
+  object_detector:
+    enable:                 true
+    showAllDetections:      false
+    showBall:               true
+    showGoal:               true
+    showObstacle:           true
+    # network
+    label_file:             '.darknet/data/rob.names'
+    net_cfg:                '.darknet/cfg/tiny-yolo-v1-rob.cfg'
+    weight_file:            '.darknet/model/tiny-yolo-hum_20180617.weights'
+    low_thresh:             0.2 # low thresh value for probability
+    high_thresh:            1.0 # high thresh value for probability
+    # check validation
+    ball_max_scale_coff:    0.5
+    ball_wh_low_ratio:      0.8
+    ball_wh_high_ratio:     1.2
+  obstacle_detector:
+    enable:                 true
+    showAllObstacles:       false
+    showResObstacles:       true
+    # hsv range
+    active:                 false
+    h0:                     0
+    h1:                     168
+    s0:                     0
+    s1:                     191
+    v0:                     0
+    v1:                     32
+    # model
+    decayConfidence:        0.99
+    minValidConfidence:     0.1
+    lowPassCoef:            0.9
+    maxPossibleJump:        0.4
+    # morph
+    dilate_1:               1
+    erode_1:                1
+    dilate_2:               5
+    erode_2:                1
+    # shape
+    minArea:                1000
+    minDistance:            0
+    maxDistance:            500
+  ball_detector:
+    enable:                 true
+    showResult:             true
+    useKalman:              true
+    # params for simple blob detector
+    useSimpleBlobDetecor:   false
+    BBoxScale:              1.5
+    thresholdStep:          10
+    minThreshold:           10
+    maxThreshold:           220
+    minRepeatability:       2
+    filterByColor:          false
+    blobColor:              0
+    filterByArea:           true
+    minArea:                16
+    maxArea:                40000
+    filterByCircularity:    true
+    minCircularity:         0.1
+    filterByConvexity:      true
+    minConvexity:           0.87
+    filterByInertia:        true
+    minInertiaRatio:        0.01
+    # check ball validation
+    maxBoxCenterOffset:     0.1
+    # check ball radius
+    useRadiusCheck:         false
+    minBallRadiusRatio:     0.2
+    maxBallRadiusRatio:     1.5
+    # check ball in field
+    useInFieldCheck:        false
+    minBallToFieldDist:     -10
+    # check ball distance from robot
+    useDistCheck:           true
+    maxSeeBallDist:         700
+  circle_detector:
+    enable:                 true
+    minLineLen:             10 # min line length for circle line
+    maxLineLen:             150 # max line length for circle line
+    maxDistBetween2LS:      30 # max distance between two circle lines
+    radiusMaxCoef:          1.4 # max coef for valid radius
+    radiusMinCoef:          0.75 # min coef for valid radius
+    confiusedDist:          30 # distance for confused center point
+    minLineSegmentCount:    5 # how many circle points at least
+  field_detector:
+    enable:                 true
+    showMask:               false
+    showResult:             true
+    showDebug:              false
+    # HSV range for green and white
+    h0:                     38
+    h1:                     71
+    s0:                     40
+    s1:                     255
+    v0:                     0
+    v1:                     255
+    d_h0:                   32
+    d_h1:                   79
+    d_s0:                   0
+    d_s1:                   255
+    d_v0:                   0
+    d_v1:                   255
+    active:                 false
+    # erode and dilate
+    erode:                  1
+    dilate:                 1
+    erode2:                 3
+    dilate2:                3
+    # filter valid field hull
+    maxContourCount:        5 # number of detected field hull to merge
+    minArea:                2500 # min area for valid field hull
+    changePitch:            25
+    maxDownDiffPixelUp:     300 # when pitch is lower then changePitch
+    maxDownDiffPixelDown:   400 # when pitch is larger then changePitch
+    approxPoly:             0.02
+    maxAcceptDistance:      10.81
+    minAcceptX:             -1
+  goal_detector:
+    enable:                 true
+    showMask:               false
+    showHoughLines:         false
+    showAllLines:           true
+    showResLine:            true
+    showVote:               false
+    showExtendPoints:       false
+    useKalman:              false
+    # HSV range for white color
+    h0:                     0
+    h1:                     113
+    s0:                     0
+    s1:                     31
+    v0:                     173
+    v1:                     255
+    active:                 true
+    # hough line detection
+    MinLineLength:          20
+    MaxLineGap:             15
+    # field threshold for up and down point of goal post
+    MaxOutField:            0
+    MinOutField:            50
+    OutFieldDistanceNear:   100
+    OutFieldDistanceFar:    300
+    OutFieldOffsetNear:     100
+    OutFieldOffsetMid:      0
+    OutFieldOffsetFar:      0
+    MinNearFieldUpPoint:    -20 # min distance between up point of goal post and field
+    # line segment merge
+    DistanceToMerge:        15
+    AngleToMerge:           20
+    CollinearLengthToMerge: 40
+    # for check distance box
+    NearestDistance:        0
+    FurthestDistance:       1081
+    NearMinLen:             0
+    NearMaxLen:             640 #IMGWIDTH
+    FarMinLen:              0
+    FarMaxLen:              640 #IMGWIDTH
+    # max distance between robot and goal post
+    maxDistFromRobot:       450
+    # goal post validation check
+    jumpMax:                2
+    jumpDistanceNear:       200
+    jumpDistanceFar:        300
+    jumpDoubleNear:         100
+    jumpDoubleMid:          60
+    jumpDoubleFar:          43
+    doubleVote:             40
+    minDoubleLength:        3
+    minContinuesColor:      7
+    # goal post extend
+    useGoalPostExtend:      true
+    extLengthPerAttempt:    3
+    extInvalidPoints:       20 # invalid point number to stop dip
+    extTotalPoints:         150 # total points number to stop dip
+    extDownMaxGap:          10
+    extValidLength:         20
+    # goal post cut off
+    cutOffInvalidPoints:    5
+    # check goal post length
+    useGoalLengthCheck:     true
+    validGoalLengthCoff:    0.6
+    # check goal width
+    useGoalWidthCheck:      true
+    minGoalWidthRatio:      0.7
+    maxGoalWidthRatio:      1.3
+    # kalman error
+    maxUnknownDistError:    50.0
+    # darknet check
+    useDarknetCheck:        false
+    bboxScale:              1.5
+    minDarknetResultDist:   210
+  line_detector:
+    enable:                 true
+    showUnmerged:           true
+    showMask:               false
+    showResult:             true
+    showAllLine:            true
+    showVote:               false
+    showCanny:              false
+    # HSV range for white lines
+    h0:                     0
+    h1:                     255
+    s0:                     0
+    s1:                     80
+    v0:                     50
+    v1:                     255
+    black_h0:               11
+    black_h1:               64
+    black_s0:               199
+    black_s1:               255
+    black_v0:               0
+    black_v1:               47
+    black_dilate:           5
+    active:                 false
+    # hough line
+    MinLineLength:          40 # min length for hough line
+    rhoHough:               1 # distance resolution of the accumulator in pixels
+    thetaHough:             45 # angle resolution of the accumulator in radians
+    thresholdHough:         20 # accumulator threshold parameter
+    maxLineGapHough:        20 # max allowed gap between points on the same line to link them.
+    # line merge
+    AngleToMerge:           20
+    DistanceToMerge_0:      20
+    DistanceToMerge_15:     15
+    DistanceToMerge_30:     10
+    DistanceToMerge_45:     10
+    DistanceToMerge_60:     10
+    DistanceToMerge_75:     10
+    CollinearLengthToMerge: 50
+    # line validation check
+    jumpMax:                10
+    jumpMin:                3
+    widthCheck:             0.07
+    aprxDist:               true
+    doubleVote:             50
+    greenVote:              50
+    colorVote:              40
+    doubleVUse:             true
+    greenVUse:              true
+    colorVUse:              true
+    doubleVStart:           0
+    greenVStart:            0
+    colorVStart:            0
+    doubleVEnd:             1
+    greenVEnd:              1
+    colorVEnd:              1
+    # canny
+    cannyThreadshold_0:     13
+    cannyThreadshold_15:    13
+    cannyThreadshold_30:    13
+    cannyThreadshold_45:    20
+    cannyThreadshold_60:    20
+    cannyThreadshold_75:    20
+    # blurSize1:            5
+    # blurSize2:            5
+    blurSizeUp_1:           5
+    # blurSizeUp_2:         5
+    blurSizeDown_1:         7
+    # blurSizeDown_2:       5
+    blurSizeAll:            5
+    blurSplitRatio_0:       0.1
+    blurSplitEndPitch:      30
+    cannyaperture:          3
+    lineAwayFromField:      30
+  line_classifier:
+    enable:                 true
