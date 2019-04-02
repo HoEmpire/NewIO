@@ -183,6 +183,7 @@ void ImuFilter::getCleanData(
 {
     Lowpass_Filter(ax, ay, az, ax_last, ay_last, az_last);
     //Loawpass_test(wx, wy, wz);
+    UpdateBias(wx, wy, wz);
     wx = wx - wx_b;
     wy = wy - wy_b;
     wz = wz - wz_b;
@@ -261,6 +262,16 @@ void ImuFilter::clearData()
   ax_last = 0;
   ay_last = 0;
   az_last = 0;
+}
+
+void ImuFilter::UpdateBias(float wx, float wy, float wz)
+{
+  if(abs(wx) < 0.05 && abs(wy) < 0.05 && abs(wz) < 0.05)
+  {
+    wx_b = 0.5 * wx_b + 0.5 * wx;
+    wy_b = 0.5 * wy_b + 0.5 * wy;
+    wz_b = 0.5 * wz_b + 0.5 * wz;
+  }
 }
 
 }

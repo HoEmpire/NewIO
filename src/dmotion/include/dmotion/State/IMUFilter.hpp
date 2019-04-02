@@ -61,6 +61,8 @@ class ImuFilter
 
     void clearData();
 
+    void UpdateBias(float wx, float wy, float wz);
+
     float ax_wog, ay_wog, az_wog;
 
   private:
