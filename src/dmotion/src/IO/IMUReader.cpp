@@ -91,7 +91,7 @@ bool IMUReader::readIMUData()
           else
               timer::delay_us(10);
           power_tick++;
-          if(power_tick > 2000){
+          if(power_tick > 40){
               INFO("tick overflow");
               //a.toc();
               return false;// 20ms read failed
