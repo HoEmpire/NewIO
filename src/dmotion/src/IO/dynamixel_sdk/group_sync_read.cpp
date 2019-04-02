@@ -24,6 +24,7 @@
 #include <iostream>
 
 using namespace dynamixel;
+using namespace std;
 
 GroupSyncRead::GroupSyncRead(PortHandler *port, PacketHandler *ph, uint16_t start_address, uint16_t data_length)
   : port_(port),
@@ -120,13 +121,20 @@ int GroupSyncRead::rxPacket()
 
   if (cnt == 0)
     return COMM_NOT_AVAILABLE;
-
+  timer a;
+  a.tic();
   for (int i = 0; i < cnt; i++)
   {
-    uint8_t id = id_list_[i];
+    if (a.toc_no_output() > 6.0)
+    {
+      INFO("GroupSyncRead:overtime!");
+      return COMM_RX_FAIL;//TODO 暂时没读完整就当读坏了
+    }
 
-    result = ph_->readRx(port_, id, data_length_, data_list_[id]);
-    timer::delay_us(20);//TODO delay in here
+      uint8_t id = id_list_[i];
+  //    cout << id << endl;
+      result = ph_->readRx(port_, id, data_length_, data_list_[id]);
+      timer::delay_us(10);//TODO delay in here
     if (result != COMM_SUCCESS)
       return result;
   }

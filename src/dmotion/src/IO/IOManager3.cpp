@@ -17,20 +17,102 @@ using namespace dynamixel;
 
 namespace Motion
 {
+static void* pthreadIMU(void* arg);
+static void* pthreadPow(void* arg);
+
+static int get_thread_policy(pthread_attr_t *attr)
+{
+  int policy;
+  int rs = pthread_attr_getschedpolicy(attr,&policy);
+  assert(rs==0);
+  switch(policy)
+  {
+  case SCHED_FIFO:
+    printf("policy= SCHED_FIFO\n");
+    break;
+  case SCHED_RR:
+    printf("policy= SCHED_RR\n");
+    break;
+  case SCHED_OTHER:
+    printf("policy=SCHED_OTHER\n");
+    break;
+  default:
+    printf("policy=UNKNOWN\n");
+    break;
+  }
+  return policy;
+}
+
+// static void show_thread_priority(pthread_attr_t *attr,int policy)
+// {
+//   int priority = sched_get_priority_max(policy);
+//   assert(priority!=-1);
+//   printf("max_priority=%d\n",priority);
+//   priority= sched_get_priority_min(policy);
+//   assert(priority!=-1);
+//   printf("min_priority=%d\n",priority);
+// }
+
+static int get_thread_priority(pthread_attr_t *attr)
+{
+  struct sched_param param;
+  int rs = pthread_attr_getschedparam(attr,&param);
+  assert(rs==0);
+  printf("priority=%d\n",param.__sched_priority);
+  return param.__sched_priority;
+}
+
+static int set_thread_priority(pthread_attr_t *attr, int priority)
+{
+  struct sched_param param;
+  param.sched_priority = priority;
+  pthread_attr_setschedparam(attr,&param);
+  //pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+  return param.__sched_priority;
+}
+
+static void set_thread_policy(pthread_attr_t *attr,int policy)
+{
+  int rs = pthread_attr_setschedpolicy(attr,policy);
+  assert(rs==0);
+  get_thread_policy(attr);
+}
+
 IOManager3::IOManager3()
     : m_power_state(OFF),
       m_servo_inited(false)
 {
+    //nice(0);
     ROS_DEBUG("IOManager3::IOManager3: Construct IOManager3 instance");
     initZJUJoint();
+    int rs = pthread_attr_init(&attr);
+    assert(rs==0);
+
+    printf("show priority of current thread: ");
+    int priority = get_thread_priority(&attr);
+
+    printf("set thread: SCHED_RR policy\n");
+    set_thread_policy(&attr,SCHED_RR);
+    priority = 95;
+    printf("set thread: %d policy\n", priority);
+    set_thread_priority(&attr, priority);
+    printf("show priority of current thread: ");
+    priority = get_thread_priority(&attr);
+    assert(rs==0);
 
     if(POWER_DETECTER)
     {
-        std::thread t1(&IOManager3::readIMU,this);
-        t1.detach();
+        //if ((pthread_create(&tidIMU,NULL,IOManager3::readIMU, NULL)!=0)
+        if (pthread_create(&tidIMU,NULL, &pthreadIMU,  (void *)this)!=0)
+        {
+           printf("create error!\n");
+        }
         timer::delay_ms(200);
-        std::thread t2(&IOManager3::checkPower,this);
-        t2.detach();
+
+        if (pthread_create(&tidPow,NULL, &pthreadPow,  (void *)this)!=0)
+        {
+               printf("create error!\n");
+        }
         checkIOPower();
     }
     else
@@ -44,7 +126,12 @@ IOManager3::IOManager3()
 
 }
 
-IOManager3::~IOManager3() = default;
+IOManager3::~IOManager3()
+{
+    pthread_join(tidIMU,NULL);
+    pthread_join(tidPow,NULL);
+    pthread_attr_destroy(&attr);
+}
 
 dynamixel::PortHandler* IOManager3::initPort(const std::string portname, const int baudrate, const bool block)
 {
@@ -331,7 +418,10 @@ void IOManager3::checkIOPower()
     }
 }
 
-void IOManager3::readIMU(){
+static void* pthreadIMU(void* arg){
+  return static_cast<IOManager3*>(arg)->readIMU();
+}
+void* IOManager3::readIMU(){
     while(ros::ok())
     {
 
@@ -353,9 +443,14 @@ void IOManager3::readIMU(){
         }
           //  timer::delay_us(6000);
     }
+    return NULL;
 }
 
-void IOManager3::checkPower(){
+static void* pthreadPow(void* arg){
+  return static_cast<IOManager3*>(arg)->checkPower();
+}
+
+void* IOManager3::checkPower(){
     int PowerChangeTick = 0;
     while(ros::ok()){
       if(m_power_state == ON)
@@ -385,6 +480,7 @@ void IOManager3::checkPower(){
       // INFO("REOPENING...");
     timer::delay_ms(250);
     }
+    return NULL;
 }
 
 void IOManager3::ResetIniPosRead()

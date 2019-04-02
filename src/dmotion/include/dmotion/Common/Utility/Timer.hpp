@@ -32,6 +32,14 @@ public:
         return elapsed_seconds.count() * 1000;
     }
 
+    double toc_no_output()
+    {
+        end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        //std::cout << "**" << elapsed_seconds.count() * 1000 << "ms have passed**" << std::endl;
+        return elapsed_seconds.count() * 1000;
+    }
+
     static void delay_us(const int microseconds)
     {
         std::this_thread::sleep_for(std::chrono::microseconds(microseconds));

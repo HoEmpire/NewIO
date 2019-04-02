@@ -1,12 +1,14 @@
 <launch>
     <node pkg="dmotion"
-          name="main"
+          name="dmotion_$(env ZJUDANCER_ROBOTID)"
           type="main"
           output="screen"
           respawn="false"
           required="true"
           cwd="node"
           args="">
+
+        <param name="RobotId" value="$(env ZJUDANCER_ROBOTID)" />
 
         <rosparam command="load" file="$(find dmotion)/config/1/dmotion/motion.yml"/>
         <rosparam command="load" file="$(find dmotion)/config/1/dmotion/motor.yml"/>

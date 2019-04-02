@@ -7,6 +7,10 @@
 #include <vector>
 #include <chrono>
 
+#include <pthread.h>
+#include <sched.h>
+#include <assert.h>
+
 namespace Motion
 {
 
@@ -134,12 +138,12 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief             a thread for reading IMU
     ////////////////////////////////////////////////////////////////////////////////
-    void readIMU();
+    void* readIMU();
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief             a thread for checking power state(T:250ms)
     ////////////////////////////////////////////////////////////////////////////////
-    void checkPower();
+    void* checkPower();
 
     ////////////////////////////////////////////////////////////////////////////////
     /// @brief             get value of one joint
@@ -166,7 +170,9 @@ private:
     ServoIO m_servo_io;
     FeetSensorIO m_feet_io;
     IMUReader m_imu_reader;
-
+    pthread_t tidIMU;
+    pthread_t tidPow;
+    pthread_attr_t attr;
     std::chrono::time_point<std::chrono::steady_clock> m_sync_time;//sync time in the thread of spinOnce
     std::chrono::time_point<std::chrono::steady_clock>  m_imu_sync_time;//sync time in the thread of readIMU
 

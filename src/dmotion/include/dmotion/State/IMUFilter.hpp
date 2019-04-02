@@ -67,7 +67,9 @@ class ImuFilter
 
     // **** state variables
     float q0, q1, q2, q3;  // quaternion
-    float roll, pitch, yaw;
+    float roll = 0;
+    float pitch= 0;
+    float yaw = 0;
 
     float wx_b = 0;
     float wy_b = 0;

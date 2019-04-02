@@ -163,6 +163,8 @@ public:
 
     void ResetIniPosRead();
 
+    bool read_state;
+
 private:
     bool m_writer_inited, m_reader_inited, m_servo_inited;
 
@@ -173,6 +175,7 @@ private:
     dynamixel::GroupSyncRead * m_pos_reader;
     dynamixel::GroupSyncRead * m_pos_reader2;
     dynamixel::GroupSyncRead * m_pos_power;//use the servo to check power for the first time
+
 
 
 protected:

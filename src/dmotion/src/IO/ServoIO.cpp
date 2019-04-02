@@ -140,7 +140,7 @@ void ServoIO::initServoPositions()
     }
 
     m_pos_writer->txPacket();
-    sleep(3);//TODO hardcode
+    //sleep(3);//TODO hardcode
     // turn off led
     for (auto& joint:m_joints)
     {
@@ -394,8 +394,9 @@ void ServoIO::setSingleServoPosition(std::string name, double position)
     it = m_joints.find(name);
     if(it != m_joints.end())
     {
-        if(IS_TIME_BASE)
-            (*it).second.delta_pos = position - (*it).second.goal_pos;
+        (*it).second.delta_pos = position - (*it).second.goal_pos;
+        (*it).second.real_vel = (*it).second.delta_pos / 0.01;//TODO hardcode
+        (*it).second.real_pos = (*it).second.goal_pos;
         (*it).second.goal_pos = position;
     }
     else
@@ -559,14 +560,15 @@ void ServoIO::readServoPosVel()
       INFO("ServoIO::readServoPosVel: read servo velocities");
 
     auto dxl_comm_result = m_pos_reader2->txRxPacket();
-
-    int cunt = 0;
-    while (dxl_comm_result != COMM_SUCCESS && cunt < 5)
-    {
-      INFO("fucking reading error");
-      dxl_comm_result = m_pos_reader2->txRxPacket();
-      cunt ++;
-    }
+    if(dxl_comm_result != COMM_SUCCESS)
+        return;
+    // int cunt = 0;
+    // while (dxl_comm_result != COMM_SUCCESS && cunt < 5)
+    // {
+    //   INFO("fucking reading error");
+    //   dxl_comm_result = m_pos_reader2->txRxPacket();
+    //   cunt ++;
+    // }
 
     for (auto& joint:m_joints)
     {
@@ -580,7 +582,7 @@ void ServoIO::readServoPosVel()
         }
         if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_VELOCITY, LENGTH_POSITION))
         {
-           INFO ("ServoIO::readServoPosVel: get current joint value error");
+           //INFO ("ServoIO::readServoPosVel: get current joint value error");
         }
         else
         {
@@ -611,7 +613,7 @@ void ServoIO::readServoPosVel()
           }
           if (!m_pos_reader2->isAvailable(_cfg.id, ADDR_CURR_POSITION, LENGTH_POSITION))
           {
-             INFO ("ServoIO::readServoPosVel: get current velocity value error");
+             //INFO ("ServoIO::readServoPosVel: get current velocity value error");
           }
           else
           {

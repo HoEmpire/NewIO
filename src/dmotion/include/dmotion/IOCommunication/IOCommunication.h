@@ -14,6 +14,7 @@
 #include "dmsgs/MotionInfo.h"
 #include "dmsgs/ActionCommand.h"
 #include "dmsgs/VisionInfo.h"
+#include "dmsgs/SetInitOrientation.h"
 
 namespace Motion
 {
@@ -45,6 +46,9 @@ public:
 
      void SetHeadServoValue();
 
+     bool setFieldYaw(dmsgs::SetInitOrientation::Request &req,
+                      dmsgs::SetInitOrientation::Response &res);
+
      dmsgs::MotionInfo m_motion_info;
 
      std_msgs::Float64MultiArray m_motion_hub;
@@ -65,8 +69,11 @@ private:
      float desire_pitch, desire_yaw;
      float pitch_speed, yaw_speed;
 
+     int lower_board_success_flag;
+
      ros::Publisher m_pub_motion_info;
      ros::Subscriber m_sub_motion_hub, m_sub_vision, m_sub_action_command;
+     ros::ServiceServer m_motion_server;
 };
 
 }

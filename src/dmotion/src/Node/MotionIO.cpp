@@ -6,7 +6,13 @@ int main(int argc, char ** argv){
     parameters.init(&n);
     Motion::IOCommunication io_com(&n);
 //    Motion::IOManager3 io;
-    while(ros::ok){
-//	io.spinOnce();
+    //timer a;
+    nice(-20);
+    while(ros::ok()){
+     io_com.IOLoop();
+     //a.tic();
+     io_com.Publisher();
+     //INFO("publish");
+    // a.toc();
     }
 }

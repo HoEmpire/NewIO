@@ -6,7 +6,7 @@ find_package(catkin REQUIRED
     COMPONENTS
     roscpp
     dmsgs
-   )
+)
 
 find_package(Eigen3 REQUIRED)
 

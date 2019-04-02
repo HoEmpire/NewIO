@@ -79,7 +79,7 @@ bool FeetSensorIO::readPressureData()
     if ( !readSinglePackage(true) )
     {
       if(DEBUG_OUTPUT)
-        INFO("左脚读值失败");
+      //  INFO("左脚读值失败");
         return false;
     }
 
@@ -88,7 +88,7 @@ bool FeetSensorIO::readPressureData()
     if ( !readSinglePackage(false) )
     {
       if(DEBUG_OUTPUT)
-        INFO("右脚读值失败");
+      //  INFO("右脚读值失败");
         return false;
     }
     ROS_DEBUG_STREAM("FeetSensorIO::readPressureData: data reading success" << std::endl
@@ -104,7 +104,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
     static int count = 0;
     assert(static_cast<int>(m_tx_packet.size()) == m_tx_len);
 
-    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 4.0);
+    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 4.0);//TODO
     //bool com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
 
     if (!com_res_){
@@ -131,7 +131,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
             )
         {
             count ++;
-            ROS_WARN("FeetSensorIO::readPressureData: header error!!!");
+          //  ROS_WARN("FeetSensorIO::readPressureData: header error!!!");
             // exit(0);
             m_port->clearPort();
             return false;
@@ -143,13 +143,13 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
     else
     {
         m_port->clearPort();
-        ROS_WARN("FeetSensorIO::readPressureData: incomplete packet");
+      //  ROS_WARN("FeetSensorIO::readPressureData: incomplete packet");
         return false;
     }
 }
 
 #else
-bool FeetSensorIO::readSinglePackage(const bool isLeft)
+bool FeetSensorIO::readSinglePackage(const bool isLeft){
 
 
       /**************** buffer initial ****************/
@@ -283,13 +283,6 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
         continue;
       read_flag = 0;
 
-
-       #if 0
-         for(i = 0;i<46;i++){
-           printf("%02x,",datas_buffer[i]);
-         }
-         printf("\n");
-       #endif
        int i = 0;
        uint8_t sum = 0;
 
@@ -308,14 +301,11 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
          INFO("pressure sensor:check sum failed.");
          return false;
        }
-       //m_imu_readBegin = m_imu_readBegin_tmp;
-       //m_port->clearPort();
-      // a.toc();
+
        return true;
       }
 }
 #endif
-
 
 
 

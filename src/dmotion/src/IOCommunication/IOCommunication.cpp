@@ -10,15 +10,20 @@ namespace Motion
 {
 
 IOCommunication::IOCommunication(ros::NodeHandle* nh)
-  : m_nh(nh)
+  : m_nh(nh),
+    target_pitch(0.0),
+    target_yaw(0.0),
+    desire_pitch(0.0),
+    desire_yaw(0.0),
+    lower_board_success_flag(0)
 {
 //    parameters.init(m_nh);
     //INFO("wait for ini io to be done");
     IniIO();
     //INFO("ini io done");
-    std::thread IO_thread(&IOCommunication::IOLoop, this);
-    IO_thread.detach();
-    timer::delay_ms(100.0);
+    //std::thread IO_thread(&IOCommunication::IOLoop, this);
+    //IO_thread.detach();
+    //timer::delay_ms(100.0);
     //INFO("io loop done");
     // std::thread IMU_thread(&IOCommunication::IMULoop, this);
     // IMU_thread.detach();
@@ -28,16 +33,20 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
     // StateManager_thread.detach();
     // timer::delay_ms(100.0);
     //INFO("sm loop done");
+    int robotId;
+    if(!m_nh->getParam("RobotId", robotId))
+        throw std::runtime_error("Can't get robot id");
 
     m_sub_motion_hub = m_nh->subscribe("/ServoInfo", 1, &IOCommunication::SetJointValue, this);//TODO
-    m_sub_action_command = m_nh->subscribe("/ActionCommand", 1, &IOCommunication::ReadHeadServoValue, this);//TODO
-    m_sub_vision = m_nh->subscribe("/VisionInfo", 1, &IOCommunication::ReadVisionYaw, this);//TODO
-    m_pub_motion_info = m_nh->advertise<dmsgs::MotionInfo>("MotionInfo", 1);
+    m_sub_action_command = m_nh->subscribe("/dbehavior_" + std::to_string(robotId) + "/ActionCommand", 1, &IOCommunication::ReadHeadServoValue, this);//TODO
+    m_sub_vision = m_nh->subscribe("/division_" + std::to_string(robotId) + "/VisionInfo", 1, &IOCommunication::ReadVisionYaw, this);//TODO
+    m_pub_motion_info = m_nh->advertise<dmsgs::MotionInfo>("/dmotion_" + std::to_string(robotId) + "/MotionInfo", 1);
+    m_motion_server = m_nh->advertiseService("/dmotion_" + std::to_string(robotId) + "/set_motion_yaw", &IOCommunication::setFieldYaw, this); //这个服务暂时没什么用，纯属适应老体系,具体实现应该在IO实现
     // m_pub_motion_hub = m_nh->advertise<dmsgs::MotionDebugInfo>("MotionHub", 1);
 
-    std::thread pub_thread(&IOCommunication::Publisher, this);
-    pub_thread.detach();
-    timer::delay_ms(100.0);
+    //std::thread pub_thread(&IOCommunication::Publisher, this);
+    //pub_thread.detach();
+    //timer::delay_ms(100.0);
     // std::thread sub_thread(&IOCommunication::Subscriber, this);
     // sub_thread.detach();
     // timer::delay_ms(100.0);
@@ -84,8 +93,6 @@ void IOCommunication::IniIO()
 
 void IOCommunication::IOLoop()
 {
-  while(ros::ok())
-  {
     if(!io.m_servo_inited)
     {
         IniIO();
@@ -93,10 +100,15 @@ void IOCommunication::IOLoop()
     else
     {
       SetHeadServoValue();
-      if(sm.m_stable_state == STABLE || m_status != "WALK")
-         io.setAllJointValue(m_joint_value);
+      //if(sm.m_stable_state == STABLE || m_status != "WALK")//TODO 去除跌倒不動
+
+      io.setAllJointValue(m_joint_value);
       io.spinOnce();
-      io.readPosVel();
+      //timer a;
+      //a.tic();
+      //io.readPosVel();
+      //INFO("read servo");
+      //a.toc();
       // power_data = io.getPowerState();
       // pressure_data = io.getPressureData();
       // read_pos = io.readAllPosition();
@@ -111,7 +123,6 @@ void IOCommunication::IOLoop()
       sm.servo_vel = io.readAllVel();
       sm.working();
     }
-  }
 }
 
 
@@ -131,6 +142,14 @@ void IOCommunication::SetJointValue(const std_msgs::Float64MultiArray & msg)
 {
    if(sm.imu_initialized == INITED)
    {
+     for (int i = 0; i < 16; i++)
+     {
+         if(isnan(msg.data[i]))
+         {
+           ROS_WARN("NaN from MotionHub!!");
+           return;
+         }
+     }
      for(int i = 0; i < 16; i++)
          m_joint_value[i] = msg.data[i];
      m_status = msg.layout.dim[0].label;
@@ -190,12 +209,12 @@ void IOCommunication::SetHeadServoValue()
     }
 
     //head protecter
-    if(sm.m_stable_state == BACKDOWN)
+    if(sm.pitch * 180 / M_PI <= -50)//back down
     {
         target_yaw = 0;
         target_pitch = 30;
     }
-    else if(sm.m_stable_state == FRONTDOWN)
+    else if(sm.pitch * 180 / M_PI >= 50)//front down
     {
         target_yaw = 0;
         target_pitch = -30;
@@ -206,70 +225,63 @@ void IOCommunication::SetHeadServoValue()
 
 void IOCommunication::Publisher()
 {
-    ros::Rate loop_rata(ROS_TOPIC_FREQ);
-    int lower_board_success_flag = 0;
-    while(ros::ok())
+    if(sm.imu_initialized == INITED)
     {
-      if(sm.imu_initialized == INITED)
+      if(lower_board_success_flag > 5)
       {
-        if(lower_board_success_flag > 5)
-        {
-          //stable & forward_or_backward
-          if(sm.m_stable_state == STABLE)
-              m_motion_info.stable = true;
-          else
-          {
-            m_motion_info.stable = false;
-            if(sm.m_stable_state == FRONTDOWN)
-               m_motion_info.forward_or_backward = true;
-            else
-               m_motion_info.forward_or_backward = false;
-          }
-
-          //timestamp
-          m_motion_info.timestamp = ros::Time::now();
-
-          //lower_board_connected
-          m_motion_info.lower_board_connected = true;
-
-          //curPlat
-          m_motion_info.curPlat.pitch = target_pitch;
-          m_motion_info.curPlat.yaw = target_yaw;
-
-          //odometry
-          m_motion_info.odometry.x = sm.x_now;
-          m_motion_info.odometry.y = sm.y_now;
-          m_motion_info.odometry.z = sm.yaw * 180 / M_PI;
-
-          //imuRPY
-          m_motion_info.imuRPY.x = sm.roll * 180 / M_PI;
-          m_motion_info.imuRPY.y = sm.pitch * 180 / M_PI;
-          m_motion_info.imuRPY.z = sm.yaw * 180 / M_PI;
-
-          //status
-          if(m_status == "STANDBY")
-              m_motion_info.status = m_motion_info.STANDBY;
-          else if(m_status == "WALK" || m_status == "GETUP")
-              m_motion_info.status = m_motion_info.WALKING;
-          else if(m_status == "KICK" )
-              m_motion_info.status = m_motion_info.KICKING;
-        }
+        //stable & forward_or_backward
+        if(sm.m_stable_state == STABLE)
+            m_motion_info.stable = true;
         else
         {
-          m_motion_info.lower_board_connected = false;
-          lower_board_success_flag++;
+          m_motion_info.stable = false;
+          if(sm.m_stable_state == FRONTDOWN)
+             m_motion_info.forward_or_backward = true;
+          else
+             m_motion_info.forward_or_backward = false;
         }
+
+        //timestamp
+        m_motion_info.timestamp = ros::Time::now();
+
+        //lower_board_connected
+        m_motion_info.lower_board_connected = true;
+
+        //curPlat
+        m_motion_info.curPlat.pitch = target_pitch;
+        m_motion_info.curPlat.yaw = target_yaw;
+
+        //odometry
+        m_motion_info.odometry.x = sm.x_now;
+        m_motion_info.odometry.y = sm.y_now;
+        m_motion_info.odometry.z = sm.yaw * 180 / M_PI;
+
+        //imuRPY
+        m_motion_info.imuRPY.x = sm.roll * 180 / M_PI;
+        m_motion_info.imuRPY.y = sm.pitch * 180 / M_PI;
+        m_motion_info.imuRPY.z = sm.yaw * 180 / M_PI;
+
+        //status
+        if(m_status == "STANDBY")
+            m_motion_info.status = m_motion_info.STANDBY;
+        else if(m_status == "WALK" || m_status == "GETUP")
+            m_motion_info.status = m_motion_info.WALKING;
+        else if(m_status == "KICK" )
+            m_motion_info.status = m_motion_info.KICKING;
       }
       else
       {
         m_motion_info.lower_board_connected = false;
-        lower_board_success_flag = 0;
+        lower_board_success_flag++;
       }
-      m_pub_motion_info.publish(m_motion_info);
-      ros::spinOnce();
-    //  m_pub_motion_hub.publish(m_motion_hub);
-      loop_rata.sleep();
     }
+    else
+    {
+      m_motion_info.lower_board_connected = false;
+      lower_board_success_flag = 0;
+    }
+    m_pub_motion_info.publish(m_motion_info);
+    ros::spinOnce();
 }
 
 void IOCommunication::ReadVisionYaw(const dmsgs::VisionInfo & msg)
@@ -277,13 +289,10 @@ void IOCommunication::ReadVisionYaw(const dmsgs::VisionInfo & msg)
     sm.vision_yaw = msg.robot_pos.z;
 }
 
-
-
-// void IOCommunication::Subscriber() //TODO
-// {
-//     ros::AsyncSpinner spinner(3); // Use 3 threads
-//     spinner.start();
-//     ros::waitForShutdown();
-// }
+bool IOCommunication::setFieldYaw(dmsgs::SetInitOrientation::Request &req,
+                 dmsgs::SetInitOrientation::Response &res)
+{
+    return true;
+}
 
 }

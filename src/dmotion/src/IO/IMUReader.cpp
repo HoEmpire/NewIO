@@ -269,16 +269,13 @@ inline bool IMUReader::remapIMUData(const uint8_t* buffer)
 void IMUReader::test_imu()
 {
   uint8_t byte_buffer;
-  timer a;
   while(ros::ok())
   {
-    a.tic();
     while(!m_imu_port->readPort(&byte_buffer, 1))
     {
       timer::delay_us(10);
     }
     m_imu_port->clearPort();
-    a.toc();
   }
 }
 
