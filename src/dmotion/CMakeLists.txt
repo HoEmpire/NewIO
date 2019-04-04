@@ -138,8 +138,15 @@ target_link_libraries(neo_dmotion_lib dmotion_io)
 #add_executable(feetsensor_test example/feetsensor_test/feetsensor_test.cpp)
 #target_link_libraries(feetsensor_test ${catkin_LIBRARIES} dmotion_io dmotion_common)
 
-add_executable(main src/Node/MotionIO.cpp)
-target_link_libraries(main
+#add_executable(main src/Node/MotionIO.cpp)
+#target_link_libraries(main
+#                      ${catkin_LIBRARIES}
+#                      dmotion_io
+#                      neo_dmotion_lib
+#)
+
+add_executable(vicon example/vicon_test/vicon_test_walk_straight.cpp)
+target_link_libraries(vicon
                       ${catkin_LIBRARIES}
                       dmotion_io
                       neo_dmotion_lib

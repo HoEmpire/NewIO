@@ -7,7 +7,6 @@ int main(int argc, char ** argv){
     Motion::IOCommunication io_com(&n);
 //    Motion::IOManager3 io;
     //timer a;
-    nice(-20);
     while(ros::ok()){
      io_com.IOLoop();
      //a.tic();

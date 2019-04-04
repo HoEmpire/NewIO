@@ -11,16 +11,10 @@
 #include <fstream>
 #include <iostream>
 
-#define workplace "/home/ubuntu/test/NewIO/test_data/test1"
+#define workplace "/home/ubuntu/test1/NewIO/test_data/test1"
 
-#define TEST_MODE 1 // 1为慢速测试，2为中速测试，3为快速测试，4为正弦，5为圆圈
+#define TEST_MODE 4 // 1为慢速测试，2为中速测试，3为快速测试，4为正弦，5为圆圈
 
-#define GPARAM(x, y)                                                                                                                                                                                   \
-    do {                                                                                                                                                                                               \
-        if (!m_nh->getParam(x, y)) {                                                                                                                                                                   \
-            MOTION_WARN("Motion get pararm " #x " error!");                                                                                                                                          \
-        }                                                                                                                                                                                              \
-    } while (0)
 
 using namespace std;
 using namespace Eigen;
@@ -31,6 +25,8 @@ Motion::PressureData pressure_data;
 bool servo_state;
 std::vector<double> read_pos(12,0);
 std::vector<double> read_vel(12,0);
+std::vector<double> read_pos0(12,0);
+std::vector<double> read_vel0(12,0);
 
 using namespace dmotion;
 using namespace Motion;
@@ -64,6 +60,12 @@ void tt()
     PendulumWalk pen;
     pen.GiveAStep(0,0,0);
     fucking = pen.GiveATick();
+    fucking.push_back(-20);
+    fucking.push_back(50);
+    fucking.push_back(-20);
+    fucking.push_back(50);
+    fucking.push_back(0);
+    fucking.push_back(0);
     io.setAllJointValue(fucking);
     io.spinOnce();
     sleep(2);
@@ -72,28 +74,25 @@ void tt()
     int step = 0;
     int mode = TEST_MODE;
 
-    GPARAM("test_mode", mode);
-
     while(ros::ok()){
       if(flag >= 500)
       {
       switch(mode)
       {
         case 1:
-                if(step < 40)
+                if(step < 30)
                 {
                   if(ticks == 0)
                     pen.GiveAStep(3,0,0);
                   if(ticks < 35)
                   {
                     fucking = pen.GiveATick();
+                    fucking.push_back(-20);
+                    fucking.push_back(50);
+                    fucking.push_back(-20);
+                    fucking.push_back(50);
                     fucking.push_back(0);
-                    fucking.push_back(30);
                     fucking.push_back(0);
-                    fucking.push_back(30);
-                    fucking.push_back(0);
-                    fucking.push_back(0);
-                    io.setAllJointValue(fucking);
                     ticks++;
                   }
                   if(ticks >= 35)
@@ -116,20 +115,20 @@ void tt()
                 }
                break;
         case 2:
-                if(step < 40)
+                if(step < 30)
                 {
                   if(ticks == 0)
-                    pen.GiveAStep(5,0,0);
+                    pen.GiveAStep(2,0,0);
                   if(ticks < 35)
                   {
                     fucking = pen.GiveATick();
+                    fucking.push_back(-20);
+                    fucking.push_back(50);
+                    fucking.push_back(-20);
+                    fucking.push_back(50);
                     fucking.push_back(0);
-                    fucking.push_back(30);
                     fucking.push_back(0);
-                    fucking.push_back(30);
-                    fucking.push_back(0);
-                    fucking.push_back(0);
-                    io.setAllJointValue(fucking);
+                    //io.setAllJointValue(fucking);
                     ticks++;
                   }
                   if(ticks >= 35)
@@ -152,20 +151,20 @@ void tt()
                 }
                break;
         case 3:
-                if(step < 40)
+                if(step < 30)
                 {
                   if(ticks == 0)
-                    pen.GiveAStep(7,0,0);
+                    pen.GiveAStep(6,0,0);
                   if(ticks < 35)
                   {
                     fucking = pen.GiveATick();
+                    fucking.push_back(-20);
+                    fucking.push_back(50);
+                    fucking.push_back(-20);
+                    fucking.push_back(50);
                     fucking.push_back(0);
-                    fucking.push_back(30);
                     fucking.push_back(0);
-                    fucking.push_back(30);
-                    fucking.push_back(0);
-                    fucking.push_back(0);
-                    io.setAllJointValue(fucking);
+                    //io.setAllJointValue(fucking);
                     ticks++;
                   }
                   if(ticks >= 35)
@@ -187,14 +186,53 @@ void tt()
                   }
                 }
                break;
-        case 4:
-        case 5:
+       case 4:
+               if(step < 40)
+               {
+                 if(ticks == 0)
+                   if(step < 20)
+                      pen.GiveAStep(5,0,5);
+                   else
+                      pen.GiveAStep(5,0,-5);
+                 if(ticks < 35)
+                 {
+                   fucking = pen.GiveATick();
+                   fucking.push_back(-20);
+                   fucking.push_back(50);
+                   fucking.push_back(-20);
+                   fucking.push_back(50);
+                   fucking.push_back(0);
+                   fucking.push_back(0);
+                   //io.setAllJointValue(fucking);
+                   ticks++;
+                 }
+                 if(ticks >= 35)
+                 {
+                   ticks = 0;
+                   step++;
+                 }
+               }
+               else
+               {
+                 if(ticks < 35)
+                 {
+                   ticks++;
+                 }
+                 if(ticks >= 35)
+                 {
+                   ticks = 0;
+                   step++;
+                 }
+               }
+              break;
       }
 
       }
 
-
+      io.setAllJointValue(fucking);
       io.spinOnce();
+      read_pos0 = io.readAllPosition();
+      read_vel0 = io.readAllVel();
       io.readPosVel();
       imu_data = io.getIMUData();
       power_data = io.getPowerState();
@@ -231,7 +269,7 @@ int main(int argc, char ** argv)
     ofstream right_yaw("right_yaw.txt", ios::out|ios::trunc);
     ofstream right_vx("right_vx.txt", ios::out|ios::trunc);
     ofstream right_vy("right_vy.txt", ios::out|ios::trunc);
-    ofstream right_vy("right_vz.txt", ios::out|ios::trunc);
+    ofstream right_vz("right_vz.txt", ios::out|ios::trunc);
 
     //left data
     ofstream left_x("left_x.txt", ios::out|ios::trunc);
@@ -243,6 +281,28 @@ int main(int argc, char ** argv)
     ofstream left_vx("left_vx.txt", ios::out|ios::trunc);
     ofstream left_vy("left_vy.txt", ios::out|ios::trunc);
     ofstream left_vz("left_vz.txt", ios::out|ios::trunc);
+
+    //right0 data
+    ofstream right_x0("right_x0.txt", ios::out|ios::trunc);
+    ofstream right_y0("right_y0.txt", ios::out|ios::trunc);
+    ofstream right_z0("right_z0.txt", ios::out|ios::trunc);
+    ofstream right_roll0("right_roll0.txt", ios::out|ios::trunc);
+    ofstream right_pitch0("right_pitch0.txt", ios::out|ios::trunc);
+    ofstream right_yaw0("right_yaw0.txt", ios::out|ios::trunc);
+    ofstream right_vx0("right_vx0.txt", ios::out|ios::trunc);
+    ofstream right_vy0("right_vy0.txt", ios::out|ios::trunc);
+    ofstream right_vz0("right_vz0.txt", ios::out|ios::trunc);
+
+    //left0 data
+    ofstream left_x0("left_x0.txt", ios::out|ios::trunc);
+    ofstream left_y0("left_y0.txt", ios::out|ios::trunc);
+    ofstream left_z0("left_z0.txt", ios::out|ios::trunc);
+    ofstream left_roll0("left_roll0.txt", ios::out|ios::trunc);
+    ofstream left_pitch0("left_pitch0.txt", ios::out|ios::trunc);
+    ofstream left_yaw0("left_yaw0.txt", ios::out|ios::trunc);
+    ofstream left_vx0("left_vx0.txt", ios::out|ios::trunc);
+    ofstream left_vy0("left_vy0.txt", ios::out|ios::trunc);
+    ofstream left_vz0("left_vz0.txt", ios::out|ios::trunc);
 
     //suupport state
     ofstream support("support.txt", ios::out|ios::trunc);
@@ -271,6 +331,15 @@ int main(int argc, char ** argv)
     std::vector<double> data_left_x, data_left_y, data_left_z;
     std::vector<double> data_left_roll, data_left_pitch, data_left_yaw;
     std::vector<double> data_left_vx, data_left_vy, data_left_vz;
+
+    std::vector<double> data_right_x0, data_right_y0, data_right_z0;
+    std::vector<double> data_right_roll0, data_right_pitch0, data_right_yaw0;
+    std::vector<double> data_right_vx0, data_right_vy0, data_right_vz0;
+
+    std::vector<double> data_left_x0, data_left_y0, data_left_z0;
+    std::vector<double> data_left_roll0, data_left_pitch0, data_left_yaw0;
+    std::vector<double> data_left_vx0, data_left_vy0, data_left_vz0;
+
 
     std::vector<int> support_now;
 
@@ -336,6 +405,36 @@ int main(int argc, char ** argv)
          data_left_vy.push_back(leg_left.vy_result);
          data_left_vz.push_back(leg_left.vz_result);
 
+////////////////////////////////////////////////////////
+
+         std::vector<double> right_p0(read_pos0.begin(), read_pos0.begin() + 6);
+         std::vector<double> right_v0(read_vel0.begin(), read_vel0.begin() + 6);
+         ForKin  leg_right0(right_p0,true);
+         data_right_x0.push_back(leg_right0.x_result);
+         data_right_y0.push_back(leg_right0.y_result);
+         data_right_z0.push_back(leg_right0.z_result);
+         data_right_roll0.push_back(leg_right0.roll_result);
+         data_right_pitch0.push_back(leg_right0.pitch_result);
+         data_right_yaw0.push_back(leg_right0.yaw_result);
+         leg_right0.calVelocity(right_v0);
+         data_right_vx0.push_back(leg_right0.vx_result);
+         data_right_vy0.push_back(leg_right0.vy_result);
+         data_right_vz0.push_back(leg_right0.vz_result);
+
+         std::vector<double> left_p0(read_pos0.begin() + 6, read_pos0.begin() + 12);
+         std::vector<double> left_v0(read_vel0.begin() + 6, read_vel0.begin() + 12);
+         ForKin  leg_left0(left_p0,false);
+         data_left_x0.push_back(leg_left0.x_result);
+         data_left_y0.push_back(leg_left0.y_result);
+         data_left_z0.push_back(leg_left0.z_result);
+         data_left_roll0.push_back(leg_left0.roll_result);
+         data_left_pitch0.push_back(leg_left0.pitch_result);
+         data_left_yaw0.push_back(leg_left0.yaw_result);
+         leg_left0.calVelocity(left_v0);
+         data_left_vx0.push_back(leg_left0.vx_result);
+         data_left_vy0.push_back(leg_left0.vy_result);
+         data_left_vz0.push_back(leg_left0.vz_result);
+
          if(sm.m_support_state == SUPPORT_RIGHT)
          {
             support_now.push_back(1);
@@ -380,16 +479,16 @@ int main(int argc, char ** argv)
     INFO("get shit done");
     INFO("***********************");
 
-    cout << int(roll.size()) << endl;
+    cout << int(data_feet_roll.size()) << endl;
     int i;
-    for(i = 0;i < int(roll.size()); i++)
+    for(i = 0;i < int(data_feet_roll.size()); i++)
     {
-      data_ax << ax[i] << " ";
-      data_ay << ay[i] << " ";
-      data_az << az[i] << " ";
-      data_wx << wx[i] << " ";
-      data_wy << wy[i] << " ";
-      data_wz << wz[i] << " ";
+      ax << data_ax[i] << " ";
+      ay << data_ay[i] << " ";
+      az << data_az[i] << " ";
+      wx << data_wx[i] << " ";
+      wy << data_wy[i] << " ";
+      wz << data_wz[i] << " ";
 
       right_x << data_right_x[i] << " ";
       right_y << data_right_y[i] << " ";
@@ -411,15 +510,31 @@ int main(int argc, char ** argv)
       left_vy << data_left_vy[i] << " ";
       left_vz << data_left_vz[i] << " ";
 
+      right_x0 << data_right_x0[i] << " ";
+      right_y0 << data_right_y0[i] << " ";
+      right_z0 << data_right_z0[i] << " ";
+      right_roll0 << data_right_roll0[i] << " ";
+      right_pitch0 << data_right_pitch0[i] << " ";
+      right_yaw0 << data_right_yaw0[i] << " ";
+      right_vx0 << data_right_vx0[i] << " ";
+      right_vy0 << data_right_vy0[i] << " ";
+      right_vz0 << data_right_vz0[i] << " ";
+
+      left_x0 << data_left_x0[i] << " ";
+      left_y0 << data_left_y0[i] << " ";
+      left_z0 << data_left_z0[i] << " ";
+      left_roll0 << data_left_roll0[i] << " ";
+      left_pitch0 << data_left_pitch0[i] << " ";
+      left_yaw0 << data_left_yaw0[i] << " ";
+      left_vx0 << data_left_vx0[i] << " ";
+      left_vy0 << data_left_vy0[i] << " ";
+      left_vz0 << data_left_vz0[i] << " ";
+
       support << support_now[i] << " ";
 
       feet_roll << data_feet_roll[i] << " ";
       feet_pitch << data_feet_pitch[i] << " ";
       feet_yaw << data_feet_yaw[i] << " ";
-
-      feet_rollv << data_feet_rollv[i] << " ";
-      feet_pitchv << data_feet_pitchv[i] << " ";
-      feet_yawv << data_feet_yawv[i] << " ";
 
       x << data_x[i] << " ";
       y << data_y[i] << " ";
@@ -458,6 +573,26 @@ int main(int argc, char ** argv)
       left_vx.close();
       left_vy.close();
       left_vz.close();
+
+      right_x0.close();
+      right_y0.close();
+      right_z0.close();
+      right_roll0.close();
+      right_pitch0.close();
+      right_yaw0.close();
+      right_vx0.close();
+      right_vy0.close();
+      right_vz0.close();
+
+      left_x0.close();
+      left_y0.close();
+      left_z0.close();
+      left_roll0.close();
+      left_pitch0.close();
+      left_yaw0.close();
+      left_vx0.close();
+      left_vy0.close();
+      left_vz0.close();
 
       support.close();
 
