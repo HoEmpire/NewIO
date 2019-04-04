@@ -38,7 +38,7 @@ dmotion:
     dynamixel_protocol_version  : 1.0
 
   state:
-    using_pressure : false
+    using_pressure : true
     imu_algorithm_gain : 0.1
     imu_bias_gain : 0
     imu_pitch_bias : 0

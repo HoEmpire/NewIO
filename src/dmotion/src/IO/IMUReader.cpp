@@ -9,7 +9,8 @@
 #define BAUDRATE  576000
 // #define PORT_NAME "/dev/ttyUSB0"
 // #define BAUDRATE  3000000
-
+#define new 1
+//#define MU_BLOCK 1
 
 namespace Motion
 {
@@ -55,6 +56,7 @@ void IMUReader::clearPort()
     m_imu_port->clearPort();
 }
 
+
 bool IMUReader::readIMUData()
 {
 
@@ -66,7 +68,7 @@ bool IMUReader::readIMUData()
       const unsigned char gyro_preamble[3] = {0xEE, 0xEE, 0x50};
 
       uint8_t byte_buffer;
-      uint8_t datas_buffer[28];
+      uint8_t datas_buffer[25];
       //header:{0xEE, 0xEE, 0x50} (1Byte x3)
       //accl_x | accl_y | accl_z | grpo_x | grpo_y | grpo_z | checksum (2Byte x6 +1)
       //magn | checksum (8Byte + 1)
@@ -82,7 +84,7 @@ bool IMUReader::readIMUData()
       timer a;
       while(true)
       {
-        while(!m_imu_port->readPort(&byte_buffer, 1))
+        while(state != 3 && !m_imu_port->readPort(&byte_buffer, 1))
         {
           if(state == 0)
               timer::delay_us(500);
@@ -95,6 +97,8 @@ bool IMUReader::readIMUData()
               return false;// 20ms read failed
           }
         }
+
+
         power_tick = 0;
         switch(state)
         {
@@ -149,12 +153,21 @@ bool IMUReader::readIMUData()
           case 3:
           {
             //INFO("CASE 3");
-            datas_buffer[cnt_read_num++] = byte_buffer;
-            if(cnt_read_num == 25)
+            bool com_res_ = m_imu_port->readData1Byte(datas_buffer, 25, 5.0);//TODO
+            if(!com_res_)
             {
-              read_flag = 1;
-              state = 0;
+              m_imu_port->clearPort();
+              return false;
             }
+            read_flag = 1;
+            state = 0;
+
+            //datas_buffer[cnt_read_num++] = byte_buffer;
+            // if(cnt_read_num == 25)
+            // {
+            //   read_flag = 1;
+            //   state = 0;
+            // }
           }
         }
 
@@ -162,13 +175,6 @@ bool IMUReader::readIMUData()
         continue;
       read_flag = 0;
 
-
-       #if 0
-         for(i = 0;i<46;i++){
-           printf("%02x,",datas_buffer[i]);
-         }
-         printf("\n");
-       #endif
        int i = 0;
        uint8_t sum_acc = 0;
        uint8_t sum_magn = 0;

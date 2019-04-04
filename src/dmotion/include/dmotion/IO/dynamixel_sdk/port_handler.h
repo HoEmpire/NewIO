@@ -53,12 +53,17 @@ private:
   int poll_waiting_ticks;
 
   bool    setupPort(const int cflag_baud, const bool block = false);
+
   bool    setCustomBaudrate(int speed);
   int     getCFlagBaud(const int baudrate);
 
   double  getCurrentTime();
   double  getTimeSinceStart();
-  
+
+public:
+  void    SetSingleByteBlock();
+  void    SetMultiByteBlock(int n);
+
 public:
   static const int DEFAULT_BAUDRATE_ = 57600; ///< Default Baudrate
 
@@ -188,7 +193,7 @@ public:
   bool isPacketTimeout();
 
   bool waitUntilReadable(uint32_t timeout);
-  
+
   bool waitUntilReadablePoll();
 
   void setPollWaitingTicks(int msecs)

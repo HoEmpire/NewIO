@@ -198,7 +198,7 @@ void IOManager3::spinOnce()
         }
         else
         {
-          readPosVel();
+          //readPosVel();
         }
     }
     else if (OFF == m_power_state)

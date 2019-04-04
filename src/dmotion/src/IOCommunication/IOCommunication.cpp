@@ -37,7 +37,7 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
     set_thread_priority(&attr, priority);
     printf("show priority of current thread: ");
     priority = get_thread_priority(&attr);
-    //pthread_setschedprio(tidIO, 99);
+    pthread_setschedprio(tidIO, 99);
     if (pthread_create(&tidIO, &attr, &pthreadIOLoop,  (void *)this)!=0)
     {
        printf("create error!\n");
