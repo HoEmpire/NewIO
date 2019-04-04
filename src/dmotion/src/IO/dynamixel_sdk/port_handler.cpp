@@ -81,18 +81,24 @@ PortHandler::PortHandler(const char *port_name)
 bool PortHandler::readData1Byte(uint8_t* buffer, int length, double timeout)
 {
   int rx_length = 0;
+  int this_read = 0;
 
   this->setPacketTimeout(timeout);
+  timer a;
   while(!this->isPacketTimeout())
   {
-    rx_length += this->readPort(&buffer[rx_length], length-rx_length);
+    a.tic();
+    this_read = this->readPort(&buffer[rx_length], length-rx_length);
+    rx_length += this_read;
+    if(a.toc_no_output()>1.0)
+       ROS_FATAL_STREAM("shitty readport time:" << a.toc_no_output() << ",data length:" << this_read);
     if (rx_length == length)
       return true;
-    timer::delay_ms(1.0);//TODO add delay
+    timer::delay_us(500.0);//TODO add delay
     //timer::delay_us(10);//TODO remove delay
   }
   // std::cout << "PortHandler::readData1Byte: incomplete packete, actual length " << rx_length << std::endl;
-  std::cout << "read failed, data length" << rx_length << std::endl;
+  //std::cout << "read failed, data length" << rx_length << std::endl;
   return false;
 }
 
@@ -295,7 +301,7 @@ bool PortHandler::setupPort(int cflag_baud, const bool block)
   newtio.c_cc[VMIN]   = 0;
 
   // clean the buffer and activate the settings for the port
-  //fcntl(socket_fd_,F_SETFL,FNDELAY);
+  fcntl(socket_fd_,F_SETFL,FNDELAY);
   tcflush(socket_fd_, TCIFLUSH);
   tcsetattr(socket_fd_, TCSANOW, &newtio);
 
@@ -304,28 +310,28 @@ bool PortHandler::setupPort(int cflag_baud, const bool block)
   return true;
 }
 
-void PortHandler::SetSingleByteBlock()
-{
-  struct termios newtio;
-  bzero(&newtio, sizeof(newtio)); // clear struct for new port settings
-
-  newtio.c_iflag = IGNPAR;
-  newtio.c_cc[VMIN]   = 1;
-  newtio.c_cc[VTIME]   = 1;
-  tcflush(socket_fd_, TCIFLUSH);
-  tcsetattr(socket_fd_, TCSANOW, &newtio);
-}
-
-void PortHandler::SetMultiByteBlock(int n)
-{
-  struct termios newtio;
-  bzero(&newtio, sizeof(newtio)); // clear struct for new port settings
-
-  newtio.c_iflag = IGNPAR;
-  newtio.c_cc[VMIN]   = n;
-  newtio.c_cc[VTIME]   = 1;
-  tcsetattr(socket_fd_, TCSANOW, &newtio);
-}
+// void PortHandler::SetSingleByteBlock()
+// {
+//   struct termios newtio;
+//   bzero(&newtio, sizeof(newtio)); // clear struct for new port settings
+//
+//   newtio.c_iflag = IGNPAR;
+//   newtio.c_cc[VMIN]   = 1;
+//   newtio.c_cc[VTIME]   = 1;
+//   tcflush(socket_fd_, TCIFLUSH);
+//   tcsetattr(socket_fd_, TCSANOW, &newtio);
+// }
+//
+// void PortHandler::SetMultiByteBlock(int n)
+// {
+//   struct termios newtio;
+//   bzero(&newtio, sizeof(newtio)); // clear struct for new port settings
+//
+//   newtio.c_iflag = IGNPAR;
+//   newtio.c_cc[VMIN]   = n;
+//   newtio.c_cc[VTIME]   = 1;
+//   tcsetattr(socket_fd_, TCSANOW, &newtio);
+// }
 
 bool PortHandler::setCustomBaudrate(int speed)
 {
