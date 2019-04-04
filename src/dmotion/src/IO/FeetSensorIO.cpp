@@ -104,7 +104,7 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
     static int count = 0;
     assert(static_cast<int>(m_tx_packet.size()) == m_tx_len);
 
-    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 4.0);//TODO
+    bool com_res_ = m_port->readData1Byte(m_rx_packet.data(), m_rx_len, 3.0);//TODO
     //bool com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
 
     if (!com_res_){
