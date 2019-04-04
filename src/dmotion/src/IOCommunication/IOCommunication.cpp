@@ -1,4 +1,5 @@
 #include "dmotion/IOCommunication/IOCommunication.h"
+#include "dmotion/Common/DThread.hpp"
 #define STATE_MANAGER_LOOP_TIME 10.0
 #define IMU_LOOP_TIME 10.0
 #define ROS_TOPIC_FREQ 100.0
@@ -8,6 +9,7 @@ const float  MIN_PLAT_PITCH  = 0;
 
 namespace Motion
 {
+static void* pthreadIOLoop(void* arg);
 
 IOCommunication::IOCommunication(ros::NodeHandle* nh)
   : m_nh(nh),
@@ -20,39 +22,41 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
 //    parameters.init(m_nh);
     //INFO("wait for ini io to be done");
     IniIO();
-    //INFO("ini io done");
-    //std::thread IO_thread(&IOCommunication::IOLoop, this);
-    //IO_thread.detach();
-    //timer::delay_ms(100.0);
-    //INFO("io loop done");
-    // std::thread IMU_thread(&IOCommunication::IMULoop, this);
-    // IMU_thread.detach();
-    // timer::delay_ms(100.0);
-    //INFO("imu loop done");
-    // std::thread StateManager_thread(&IOCommunication::StateManagerLoop, this);
-    // StateManager_thread.detach();
-    // timer::delay_ms(100.0);
-    //INFO("sm loop done");
+
     int robotId;
     if(!m_nh->getParam("RobotId", robotId))
         throw std::runtime_error("Can't get robot id");
 
+    int rs = pthread_attr_init(&attr);
+    assert(rs==0);
+
+    printf("set thread: SCHED_RR policy\n");
+    set_thread_policy(&attr,SCHED_RR);
+    int priority = 99;
+    printf("set thread: %d policy\n", priority);
+    set_thread_priority(&attr, priority);
+    printf("show priority of current thread: ");
+    priority = get_thread_priority(&attr);
+    //pthread_setschedprio(tidIO, 99);
+    if (pthread_create(&tidIO, &attr, &pthreadIOLoop,  (void *)this)!=0)
+    {
+       printf("create error!\n");
+    }
+
     m_sub_motion_hub = m_nh->subscribe("/ServoInfo", 1, &IOCommunication::SetJointValue, this);//TODO
     m_sub_action_command = m_nh->subscribe("/dbehavior_" + std::to_string(robotId) + "/ActionCommand", 1, &IOCommunication::ReadHeadServoValue, this);//TODO
-    m_sub_vision = m_nh->subscribe("/dvision_" + std::to_string(robotId) + "/VisionInfo", 1, &IOCommunication::ReadVisionYaw, this);//TODO
+    m_sub_vision = m_nh->subscribe("/division_" + std::to_string(robotId) + "/VisionInfo", 1, &IOCommunication::ReadVisionYaw, this);//TODO
     m_pub_motion_info = m_nh->advertise<dmsgs::MotionInfo>("/dmotion_" + std::to_string(robotId) + "/MotionInfo", 1);
     m_motion_server = m_nh->advertiseService("/dmotion_" + std::to_string(robotId) + "/set_motion_yaw", &IOCommunication::setFieldYaw, this); //这个服务暂时没什么用，纯属适应老体系,具体实现应该在IO实现
     // m_pub_motion_hub = m_nh->advertise<dmsgs::MotionDebugInfo>("MotionHub", 1);
 
-    //std::thread pub_thread(&IOCommunication::Publisher, this);
-    //pub_thread.detach();
-    //timer::delay_ms(100.0);
-    // std::thread sub_thread(&IOCommunication::Subscriber, this);
-    // sub_thread.detach();
-    // timer::delay_ms(100.0);
 }
 
-IOCommunication::~IOCommunication() = default;
+IOCommunication::~IOCommunication()
+{
+  pthread_join(tidIO,NULL);
+  pthread_attr_destroy(&attr);
+}
 
 void IOCommunication::IniIO()
 {
@@ -90,9 +94,13 @@ void IOCommunication::IniIO()
 //     }
 // }
 
-
-void IOCommunication::IOLoop()
+static void* pthreadIOLoop(void* arg){
+  return static_cast<IOCommunication*>(arg)->IOLoop();
+}
+void* IOCommunication::IOLoop()
 {
+   while(ros::ok())
+   {
     if(!io.m_servo_inited)
     {
         IniIO();
@@ -123,6 +131,9 @@ void IOCommunication::IOLoop()
       sm.servo_vel = io.readAllVel();
       sm.working();
     }
+    Publisher();
+  }
+    return NULL;
 }
 
 
@@ -286,7 +297,7 @@ void IOCommunication::Publisher()
 
 void IOCommunication::ReadVisionYaw(const dmsgs::VisionInfo & msg)
 {
-    sm.vision_yaw = msg.robot_pos.z;
+    sm.vision_yaw = msg.robot_pos.z / 180.0 * M_PI;
 }
 
 bool IOCommunication::setFieldYaw(dmsgs::SetInitOrientation::Request &req,

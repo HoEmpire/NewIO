@@ -1,11 +1,4 @@
 #include "dmotion/IO/IOManager3.h"
-
-#include "dmotion/Common/Utility/Utility.h"
-#include "dmotion/Common/Parameters.h"
-
-#include <chrono>
-#include <thread>
-
 using namespace dynamixel;
 
 #define LEG_ONLY false //ONLY USE LEGS OF ZJU DANCER
@@ -14,13 +7,7 @@ using namespace dynamixel;
 #define POWER_DETECTER true   //whether open check power mode or not
                               //only used in a complete Robot
 //#define old 1
-
-namespace Motion
-{
-static void* pthreadIMU(void* arg);
-static void* pthreadPow(void* arg);
-
-static int get_thread_policy(pthread_attr_t *attr)
+int get_thread_policy(pthread_attr_t *attr)
 {
   int policy;
   int rs = pthread_attr_getschedpolicy(attr,&policy);
@@ -43,17 +30,7 @@ static int get_thread_policy(pthread_attr_t *attr)
   return policy;
 }
 
-// static void show_thread_priority(pthread_attr_t *attr,int policy)
-// {
-//   int priority = sched_get_priority_max(policy);
-//   assert(priority!=-1);
-//   printf("max_priority=%d\n",priority);
-//   priority= sched_get_priority_min(policy);
-//   assert(priority!=-1);
-//   printf("min_priority=%d\n",priority);
-// }
-
-static int get_thread_priority(pthread_attr_t *attr)
+int get_thread_priority(pthread_attr_t *attr)
 {
   struct sched_param param;
   int rs = pthread_attr_getschedparam(attr,&param);
@@ -62,7 +39,7 @@ static int get_thread_priority(pthread_attr_t *attr)
   return param.__sched_priority;
 }
 
-static int set_thread_priority(pthread_attr_t *attr, int priority)
+int set_thread_priority(pthread_attr_t *attr, int priority)
 {
   struct sched_param param;
   param.sched_priority = priority;
@@ -71,12 +48,17 @@ static int set_thread_priority(pthread_attr_t *attr, int priority)
   return param.__sched_priority;
 }
 
-static void set_thread_policy(pthread_attr_t *attr,int policy)
+void set_thread_policy(pthread_attr_t *attr,int policy)
 {
   int rs = pthread_attr_setschedpolicy(attr,policy);
   assert(rs==0);
   get_thread_policy(attr);
 }
+
+namespace Motion
+{
+static void* pthreadIMU(void* arg);
+static void* pthreadPow(void* arg);
 
 IOManager3::IOManager3()
     : m_power_state(OFF),
@@ -103,13 +85,13 @@ IOManager3::IOManager3()
     if(POWER_DETECTER)
     {
         //if ((pthread_create(&tidIMU,NULL,IOManager3::readIMU, NULL)!=0)
-        if (pthread_create(&tidIMU,NULL, &pthreadIMU,  (void *)this)!=0)
+        if (pthread_create(&tidIMU, &attr, &pthreadIMU,  (void *)this)!=0)
         {
            printf("create error!\n");
         }
         timer::delay_ms(200);
 
-        if (pthread_create(&tidPow,NULL, &pthreadPow,  (void *)this)!=0)
+        if (pthread_create(&tidPow, &attr, &pthreadPow,  (void *)this)!=0)
         {
                printf("create error!\n");
         }
@@ -205,8 +187,7 @@ void IOManager3::spinOnce()
         }
 
         m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
-
-
+        m_servo_io.sendServoPositions();
         // read pressure data
         if (parameters.global.using_pressure)
         {
@@ -215,9 +196,10 @@ void IOManager3::spinOnce()
                 ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
             }
         }
-
-        m_servo_io.sendServoPositions();
-
+        else
+        {
+          readPosVel();
+        }
     }
     else if (OFF == m_power_state)
     {

@@ -8,13 +8,13 @@ dmotion:
     using_head_data : false
     using_lateral_stablizer : false
     using_push_recovery : false
-  
+
   kick:
     using_pi_mode: false
     kick_controller_p: 1600
     kick_controller_i: 100
     using_support_stablizer : false
-  
+
   hardware:
     ##### for test new io ######
     imu_port_name : /dev/IMU
@@ -38,7 +38,7 @@ dmotion:
     dynamixel_protocol_version  : 1.0
 
   state:
-    using_pressure : true
+    using_pressure : false
     imu_algorithm_gain : 0.1
     imu_bias_gain : 0
     imu_pitch_bias : 0

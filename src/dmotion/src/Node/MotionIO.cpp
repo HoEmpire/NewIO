@@ -5,14 +5,12 @@ int main(int argc, char ** argv){
   //  Motion::IOManager3 io;
     parameters.init(&n);
     Motion::IOCommunication io_com(&n);
-//    Motion::IOManager3 io;
     //timer a;
-    nice(-20);
-    while(ros::ok()){
-     io_com.IOLoop();
-     //a.tic();
-     io_com.Publisher();
-     //INFO("publish");
-    // a.toc();
+    while(ros::ok())
+    {
+     //io_com.IOLoop();
+     // a.tic();
+     // io_com.Publisher();
+     // a.SmartDelayMs(10.0);
     }
 }

@@ -1,13 +1,11 @@
 #include "dmotion/IO/FeetSensorIO.h"
-
-#include "dmotion/Common/Utility/Utility.h"
 #include "dmotion/IO/IOManager3.h"
 
 #define PORT_NAME "/dev/Servo"
-#define BAUDRATE  1000000
+#define BAUDRATE  3000000
 // #define PORT_NAME "/dev/ttyUSB0"
 // #define BAUDRATE  3000000
-#define old 1
+//#define old 1
 
 namespace Motion
 {
@@ -74,11 +72,11 @@ bool FeetSensorIO::readPressureData()
     // clear port and send command
     m_port->clearPort();
     m_port->writePort(m_tx_packet.data(), m_tx_len);
-
+    timer::delay_ms(1);
     // reading left data
     if ( !readSinglePackage(true) )
     {
-      if(DEBUG_OUTPUT)
+      //if(DEBUG_OUTPUT)
       //  INFO("左脚读值失败");
         return false;
     }
@@ -87,7 +85,7 @@ bool FeetSensorIO::readPressureData()
     // reading right data
     if ( !readSinglePackage(false) )
     {
-      if(DEBUG_OUTPUT)
+      //if(DEBUG_OUTPUT)
       //  INFO("右脚读值失败");
         return false;
     }
@@ -112,7 +110,6 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft)
     //  com_res_ = m_port->readPort(m_rx_packet.data(), m_rx_len);
       //std::abort();
     }
-
 
     if (com_res_)
     {
@@ -164,146 +161,155 @@ bool FeetSensorIO::readSinglePackage(const bool isLeft){
       int cnt_read_num = 0;
       int same_cnt = 0;
       bool read_flag = 0;
-      std::chrono::time_point<std::chrono::steady_clock> StartTime;
-      std::chrono::time_point<std::chrono::steady_clock> EndTime;
-      std::chrono::duration<double> WaitTime;
+      //std::chrono::time_point<std::chrono::steady_clock> StartTime;
+      //std::chrono::time_point<std::chrono::steady_clock> EndTime;
+      //std::chrono::duration<double> WaitTime;
 
-      StartTime = timer::getCurrentSystemTime();
-      while(true)
+    //  StartTime = timer::getCurrentSystemTime();
+      timer a, b;int cnt1 = 0;
+      while(ros::ok())
       {
+        a.tic();b.tic();
         while(!m_port->readPort(&byte_buffer, 1))
         {
-          timer::delay_us(10);
-          EndTime = timer::getCurrentSystemTime();
-          WaitTime = EndTime - StartTime;
-          if(WaitTime.count() * 1000 > 2.0){
-              INFO("pressure sensor:after 2ms read failed");
-              return false;// 2ms read failed
-          }
+          timer::delay_us(25);
+        //  EndTime = timer::getCurrentSystemTime();
+        //  WaitTime = EndTime - StartTime;
+          // if(a.toc_no_output() > 4.0){
+          //     INFO("pressure sensor:after 4ms read failed");
+          //     return false;// 2ms read failed
+          // }
         }
-
-        switch(state)
-        {
-          case 0:
-          {
-            if(byte_buffer == 0xff)
-            {
-              //INFO("CASE 0");
-              state = 1;
-              datas_buffer[cnt_read_num++] = byte_buffer;
-
-              //a.tic();
-            }
-            else
-            {
-              cnt_read_num = 0;
-              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer;
-              std::cout << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
-              //m_port->clearPort();//TODO 2019.3.31修改
-            }
-          }
-          break;
-          case 1:
-          {
-            if(byte_buffer == 0xff)
-            {
-              //INFO("CASE 1");
-              state = 2;
-              datas_buffer[cnt_read_num++] = byte_buffer;
-            }
-            else
-            {
-              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
-              state = 0;
-              cnt_read_num = 0;
-            }
-          }
-          break;
-          case 2:
-          {
-            if((isLeft && byte_buffer == 0x18) || (!isLeft && byte_buffer == 0x19))
-            {
-              //INFO("CASE 2");
-              state = 3;
-              datas_buffer[cnt_read_num++] = byte_buffer;
-            }
-            else
-            {
-              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
-              state = 0;
-              cnt_read_num = 0;
-            }
-          }
-          break;
-          case 3:
-          {
-            if(byte_buffer == 0x12)
-            {
-              //INFO("CASE 3");
-              state = 4;
-              datas_buffer[cnt_read_num++] = byte_buffer;
-            }
-            else
-            {
-              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
-              state = 0;
-              cnt_read_num = 0;
-            }
-          }
-          break;
-          case 4:
-          {
-            if(byte_buffer == 0x00)
-            {
-              //INFO("CASE 4");
-              state = 5;
-              datas_buffer[cnt_read_num++] = byte_buffer;
-            }
-            else
-            {
-              std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
-              state = 0;
-              cnt_read_num = 0;
-            }
-          }
-          break;
-          case 5:
-          {
-            //INFO("CASE 5");
-            datas_buffer[cnt_read_num++] = byte_buffer;
-            if(cnt_read_num == 22)
-            {
-              read_flag = 1;
-              state = 0;
-            }
-          }
+        a.toc();cnt1++;
+        std::cout << a.toc_no_output() << " ***** "<< std::hex << unsigned(byte_buffer) << std::endl;
+        if(cnt1 == 44) {
+          b.toc();
+          cnt1 = 0;
         }
-
-      if(read_flag == 0)
-        continue;
-      read_flag = 0;
-
-       int i = 0;
-       uint8_t sum = 0;
-
-       for(i = 2;i < 22;i++){
-         sum += datas_buffer[i];
-       }
-
-       if(sum == 0xff){
-         for(i = 0;i< 22;i++)
-             m_rx_packet[i] = datas_buffer[i];
-
-         remapPressureData(isLeft);
-         //INFO("pressure sensor:remap true.");
-       }
-       else{
-         INFO("pressure sensor:check sum failed.");
-         return false;
-       }
-
-       return true;
+      //   switch(state)
+      //   {
+      //     case 0:
+      //     {
+      //       if(byte_buffer == 0xff)
+      //       {
+      //         //INFO("CASE 0");
+      //         state = 1;
+      //         datas_buffer[cnt_read_num++] = byte_buffer;
+      //
+      //         //a.tic();
+      //       }
+      //       else
+      //       {
+      //         cnt_read_num = 0;
+      //         std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer;
+      //         std::cout << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+      //         //m_port->clearPort();//TODO 2019.3.31修改
+      //       }
+      //     }
+      //     break;
+      //     case 1:
+      //     {
+      //       if(byte_buffer == 0xff)
+      //       {
+      //         //INFO("CASE 1");
+      //         state = 2;
+      //         datas_buffer[cnt_read_num++] = byte_buffer;
+      //       }
+      //       else
+      //       {
+      //         std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+      //         state = 0;
+      //         cnt_read_num = 0;
+      //       }
+      //     }
+      //     break;
+      //     case 2:
+      //     {
+      //       if((isLeft && byte_buffer == 0x18) || (!isLeft && byte_buffer == 0x19))
+      //       {
+      //         //INFO("CASE 2");
+      //         state = 3;
+      //         datas_buffer[cnt_read_num++] = byte_buffer;
+      //       }
+      //       else
+      //       {
+      //         std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+      //         state = 0;
+      //         cnt_read_num = 0;
+      //       }
+      //     }
+      //     break;
+      //     case 3:
+      //     {
+      //       if(byte_buffer == 0x12)
+      //       {
+      //         //INFO("CASE 3");
+      //         state = 4;
+      //         datas_buffer[cnt_read_num++] = byte_buffer;
+      //       }
+      //       else
+      //       {
+      //         std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+      //         state = 0;
+      //         cnt_read_num = 0;
+      //       }
+      //     }
+      //     break;
+      //     case 4:
+      //     {
+      //       if(byte_buffer == 0x00)
+      //       {
+      //         //INFO("CASE 4");
+      //         state = 5;
+      //         datas_buffer[cnt_read_num++] = byte_buffer;
+      //       }
+      //       else
+      //       {
+      //         std::cout << "pressure sensor:Read Byte " << std::hex << byte_buffer << std::dec <<",number "<< same_cnt << ",state "<< state << std::endl;
+      //         state = 0;
+      //         cnt_read_num = 0;
+      //       }
+      //     }
+      //     break;
+      //     case 5:
+      //     {
+      //       //INFO("CASE 5");
+      //       datas_buffer[cnt_read_num++] = byte_buffer;
+      //       if(cnt_read_num == 22)
+      //       {
+      //         read_flag = 1;
+      //         state = 0;
+      //       }
+      //     }
+      //   }
+      //
+      // if(read_flag == 0)
+      //   continue;
+      // read_flag = 0;
+      //
+      //  int i = 0;
+      //  uint8_t sum = 0;
+      //
+      //  for(i = 2;i < 22;i++){
+      //    sum += datas_buffer[i];
+      //  }
+      //
+      //  if(sum == 0xff){
+      //    for(i = 0;i< 22;i++)
+      //        m_rx_packet[i] = datas_buffer[i];
+      //
+      //    remapPressureData(isLeft);
+      //    //INFO("pressure sensor:remap true.");
+      //  }
+      //  else{
+      //    INFO("pressure sensor:check sum failed.");
+      //    m_port->clearPort();
+      //    return false;
+      //  }
+      //  m_port->clearPort();
+       // return true;
       }
+      return false;
 }
 #endif
 

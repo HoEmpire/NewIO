@@ -127,14 +127,14 @@ int GroupSyncRead::rxPacket()
   {
     if (a.toc_no_output() > 6.0)
     {
-      INFO("GroupSyncRead:overtime!");
+      ROS_INFO("servo read overtime!");
       return COMM_RX_FAIL;//TODO 暂时没读完整就当读坏了
     }
 
       uint8_t id = id_list_[i];
   //    cout << id << endl;
       result = ph_->readRx(port_, id, data_length_, data_list_[id]);
-      timer::delay_us(10);//TODO delay in here
+      //timer::delay_us(10);//TODO delay in here
     if (result != COMM_SUCCESS)
       return result;
   }

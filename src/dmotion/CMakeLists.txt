@@ -35,7 +35,8 @@ include_directories(
         ./include/dmotion/ForwardKinematics
         ./include/dmotion/IOCommunication
         ./include/dmotion/State
-        ./include/Common
+        ./include/dmotion/Common
+        ./include/dmotion/IO
 )
 
 add_library(neo_dmotion_lib ./src/OneFootLanding/OneFootLanding.cpp
@@ -47,12 +48,26 @@ add_library(neo_dmotion_lib ./src/OneFootLanding/OneFootLanding.cpp
                             ./src/State/StateManager.cpp
                             ./src/State/Odometer.cpp
                             ./src/Common/Parameters.cpp
+
+                            ./src/IO/dynamixel_sdk/packet_handler.cpp
+                            ./src/IO/dynamixel_sdk/group_bulk_read.cpp
+                            ./src/IO/dynamixel_sdk/group_bulk_write.cpp
+                            ./src/IO/dynamixel_sdk/protocol1_packet_handler.cpp
+                            ./src/IO/dynamixel_sdk/port_handler.cpp
+                            ./src/IO/dynamixel_sdk/group_sync_read.cpp
+                            ./src/IO/dynamixel_sdk/protocol2_packet_handler.cpp
+                            ./src/IO/dynamixel_sdk/group_sync_write.cpp
+
+                            ./src/IO/IOManager3.cpp
+                            ./src/IO/IMUReader.cpp
+                            ./src/IO/ServoIO.cpp
+                            ./src/IO/FeetSensorIO.cpp
                             ./src/IOCommunication/IOCommunication.cpp
 )
 
 
-add_subdirectory(src/IO)
-target_link_libraries(neo_dmotion_lib dmotion_io)
+#add_subdirectory(src/IO)
+#target_link_libraries(neo_dmotion_lib dmotion_io)
 #add_subdirectory(src/Common)
 
 #add_executable(climb_read example/test/climb_read.cpp)
@@ -141,7 +156,6 @@ target_link_libraries(neo_dmotion_lib dmotion_io)
 add_executable(main src/Node/MotionIO.cpp)
 target_link_libraries(main
                       ${catkin_LIBRARIES}
-                      dmotion_io
                       neo_dmotion_lib
 )
 

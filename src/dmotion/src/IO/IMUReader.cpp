@@ -1,6 +1,4 @@
-#include <stdio.h>
 #include "dmotion/IO/IMUReader.h"
-//#include "dmotion/IO/IOManager2.h"
 #include "dmotion/IO/IOManager3.h"
 
 #include "dmotion/Common/Parameters.h"
@@ -89,9 +87,9 @@ bool IMUReader::readIMUData()
           if(state == 0)
               timer::delay_us(500);
           else
-              timer::delay_us(10);
+              timer::delay_us(50);
           power_tick++;
-          if(power_tick > 40){
+          if(power_tick > 22){
               INFO("tick overflow");
               //a.toc();
               return false;// 20ms read failed

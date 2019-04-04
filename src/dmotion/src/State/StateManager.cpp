@@ -335,7 +335,10 @@ void StateManager::working()
   checkIniState();
   if(pressure_initialized == INITED)
   {
-    checkSupportState();
+    if(parameters.global.using_pressure)
+      checkSupportState();
+    else
+       m_support_state = SUPPORT_BOTH;
   }
   else if(pressure_initialized == INITING)
   {
@@ -380,9 +383,68 @@ void StateManager::GetEncoderVel()
   yaw_feet = leg.yaw_result;
 }
 
+void StateManager::GetEncoderVelBoth()
+{
+  std::vector<double> pos;
+  std::vector<double> vel;
+
+  //cal left
+  pos.assign(servo_pos.begin() + 6, servo_pos.begin() + 12);
+  vel.assign(servo_vel.begin() + 6, servo_vel.begin() + 12);
+  ForKin left(pos, false);
+  left.calVelocity(vel);
+
+  vx_left = left.vx_result;
+  vy_left = left.vy_result;
+  vz_left = left.vz_result;
+  roll_left = left.roll_result;
+  pitch_left = left.pitch_result;
+  yaw_left = left.yaw_result;
+
+  pos.assign(servo_pos.begin(), servo_pos.begin() + 6);
+  vel.assign(servo_vel.begin(), servo_vel.begin() + 6);
+  ForKin right(pos, true);
+  left.calVelocity(vel);
+
+  vx_right = right.vx_result;
+  vy_right = right.vy_result;
+  vz_right = right.vz_result;
+  roll_right = right.roll_result;
+  pitch_right = right.pitch_result;
+  yaw_right = right.yaw_result;
+}
+
+void StateManager::CheckSupportWoSensor()
+{
+  if(vx_right > vx_left)
+  {
+    vx_encoder = vx_right;
+    vy_encoder = vy_right;
+    vz_encoder = vz_right;
+    roll_feet = roll_right;
+    pitch_feet = pitch_right;
+    yaw_feet = yaw_right;
+  }
+  else
+  {
+    vx_encoder = vx_left;
+    vy_encoder = vy_left;
+    vz_encoder = vz_left;
+    roll_feet = roll_left;
+    pitch_feet = pitch_left;
+    yaw_feet = yaw_left;
+  }
+}
+
 void StateManager::CalOdometer()
 {
-  GetEncoderVel();
+  if(parameters.global.using_pressure)
+    GetEncoderVel();
+  else
+  {
+    GetEncoderVelBoth();
+    CheckSupportWoSensor();
+  }
   Eigen::Matrix<double,3,1> acc_wog;
   acc_wog << ax_wog, ay_wog, az_wog;
 

@@ -266,11 +266,17 @@ void ImuFilter::clearData()
 
 void ImuFilter::UpdateBias(float wx, float wy, float wz)
 {
+  static int small_tick = 0;
   if(abs(wx) < 0.05 && abs(wy) < 0.05 && abs(wz) < 0.05)
+    small_tick++;
+  else
+    small_tick = 0;
+
+  if(small_tick > 10)
   {
-    wx_b = 0.5 * wx_b + 0.5 * wx;
-    wy_b = 0.5 * wy_b + 0.5 * wy;
-    wz_b = 0.5 * wz_b + 0.5 * wz;
+    wx_b = 0.99 * wx_b + 0.01 * wx;
+    wy_b = 0.99 * wy_b + 0.01 * wy;
+    wz_b = 0.99 * wz_b + 0.01 * wz;
   }
 }
 

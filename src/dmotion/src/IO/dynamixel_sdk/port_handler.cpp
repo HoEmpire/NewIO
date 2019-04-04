@@ -88,7 +88,7 @@ bool PortHandler::readData1Byte(uint8_t* buffer, int length, double timeout)
     rx_length += this->readPort(&buffer[rx_length], length-rx_length);
     if (rx_length == length)
       return true;
-    timer::delay_us(10);//TODO remove delay
+    //timer::delay_us(10);//TODO remove delay
   }
   // std::cout << "PortHandler::readData1Byte: incomplete packete, actual length " << rx_length << std::endl;
   return false;
@@ -108,7 +108,7 @@ void PortHandler::closePort()
 
 void PortHandler::clearPort()
 {
-  tcflush(socket_fd_, TCIFLUSH);
+  tcflush(socket_fd_, TCIOFLUSH);
 }
 
 void PortHandler::setPortName(const char *port_name)
@@ -155,6 +155,7 @@ int PortHandler::getBytesAvailable()
 
 int PortHandler::readPort(uint8_t *packet, int length)
 {
+  timer::delay_us(10.0);//TODO add delay
   return read(socket_fd_, packet, length);
 }
 
@@ -293,9 +294,10 @@ bool PortHandler::setupPort(int cflag_baud, const bool block)
   newtio.c_cc[VMIN]   = 0;
 
   // clean the buffer and activate the settings for the port
+  fcntl(socket_fd_,F_SETFL,FNDELAY);
   tcflush(socket_fd_, TCIFLUSH);
   tcsetattr(socket_fd_, TCSANOW, &newtio);
-  //fcntl(socket_fd_,F_SETFL,FNDELAY);
+
 
   tx_time_per_byte = (1000.0 / (double)baudrate_) * 10.0;
   return true;

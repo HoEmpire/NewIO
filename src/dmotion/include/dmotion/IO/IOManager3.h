@@ -1,15 +1,15 @@
-#pragma once
+#ifndef IOMANAGER_H
+#define IOMANAGER_H
 
 #include "IMUReader.h"
 #include "ServoIO.h"
 #include "FeetSensorIO.h"
+#include "dmotion/Common/Utility/Utility.h"
+#include "dmotion/Common/Parameters.h"
+//#include "dmotion/Common/DThread.hpp"
 
 #include <vector>
 #include <chrono>
-
-#include <pthread.h>
-#include <sched.h>
-#include <assert.h>
 
 namespace Motion
 {
@@ -187,3 +187,5 @@ public:
 };
 
 }
+
+#endif

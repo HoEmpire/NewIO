@@ -1,12 +1,12 @@
-#pragma once
+#ifndef IOCOMMUNICATION_H
+#define IOCOMMUNICATION_H
+
 #include <thread>
 #include <iostream>
 #include <string>
 
 #include "dmotion/IO/IOManager3.h"
 #include "dmotion/State/StateManager.hpp"
-#include "dmotion/Common/Utility/Utility.h"
-#include "dmotion/Common/Parameters.h"
 #include "dmotion/ForwardKinematics/ForwardKinematics.h"
 #include "dmotion/PendulumWalk/PendulumWalk.h"
 
@@ -30,7 +30,7 @@ public:
 
      void StateManagerLoop();//状态管理节点
 
-     void IOLoop();//IO节点
+     void *IOLoop();//IO节点
 
     // void IMULoop();//读IMU节点，考虑到其周期和IO可能不一致
 
@@ -74,6 +74,10 @@ private:
      ros::Publisher m_pub_motion_info;
      ros::Subscriber m_sub_motion_hub, m_sub_vision, m_sub_action_command;
      ros::ServiceServer m_motion_server;
+
+     pthread_t tidIO;
+     pthread_attr_t attr;
 };
 
 }
+#endif
