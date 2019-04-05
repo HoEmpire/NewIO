@@ -206,7 +206,7 @@ void IOManager3::spinOnce()
 
         m_sync_time = timer::getCurrentSystemTime();//这句话的位置 TODO pyx after
 
-
+        m_servo_io.sendServoPositions();
         // read pressure data
         if (parameters.global.using_pressure)
         {
@@ -215,8 +215,6 @@ void IOManager3::spinOnce()
                 ROS_WARN("IOManager3::spinOnce: read feet pressure data error");
             }
         }
-
-        m_servo_io.sendServoPositions();
 
     }
     else if (OFF == m_power_state)

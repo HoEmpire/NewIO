@@ -11,7 +11,7 @@ int main(int argc, char ** argv){
     while(ros::ok()){
      io_com.IOLoop();
      //a.tic();
-     io_com.Publisher();
+     //io_com.Publisher();
      //INFO("publish");
     // a.toc();
     }

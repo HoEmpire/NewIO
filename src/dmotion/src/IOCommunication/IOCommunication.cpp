@@ -44,8 +44,8 @@ IOCommunication::IOCommunication(ros::NodeHandle* nh)
     m_motion_server = m_nh->advertiseService("/dmotion_" + std::to_string(robotId) + "/set_motion_yaw", &IOCommunication::setFieldYaw, this); //这个服务暂时没什么用，纯属适应老体系,具体实现应该在IO实现
     // m_pub_motion_hub = m_nh->advertise<dmsgs::MotionDebugInfo>("MotionHub", 1);
 
-    //std::thread pub_thread(&IOCommunication::Publisher, this);
-    //pub_thread.detach();
+    std::thread pub_thread(&IOCommunication::Publisher, this);
+    pub_thread.detach();
     //timer::delay_ms(100.0);
     // std::thread sub_thread(&IOCommunication::Subscriber, this);
     // sub_thread.detach();
@@ -225,6 +225,9 @@ void IOCommunication::SetHeadServoValue()
 
 void IOCommunication::Publisher()
 {
+  ros::Rate loop_rate(100);
+  while(ros::ok())
+  {
     if(sm.imu_initialized == INITED)
     {
       if(lower_board_success_flag > 5)
@@ -282,11 +285,13 @@ void IOCommunication::Publisher()
     }
     m_pub_motion_info.publish(m_motion_info);
     ros::spinOnce();
+    loop_rate.sleep();
+  }
 }
 
 void IOCommunication::ReadVisionYaw(const dmsgs::VisionInfo & msg)
 {
-    sm.vision_yaw = msg.robot_pos.z;
+    sm.vision_yaw = msg.robot_pos.z / 180 * M_PI;//FUCK
 }
 
 bool IOCommunication::setFieldYaw(dmsgs::SetInitOrientation::Request &req,

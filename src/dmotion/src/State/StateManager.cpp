@@ -2,12 +2,13 @@
 #include <ros/ros.h>
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/Common/Utility/Utility.h"
-#define IMUFILTER_INITICKS 200 //Unit:10ms  --> 10000ms = 10s
+#define IMUFILTER_INITICKS 500 //Unit:10ms  --> 10000ms = 10s
 #define PRESSURE_INITICKS 100 //Unit:10ms
 #define STABLE_COUNT 10
 #define IMU_INI_DOUBLE_SUPPORT_COUNT 100
 #define PRESSURE_THRESHOLD 0.1
-#define VISION_COMPENSATE_ON false
+#define VISION_COMPENSATE_ON true
+#define FAKE_ODOMETER true
 
 using namespace std;
 using namespace dmotion;
@@ -335,7 +336,10 @@ void StateManager::working()
   checkIniState();
   if(pressure_initialized == INITED)
   {
-    checkSupportState();
+    if(parameters.global.using_pressure)
+      checkSupportState();
+    else
+       m_support_state = SUPPORT_BOTH;
   }
   else if(pressure_initialized == INITING)
   {
@@ -380,9 +384,68 @@ void StateManager::GetEncoderVel()
   yaw_feet = leg.yaw_result;
 }
 
+void StateManager::GetEncoderVelBoth()
+{
+  std::vector<double> pos;
+  std::vector<double> vel;
+
+  //cal left
+  pos.assign(servo_pos.begin() + 6, servo_pos.begin() + 12);
+  vel.assign(servo_vel.begin() + 6, servo_vel.begin() + 12);
+  ForKin left(pos, false);
+  left.calVelocity(vel);
+
+  vx_left = left.vx_result;
+  vy_left = left.vy_result;
+  vz_left = left.vz_result;
+  roll_left = left.roll_result;
+  pitch_left = left.pitch_result;
+  yaw_left = left.yaw_result;
+
+  pos.assign(servo_pos.begin(), servo_pos.begin() + 6);
+  vel.assign(servo_vel.begin(), servo_vel.begin() + 6);
+  ForKin right(pos, true);
+  left.calVelocity(vel);
+
+  vx_right = right.vx_result;
+  vy_right = right.vy_result;
+  vz_right = right.vz_result;
+  roll_right = right.roll_result;
+  pitch_right = right.pitch_result;
+  yaw_right = right.yaw_result;
+}
+
+void StateManager::CheckSupportWoSensor()
+{
+  if(vx_right > vx_left)
+  {
+    vx_encoder = vx_right;
+    vy_encoder = vy_right;
+    vz_encoder = vz_right;
+    roll_feet = roll_right;
+    pitch_feet = pitch_right;
+    yaw_feet = yaw_right;
+  }
+  else
+  {
+    vx_encoder = vx_left;
+    vy_encoder = vy_left;
+    vz_encoder = vz_left;
+    roll_feet = roll_left;
+    pitch_feet = pitch_left;
+    yaw_feet = yaw_left;
+  }
+}
+
 void StateManager::CalOdometer()
 {
-  GetEncoderVel();
+  if(parameters.global.using_pressure)
+    GetEncoderVel();
+  else
+  {
+    GetEncoderVelBoth();
+    CheckSupportWoSensor();
+  }
   Eigen::Matrix<double,3,1> acc_wog;
   acc_wog << ax_wog, ay_wog, az_wog;
 
@@ -405,17 +468,29 @@ void StateManager::CalOdometer()
   //calculate y
   m_odometer.UpdateEstimate(acc_wog(1), encoder_vel_global(1), false);
 
+
+
   //Update center vel
-  if(vision_compensate_on)
-    m_odometer.CalVelToCenter(vision_yaw);
+  if(!FAKE_ODOMETER)
+  {
+      if(vision_compensate_on)
+        m_odometer.CalVelToCenter(vision_yaw);
+      else
+        m_odometer.CalVelToCenter(yaw);
+      //Update Odometer
+      m_odometer.UpdateOdometer();
+
+      x_now = m_odometer.x_displacement;
+      y_now = m_odometer.y_displacement;
+  }
   else
-    m_odometer.CalVelToCenter(yaw);
+  {
+     x_now = x_now + 2*(cos(vision_yaw) * vx_encoder * 0.01 - sin(vision_yaw) * vy_encoder * 0.01);
+     y_now = y_now + 2*(sin(vision_yaw) * vx_encoder * 0.01 + cos(vision_yaw) * vy_encoder * 0.01);
+  }
 
-  //Update Odometer
-  m_odometer.UpdateOdometer();
 
-  x_now = m_odometer.x_displacement;
-  y_now = m_odometer.y_displacement;
+
   //cout << "StateManager: " << "x: " << x_now << ", y: " << y_now << endl;
 }
 

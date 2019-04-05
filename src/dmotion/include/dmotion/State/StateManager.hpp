@@ -35,6 +35,10 @@ class StateManager
 
     void working();
 
+    void GetEncoderVelBoth();
+
+    void CheckSupportWoSensor();
+
     IMUData imu_data;
 
     //imu姿态和无重力加速度
@@ -68,6 +72,10 @@ class StateManager
     //码盘位姿
     double vx_encoder, vy_encoder, vz_encoder;
     double roll_feet, pitch_feet, yaw_feet;
+    double vx_left, vy_left, vz_left;
+    double roll_left, pitch_left, yaw_left;
+    double vx_right, vy_right, vz_right;
+    double roll_right, pitch_right, yaw_right;
 
     //判断选取哪只脚算码盘速度
     bool right_support_flag;

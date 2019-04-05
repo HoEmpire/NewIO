@@ -85,7 +85,7 @@ void Odometer::UpdateEstimate(double acc_wog, double vel, bool is_x)
 Matrix<double,2,1> Odometer::ChooseGain(double acc_wog)
 {
   static int small_acc_ticks = 0;
-  if(abs(acc_wog) < 0.2)
+  if(abs(acc_wog) < 20)
   {
       small_acc_ticks++;
       if(small_acc_ticks > 10)
