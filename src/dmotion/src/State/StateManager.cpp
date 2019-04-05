@@ -2,10 +2,10 @@
 #include <ros/ros.h>
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/Common/Utility/Utility.h"
-#define IMUFILTER_INITICKS 500 //Unit:10ms  --> 10000ms = 10s
+#define IMUFILTER_INITICKS 100 //Unit:10ms  --> 10000ms = 10s
 #define PRESSURE_INITICKS 100 //Unit:10ms
 #define STABLE_COUNT 10
-#define IMU_INI_DOUBLE_SUPPORT_COUNT 100
+#define IMU_INI_DOUBLE_SUPPORT_COUNT 0 //TODO 2019.4.5改
 #define PRESSURE_THRESHOLD 0.1
 #define VISION_COMPENSATE_ON true
 #define FAKE_ODOMETER true
@@ -70,6 +70,11 @@ void StateManager::iniIMUFilter()
       m_imu_filter.iniQuaternion();
       INFO("***********************");
       INFO("StateManager::initIMUFilter:IMU Ini finished!!!");
+      std::cout << "gravity:" << m_imu_filter.g << std::endl;
+      std::cout << "gyro bias wx:" << m_imu_filter.wx_b
+                << "gyro bias wy:" << m_imu_filter.wy_b
+                << "gyro bias wz:" << m_imu_filter.wz_b
+                << std::endl;
       INFO("***********************");
       imu_initialized = INITED;
     }
@@ -272,7 +277,7 @@ void StateManager::iniPressureSensor()
   }
 
   if(!parameters.global.using_pressure)
-      ini_ticks = PRESSURE_INITICKS;
+        ini_ticks = PRESSURE_INITICKS + 1;
 
   if(ini_ticks <= PRESSURE_INITICKS)
   {

@@ -148,20 +148,21 @@ void ImuFilter::iniIMU(
     int n)
 {
   Lowpass_Filter(ax, ay, az, ax_last, ay_last, az_last);
-  gx_ini = 1.0 * (n - 1) / n * gx_ini + 1.0 / n * ax_last;
-  gy_ini = 1.0 * (n - 1) / n * gy_ini + 1.0 / n * ay_last;
-  gz_ini = 1.0 * (n - 1) / n * gz_ini + 1.0 / n * az_last;
   if(abs(wx) < 0.05 && abs(wy) < 0.05 && abs(wz) < 0.05)
   {
     wx_b = 1.0 * (n - 1) / n * wx_b + 1.0 / n * wx;
     wy_b = 1.0 * (n - 1) / n * wy_b + 1.0 / n * wy;
     wz_b = 1.0 * (n - 1) / n * wz_b + 1.0 / n * wz;
+    gx_ini = 1.0 * (n - 1) / n * gx_ini + 1.0 / n * ax_last;
+    gy_ini = 1.0 * (n - 1) / n * gy_ini + 1.0 / n * ay_last;
+    gz_ini = 1.0 * (n - 1) / n * gz_ini + 1.0 / n * az_last;
   }
 }
 
 void ImuFilter::iniGravity()
 {
-  g = sqrt(gx_ini * gx_ini + gy_ini * gy_ini + gz_ini * gz_ini);
+  if(gx_ini != 0 && gy_ini != 0 && gz_ini != 0)
+      g = sqrt(gx_ini * gx_ini + gy_ini * gy_ini + gz_ini * gz_ini);
 }
 
 void ImuFilter::iniQuaternion()
@@ -275,12 +276,16 @@ void ImuFilter::UpdateBias(float wx, float wy, float wz)
   if(abs(wx) < 0.05 && abs(wy) < 0.05 && abs(wz) < 0.05)
   {
     if(small_ticks < 10)
-        small_ticks++;
+          small_ticks++;
     else
     {
-      wx_b = 0.5 * wx_b + 0.5 * wx;
-      wy_b = 0.5 * wy_b + 0.5 * wy;
-      wz_b = 0.5 * wz_b + 0.5 * wz;
+      wx_b = 0.99 * wx_b + 0.01 * wx;
+      wy_b = 0.99 * wy_b + 0.01 * wy;
+      wz_b = 0.99 * wz_b + 0.01 * wz;
+      gx_ini = 0.95 * gx_ini + 0.05 * ax_last;
+      gy_ini = 0.95 * gy_ini + 0.05 * ay_last;
+      gz_ini = 0.95 * gz_ini + 0.05 * az_last;
+      iniGravity();
     }
   }
   else

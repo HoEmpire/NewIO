@@ -84,13 +84,13 @@ void ServoIO::initServoPositions()
 
         // servo action: enable torque && turn on led && set velocity
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_RETURN_LEVEL, 1);
-        timer::delay_ms(20);    // no idea why here should be some lantency...
+        timer::delay_ms(10);    // no idea why here should be some lantency...
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_TORQUE_ENABLE, 1);
-        timer::delay_ms(20);
+        timer::delay_ms(10);
         m_servo_protocol->write1ByteTxOnly(m_servo_port, _cfg.id, ADDR_LED, 1);
-        timer::delay_ms(20);
+        timer::delay_ms(10);
         m_servo_protocol->write4ByteTxOnly(m_servo_port, _cfg.id, ADDR_PROFILE_VELOCITY, INIT_VELLOCITY);//init safety
-        timer::delay_ms(20);
+        timer::delay_ms(10);
 
         goal_position_[0] = DXL_LOBYTE(DXL_LOWORD(_cfg.init));
         goal_position_[1] = DXL_HIBYTE(DXL_LOWORD(_cfg.init));

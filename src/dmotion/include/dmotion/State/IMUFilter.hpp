@@ -65,6 +65,12 @@ class ImuFilter
 
     float ax_wog, ay_wog, az_wog;
 
+    float wx_b = 0;
+    float wy_b = 0;
+    float wz_b = 0;
+
+    float g = 9.8;
+
   private:
 
     // **** state variables
@@ -73,13 +79,10 @@ class ImuFilter
     float pitch= 0;
     float yaw = 0;
 
-    float wx_b = 0;
-    float wy_b = 0;
-    float wz_b = 0;
     float gx_ini = 0;
     float gy_ini = 0;
     float gz_ini = 0;
-    float g = 9.8;
+
     float ax_last = 0;
     float ay_last = 0;
     float az_last = 0;
