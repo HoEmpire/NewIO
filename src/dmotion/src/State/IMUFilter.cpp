@@ -3,7 +3,7 @@
 #define FILTER_FREQUENCE 0.01 // 5ms //change for test
 #define LPF_FREQ 50
 #define Ki 0.1
-#define Kp 0.1
+#define Kp 1.5
 
 using namespace std;
 using namespace Eigen;
@@ -151,7 +151,7 @@ void ImuFilter::iniIMU(
   gx_ini = 1.0 * (n - 1) / n * gx_ini + 1.0 / n * ax_last;
   gy_ini = 1.0 * (n - 1) / n * gy_ini + 1.0 / n * ay_last;
   gz_ini = 1.0 * (n - 1) / n * gz_ini + 1.0 / n * az_last;
-  if(abs(wx_b) < 0.05 && abs(wy_b) < 0.05 && abs(wy_b) < 0.05)
+  if(abs(wx) < 0.05 && abs(wy) < 0.05 && abs(wz) < 0.05)
   {
     wx_b = 1.0 * (n - 1) / n * wx_b + 1.0 / n * wx;
     wy_b = 1.0 * (n - 1) / n * wy_b + 1.0 / n * wy;
@@ -269,12 +269,22 @@ void ImuFilter::clearData()
 
 void ImuFilter::UpdateBias(float wx, float wy, float wz)
 {
+  static int small_ticks = 0;
+
+
   if(abs(wx) < 0.05 && abs(wy) < 0.05 && abs(wz) < 0.05)
   {
-    wx_b = 0.99 * wx_b + 0.01 * wx;
-    wy_b = 0.99 * wy_b + 0.01 * wy;
-    wz_b = 0.99 * wz_b + 0.01 * wz;
+    if(small_ticks < 10)
+        small_ticks++;
+    else
+    {
+      wx_b = 0.5 * wx_b + 0.5 * wx;
+      wy_b = 0.5 * wy_b + 0.5 * wy;
+      wz_b = 0.5 * wz_b + 0.5 * wz;
+    }
   }
+  else
+      small_ticks = 0;
 }
 
 }

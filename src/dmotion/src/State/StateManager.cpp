@@ -232,6 +232,8 @@ void StateManager::checkIniState()
          imu_initialized = INITING;
          m_imu_filter.clearData();
          m_odometer.ClearEstimate();
+         x_now = 0;
+         y_now = 0;
          ini_ticks = 1;
        }
     }
@@ -262,13 +264,15 @@ void StateManager::iniPressureSensor()
       right_sum += pressure_data.right[i];
   }
 
-
   if(ini_ticks == 1)
   {
     INFO("***********************");
     INFO("StateManager::iniPressureSensor:Pressure sensors Ini begins!!!");
     INFO("***********************");
   }
+
+  if(!parameters.global.using_pressure)
+      ini_ticks = PRESSURE_INITICKS;
 
   if(ini_ticks <= PRESSURE_INITICKS)
   {
@@ -280,7 +284,8 @@ void StateManager::iniPressureSensor()
     INFO("***********************");
     INFO("StateManager::initPressureSensor:Pressure sensors ini finished!!!");
     INFO("StateManager::initPressureSensor:Now you have 3 seconds to put the robot on the ground");
-    sleep(3);
+    if(parameters.global.using_pressure)
+        sleep(3);
     INFO("***********************");
     pressure_initialized = INITED;
   }
