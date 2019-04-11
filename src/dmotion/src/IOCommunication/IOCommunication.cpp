@@ -153,6 +153,12 @@ void IOCommunication::SetJointValue(const std_msgs::Float64MultiArray & msg)
      for(int i = 0; i < 16; i++)
          m_joint_value[i] = msg.data[i];
      m_status = msg.layout.dim[0].label;
+
+     int support = msg.layout.data_offset;
+     if (support == 1)
+        sm.right_support_flag = true;
+     else if (support == 0)
+        sm.right_support_flag = false;
      //PrintVector(m_joint_value);
    }
 }

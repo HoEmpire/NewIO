@@ -427,7 +427,7 @@ void StateManager::GetEncoderVelBoth()
 
 void StateManager::CheckSupportWoSensor()
 {
-  if(vx_right > vx_left)
+  if(right_support_flag)
   {
     vx_encoder = vx_right;
     vy_encoder = vy_right;
