@@ -234,7 +234,7 @@ void IOCommunication::Publisher()
   ros::Rate loop_rate(100);
   while(ros::ok())
   {
-    if(sm.imu_initialized == INITED)
+    if(sm.imu_initialized == INITED || sm.imu_initialized == INITING)
     {
       if(lower_board_success_flag > 5)
       {

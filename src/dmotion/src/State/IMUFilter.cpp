@@ -2,8 +2,8 @@
 
 #define FILTER_FREQUENCE 0.01 // 5ms //change for test
 #define LPF_FREQ 50
-#define Ki 0.1
-#define Kp 1.5
+#define Ki 0.01
+#define Kp 0.7
 
 using namespace std;
 using namespace Eigen;
@@ -153,9 +153,23 @@ void ImuFilter::iniIMU(
     wx_b = 1.0 * (n - 1) / n * wx_b + 1.0 / n * wx;
     wy_b = 1.0 * (n - 1) / n * wy_b + 1.0 / n * wy;
     wz_b = 1.0 * (n - 1) / n * wz_b + 1.0 / n * wz;
-    gx_ini = 1.0 * (n - 1) / n * gx_ini + 1.0 / n * ax_last;
-    gy_ini = 1.0 * (n - 1) / n * gy_ini + 1.0 / n * ay_last;
-    gz_ini = 1.0 * (n - 1) / n * gz_ini + 1.0 / n * az_last;
+    double temp_gravity = sqrt(ax_last * ax_last + ay_last * ay_last + az_last * az_last);
+    if (temp_gravity < 10.5 && temp_gravity > 9.5)
+    {
+      //ROS_INFO_STREAM("G:"<< temp_gravity);
+      if (gx_ini == 0 && gy_ini == 0 && gz_ini == 0)
+      {
+        gx_ini = ax_last;
+        gy_ini = ay_last;
+        gz_ini = az_last;
+      }
+      else
+      {
+        gx_ini = 1.0 * (n - 1) / n * gx_ini + 1.0 / n * ax_last;
+        gy_ini = 1.0 * (n - 1) / n * gy_ini + 1.0 / n * ay_last;
+        gz_ini = 1.0 * (n - 1) / n * gz_ini + 1.0 / n * az_last;
+      }
+    }
   }
 }
 
@@ -250,9 +264,9 @@ void ImuFilter::calAccWog()
     // az_wog = v3(2);
     //
     v2 = R * v3 ;
-    ax_wog = v2(0);
-    ay_wog = v2(1);
-    az_wog = v2(2) - g;
+    ax_wog = -v2(0);
+    ay_wog = -v2(1);
+    az_wog = g - v2(2);
 }
 
 void ImuFilter::clearData()
@@ -282,9 +296,13 @@ void ImuFilter::UpdateBias(float wx, float wy, float wz)
       wx_b = 0.99 * wx_b + 0.01 * wx;
       wy_b = 0.99 * wy_b + 0.01 * wy;
       wz_b = 0.99 * wz_b + 0.01 * wz;
-      gx_ini = 0.95 * gx_ini + 0.05 * ax_last;
-      gy_ini = 0.95 * gy_ini + 0.05 * ay_last;
-      gz_ini = 0.95 * gz_ini + 0.05 * az_last;
+      double temp_gravity = sqrt(ax_last * ax_last + ay_last * ay_last + az_last * az_last);
+      if (temp_gravity < 10.5 && temp_gravity > 9.5)
+      {
+        gx_ini = 0.95 * gx_ini + 0.05 * ax_last;
+        gy_ini = 0.95 * gy_ini + 0.05 * ay_last;
+        gz_ini = 0.95 * gz_ini + 0.05 * az_last;
+      }
       iniGravity();
     }
   }

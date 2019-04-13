@@ -164,23 +164,21 @@ void IOManager3::initZJUJoint()
 
     }
 
-    if (parameters.global.io_debug)
+    for (auto& joint:m_servo_io.m_joints)
     {
-        for (auto& joint:m_servo_io.m_joints)
-        {
-            ROS_DEBUG_STREAM("ServoIO::ServoIO:" << std::endl
-                            << joint.first << ' '
-                            << joint.second.cfg.id << ' '
-                            << joint.second.cfg.cw << ' '
-                            << joint.second.cfg.factor << ' '
-                            << joint.second.cfg.id << ' '
-                            << joint.second.cfg.init << ' '
-                            << joint.second.cfg.max_pos << ' '
-                            << joint.second.cfg.min_pos << ' '
-                            << joint.second.cfg.resolution
-                            );
-        }
+        ROS_DEBUG_STREAM("ServoIO::ServoIO:" << std::endl
+                        << joint.first << ' '
+                        << joint.second.cfg.id << ' '
+                        << joint.second.cfg.cw << ' '
+                        << joint.second.cfg.factor << ' '
+                        << joint.second.cfg.id << ' '
+                        << joint.second.cfg.init << ' '
+                        << joint.second.cfg.max_pos << ' '
+                        << joint.second.cfg.min_pos << ' '
+                        << joint.second.cfg.resolution
+                        );
     }
+
 }
 
 void IOManager3::spinOnce()

@@ -90,7 +90,7 @@ bool PortHandler::readData1Byte(uint8_t* buffer, int length, double timeout)
     a.tic();
     this_read = this->readPort(&buffer[rx_length], length-rx_length);
     rx_length += this_read;
-    if(a.toc_no_output()>1.0)
+    if(a.toc_no_output()>10.0)
        ROS_FATAL_STREAM("shitty readport time:" << a.toc_no_output() << ",data length:" << this_read);
     if (rx_length == length)
       return true;

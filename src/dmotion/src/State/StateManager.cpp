@@ -2,13 +2,14 @@
 #include <ros/ros.h>
 #include "dmotion/Common/Parameters.h"
 #include "dmotion/Common/Utility/Utility.h"
-#define IMUFILTER_INITICKS 100 //Unit:10ms  --> 10000ms = 10s
+//#define IMUFILTER_INITICKS 100 //Unit:10ms  --> 10000ms = 10s
 #define PRESSURE_INITICKS 100 //Unit:10ms
 #define STABLE_COUNT 10
 #define IMU_INI_DOUBLE_SUPPORT_COUNT 0 //TODO 2019.4.5改
 #define PRESSURE_THRESHOLD 0.1
 #define VISION_COMPENSATE_ON true
 #define FAKE_ODOMETER true
+#define STATEMANAGER_RATE 10//ms
 
 using namespace std;
 using namespace dmotion;
@@ -45,7 +46,7 @@ void StateManager::iniIMUFilter()
       INFO("***********************");
     }
 
-    if(ini_ticks <= IMUFILTER_INITICKS)
+    if(ini_ticks <= parameters.state.imu_prepare_time * 1000 / STATEMANAGER_RATE)
     {
       lin_acc_x = imu_data.accl.x;
       lin_acc_y = imu_data.accl.y;
@@ -60,8 +61,8 @@ void StateManager::iniIMUFilter()
       else
       {
         m_imu_filter.iniIMU(ang_vel_x, ang_vel_y, ang_vel_z,
-                    lin_acc_x, lin_acc_y, lin_acc_z,
-                    ini_ticks);
+                            lin_acc_x, lin_acc_y, lin_acc_z,
+                            ini_ticks);
       }
       ini_ticks++;
     }
