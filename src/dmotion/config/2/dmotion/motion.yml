@@ -51,23 +51,29 @@ dmotion:
     imu_prepare_time            : 8
     dynamixel_port_number       : 0
     dynamixel_protocol_version  : 1.0
-  
+    ##########new###########
+    imu_Kp                      : 0.7
+    imu_Ki                      : 0.02
+    vision_compensate_on        : true
+    fake_odometry_gain_x        : 2.0
+    fake_odometry_gain_y        : 2.0
+
   kick:
     using_pi_mode : false
     using_support_stablizer : false
     kick_controller_p : 1000
     kick_controller_i : 200
-  
+
   state:
     using_pressure : true
-    
+
     imu_algorithm_gain : 0.1
     imu_bias_gain : 0
     imu_pitch_bias : 0
     imu_roll_bias : 0
     imu_yaw_vel_correction : -0.001
     imu_prepare_time : 5
-    
+
     velocity_threshold : 1
     com_roll_threshold_left : -6
     com_roll_threshold_right : 7

@@ -86,10 +86,14 @@ void Parameters::update()
             );
         }
     }
-
-
     GPARAM("dmotion/state/imu_prepare_time", state.imu_prepare_time);
 
+//船新参数
+    GPARAM("dmotion/state/imu_Kp", state.imu_Kp);
+    GPARAM("dmotion/state/imu_Ki", state.imu_Ki);
+    GPARAM("dmotion/state/vision_compensate_on", state.vision_compensate_on);
+    GPARAM("dmotion/state/fake_odometry_gain_x", state.fake_odometry_gain_x);
+    GPARAM("dmotion/state/fake_odometry_gain_y", state.fake_odometry_gain_y); 
 }
 
 Parameters parameters;

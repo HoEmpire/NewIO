@@ -7,7 +7,7 @@
 #define STABLE_COUNT 10
 #define IMU_INI_DOUBLE_SUPPORT_COUNT 0 //TODO 2019.4.5改
 #define PRESSURE_THRESHOLD 0.1
-#define VISION_COMPENSATE_ON true
+// #define VISION_COMPENSATE_ON true
 #define FAKE_ODOMETER true
 #define STATEMANAGER_RATE 10//ms
 
@@ -22,9 +22,11 @@ StateManager::StateManager()
   , m_power_state(OFF)
   , m_stable_state(STABLE)
   , right_support_flag(true)
+  , right_support_flag_last(true)
+  , change_support(false)
   , x_now(0.0)
   , y_now(0.0)
-  , vision_compensate_on(VISION_COMPENSATE_ON)
+  , vision_compensate_on(parameters.state.vision_compensate_on)
 {
     ROS_DEBUG("RobotStatus::RobotStatus: init RobotStatus instance");
 }
@@ -132,12 +134,12 @@ void StateManager::checkStableState()
         ROS_WARN("check stable state failed");
     }
 
-    if (abs(deg_pitch) > 25|| abs(deg_roll) > 25) {
+    if (abs(deg_pitch) > 20|| abs(deg_roll) > 25) {
 
         stablecount = 0;
 
         // TODO hard code ....
-        if (deg_pitch > 60.0 && deg_pitch < 120.0)
+        if (deg_pitch > 40.0 && deg_pitch < 120.0)
         {
             frontcount++;
             m_stable_state = UNSTABLE;
@@ -147,7 +149,7 @@ void StateManager::checkStableState()
             frontcount = 0;
         }
 
-        if (deg_pitch < -60.0 && deg_pitch > -120.0) {
+        if (deg_pitch < -40.0 && deg_pitch > -120.0) {
             backcount++;
             m_stable_state = UNSTABLE;
         }
@@ -202,7 +204,7 @@ void StateManager::checkStableState()
         m_stable_state = RIGHTDOWN;
         //ROS_INFO("right down...");
     }
-    else if (stablecount > STABLE_COUNT)
+    else if (stablecount > STABLE_COUNT*10)//TODO hardcore 1s
     {
         m_stable_state = STABLE;
         //ROS_INFO("stable...");
@@ -326,13 +328,23 @@ void StateManager::checkSupportState()
   else if(left_sum - PressureBiasLeft > PRESSURE_THRESHOLD)
   {
       m_support_state = SUPPORT_LEFT;
+      right_support_flag_last = right_support_flag;
       right_support_flag = false;
+      if(right_support_flag_last == right_support_flag)
+          change_support = false;
+      else
+          change_support = true;
     //  ROS_INFO("support left");
   }
   else if(right_sum - PressureBiasRight > PRESSURE_THRESHOLD)
   {
       m_support_state = SUPPORT_RIGHT;
+      right_support_flag_last = right_support_flag;
       right_support_flag = true;
+      if(right_support_flag_last == right_support_flag)
+          change_support = false;
+      else
+          change_support = true;
     //  ROS_INFO("support right");
   }
   else
@@ -462,42 +474,40 @@ void StateManager::CalOdometer()
 
   if(vision_compensate_on)
   {
-    acc_wog = m_odometer.VisionCompensate(vision_yaw, yaw, acc_wog);
     encoder_vel_global = m_odometer.CalEncoderSpeedToGlobal(roll, pitch, vision_yaw,
                                                             roll_feet, pitch_feet ,yaw_feet,
                                                             vx_encoder, vy_encoder, vz_encoder);
+    encoder_vel_center = m_odometer.CalVelToCenter(vision_yaw, encoder_vel_global);
   }
   else
   {
     encoder_vel_global = m_odometer.CalEncoderSpeedToGlobal(roll, pitch, yaw,
                                                             roll_feet, pitch_feet ,yaw_feet,
                                                             vx_encoder, vy_encoder, vz_encoder);
+    encoder_vel_center = m_odometer.CalVelToCenter(yaw, encoder_vel_global);
   }
+
+  acc_wog = m_odometer.CalAccToCenter(yaw, acc_wog);
+
   //calculate x
-  m_odometer.UpdateEstimate(acc_wog(0), encoder_vel_global(0), true);
+  m_odometer.UpdateEstimate(acc_wog(0), encoder_vel_center(0), true, change_support);
 
   //calculate y
-  m_odometer.UpdateEstimate(acc_wog(1), encoder_vel_global(1), false);
-
+  m_odometer.UpdateEstimate(acc_wog(1), encoder_vel_center(1), false, change_support);
 
 
   //Update center vel
   if(!FAKE_ODOMETER)
   {
-      if(vision_compensate_on)
-        m_odometer.CalVelToCenter(vision_yaw);
-      else
-        m_odometer.CalVelToCenter(yaw);
       //Update Odometer
       m_odometer.UpdateOdometer();
-
       x_now = m_odometer.x_displacement;
       y_now = m_odometer.y_displacement;
   }
   else
   {
-     x_now = x_now + 2*(cos(vision_yaw) * vx_encoder * 0.01 - sin(vision_yaw) * vy_encoder * 0.01);
-     y_now = y_now + 2*(sin(vision_yaw) * vx_encoder * 0.01 + cos(vision_yaw) * vy_encoder * 0.01);
+     x_now = x_now + parameters.state.fake_odometry_gain_x * (cos(vision_yaw) * vx_encoder * 0.01 - sin(vision_yaw) * vy_encoder * 0.01);
+     y_now = y_now + parameters.state.fake_odometry_gain_y * (sin(vision_yaw) * vx_encoder * 0.01 + cos(vision_yaw) * vy_encoder * 0.01);
   }
 
 

@@ -79,10 +79,13 @@ class StateManager
 
     //判断选取哪只脚算码盘速度
     bool right_support_flag;
+    bool right_support_flag_last;
+    bool change_support;
 
     //视觉的yaw
     float vision_yaw;
     Eigen::Matrix<double,3,1> encoder_vel_global;
+    Eigen::Matrix<double,3,1> encoder_vel_center;
 
     //舵机值
     vector<double> servo_pos;

@@ -38,6 +38,11 @@ struct StateParameters
 {
     // imu parameters
     float imu_prepare_time;
+    bool vision_compensate_on;
+    double imu_Kp = 0.0;
+    double imu_Ki = 0.0;
+    float fake_odometry_gain_x;
+    float fake_odometry_gain_y;
 };
 
 class Parameters

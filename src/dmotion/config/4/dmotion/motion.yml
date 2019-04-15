@@ -47,6 +47,13 @@ dmotion:
     int side_assertion_ticks : 10
     int stable_assertion_ticks : 10
 
+    ##########new###########
+    imu_Kp                      : 0.7
+    imu_Ki                      : 0.02
+    vision_compensate_on        : true
+    fake_odometry_gain_x        : 2.0
+    fake_odometry_gain_y        : 2.0
+
   robot:
     stand2crouch_stepnum        : 50
     staticExit_num              : 2

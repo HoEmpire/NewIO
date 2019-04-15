@@ -1,8 +1,8 @@
 #include "dmotion/State/IMUFilter.hpp"
-
+#include "dmotion/Common/Parameters.h"
 #define FILTER_FREQUENCE 0.01 // 5ms //change for test
 #define LPF_FREQ 50
-#define Ki 0.01
+#define Ki 0.02
 #define Kp 0.7
 
 using namespace std;
@@ -224,13 +224,24 @@ void ImuFilter::Fusing(
     cross(ax_temp, ay_temp, az_temp, vgx, vgy, vgz, ex, ey, ez);
 
     float exP,eyP,ezP;
-
-    exI = exI + ex * Ki * FILTER_FREQUENCE;
-    eyI = eyI + ey * Ki * FILTER_FREQUENCE;
-    ezI = ezI + ez * Ki * FILTER_FREQUENCE;
-    exP = ex * Kp;
-    eyP = ey * Kp;
-    ezP = ez * Kp;
+    if(parameters.state.imu_Kp == 0)
+    {
+      exI = exI + ex * Ki * FILTER_FREQUENCE;
+      eyI = eyI + ey * Ki * FILTER_FREQUENCE;
+      ezI = ezI + ez * Ki * FILTER_FREQUENCE;
+      exP = ex * Kp;
+      eyP = ey * Kp;
+      ezP = ez * Kp;
+    }
+    else
+    {
+      exI = exI + ex * parameters.state.imu_Ki * FILTER_FREQUENCE;
+      eyI = eyI + ey * parameters.state.imu_Ki * FILTER_FREQUENCE;
+      ezI = ezI + ez * parameters.state.imu_Ki * FILTER_FREQUENCE;
+      exP = ex * parameters.state.imu_Kp;
+      eyP = ey * parameters.state.imu_Kp;
+      ezP = ez * parameters.state.imu_Kp;
+    }
 
     vgx = FILTER_FREQUENCE / 2 * (wx + exI + exP);
     vgy = FILTER_FREQUENCE / 2 * (wy + eyI + eyP);

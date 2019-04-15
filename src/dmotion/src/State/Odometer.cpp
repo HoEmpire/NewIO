@@ -1,6 +1,6 @@
 #include "dmotion/State/Odometer.h"
 #include <iostream>
-#define SAMPLE_RATE 0.01//周期为0.01s
+#define SAMPLE_RATE 0.0103//周期为0.01s
 #define ERROR 1e-8
 using namespace Eigen;
 using namespace std;
@@ -13,12 +13,17 @@ Odometer::Odometer()
   H << 1,0;
   F << 1,SAMPLE_RATE,
        0,1;
-  K_normal = CalGain(1, 300000, 100);
-  K_resist_drift = CalGain(1, 1000, 1);
-  K_static = CalGain(1, 10, 100);
+  //                                 k_acc   k_vel
+  K_normal_x = CalGain(10, 10);   //   10     10
+  K_big_acc_x = CalGain(1, 1000); //    1    1000
+  K_normal_y = CalGain(10, 10);   //   10     10
+  K_big_acc_y = CalGain(1, 1000); //    1    1000
+  K_static = CalGain(100, 0);     //   100     0
   cout << "Kalman Filter Gain: " << endl;
-  cout << "K_normal:" << endl << K_normal << endl;
-  cout << "K_resist_drift:" << endl << K_resist_drift << endl;
+  cout << "K_normal_x:" << endl << K_normal_x << endl;
+  cout << "K_big_acc_x:" << endl << K_big_acc_x << endl;
+  cout << "K_normal_y:" << endl << K_normal_y << endl;
+  cout << "K_big_acc_y:" << endl << K_big_acc_y << endl;
   cout << "K_static:" << endl << K_static << endl;
 }
 
@@ -28,12 +33,12 @@ Odometer::~Odometer()
 }
 
 
-Matrix<double,2,1> Odometer::CalGain(double k_state, double k_vel, double k_acc)
+Matrix<double,2,1> Odometer::CalGain(double k_acc, double k_vel)
 {
   Matrix2d Q = Matrix2d::Identity();
   Matrix2d P = 0.01 * Matrix2d::Identity();
   Matrix2d E = Matrix2d::Identity();
-  Q(0,0) = k_state;
+  Q(0,0) = 1;//k_state
   Q(1,1) = k_acc;
   double R = k_vel;
   double k1_last = 100, k1_now = 0;
@@ -62,9 +67,9 @@ Matrix<double,2,1> Odometer::CalGain(double k_state, double k_vel, double k_acc)
   return K;
 }
 
-void Odometer::UpdateEstimate(double acc_wog, double vel, bool is_x)
+void Odometer::UpdateEstimate(double acc_wog, double vel, bool is_x, bool change_support)
 {
-  Matrix<double, 2, 1> K = ChooseGain(acc_wog);
+  Matrix<double, 2, 1> K = ChooseGain(acc_wog, is_x, change_support);
   Matrix<double, 1, 1> vel_matrix;
   vel_matrix << vel;
   Matrix<double, 2, 1> Xe;
@@ -82,21 +87,74 @@ void Odometer::UpdateEstimate(double acc_wog, double vel, bool is_x)
   }
 }
 
-Matrix<double,2,1> Odometer::ChooseGain(double acc_wog)
+Matrix<double,2,1> Odometer::ChooseGain(double acc_wog, bool is_x, bool change_support)
 {
-  static int small_acc_ticks = 0;
-  if(abs(acc_wog) < 20)
+  static int small_acc_ticks_x = 0;
+  static int small_acc_ticks_y = 0;
+  static int change_support_x = 0;
+  static int change_support_y = 0;
+
+  //x fusing
+  if(is_x)
   {
-      small_acc_ticks++;
-      if(small_acc_ticks > 10)
-          return K_static;
+    //零速更新
+    if(change_support || change_support_x != 0)
+    {
+      if(change_support_x < 2)
+          change_support_x++;
       else
-          return K_resist_drift;
+      {
+          change_support_x = 0;
+          return K_static;
+      }
+    }
+
+    if(abs(acc_wog) < 20)
+    {
+        small_acc_ticks_x++;
+        if(small_acc_ticks_x > 10)
+            return K_static;
+        else
+            return K_normal_x;
+    }
+    else if(abs(acc_wog) > 200)
+        return K_big_acc_x;
+    else
+    {
+        small_acc_ticks_x = 0;
+        return K_normal_x;
+    }
   }
+  //Y fusing
   else
   {
-      small_acc_ticks = 0;
-      return K_normal;
+    //零速更新
+    if(change_support || change_support_y != 0)
+    {
+      if(change_support_y < 12)
+          change_support_y++;
+      else
+      {
+          change_support_y = 0;
+          return K_static;
+      }
+    }
+
+    if(abs(acc_wog) < 20)
+    {
+        small_acc_ticks_y++;
+        if(small_acc_ticks_y > 10)
+            return K_static;
+        else
+            return K_normal_y;
+    }
+    else if(abs(acc_wog) > 100)
+        return K_big_acc_x;
+    else
+    {
+        small_acc_ticks_y = 0;
+        return K_normal_y;
+    }
   }
 }
 
@@ -135,18 +193,17 @@ Matrix<double,3,1> Odometer::CalEncoderSpeedToGlobal(double roll_global, double 
 
 }
 
-void Odometer::CalVelToCenter(double yaw)
+Matrix<double,3,1> Odometer::CalVelToCenter(double yaw, Eigen::Matrix<double,3,1> vel_global)
 {
   Eigen::AngleAxisd rotation_vector(yaw, Vector3d::UnitZ());
   Eigen::Matrix3d rotation_matrix;
   rotation_matrix = rotation_vector.matrix();
   Eigen::Matrix<double,3,1> vel_after, vel_before;
 
-  vel_before << x_estimate(0), y_estimate(0), 0;
+  vel_before << vel_global(0), vel_global(1), vel_global(2);
   vel_after = rotation_matrix.transpose() * vel_before;
 
-  x_vel_to_center = vel_after(0);
-  y_vel_to_center = vel_after(1);
+  return vel_after;
 }
 
 void Odometer::UpdateOdometer()
@@ -155,18 +212,15 @@ void Odometer::UpdateOdometer()
   y_displacement = y_displacement + y_estimate(0) * SAMPLE_RATE;
 }
 
-Matrix<double,3,1> Odometer::VisionCompensate(double vision_yaw, double imu_yaw, Eigen::Matrix<double,3,1> vector)
+Matrix<double,3,1> Odometer::CalAccToCenter(double imu_yaw, Eigen::Matrix<double,3,1> acc_origin)
 {
-  Eigen::AngleAxisd vision_rotation_vector(vision_yaw, Vector3d::UnitZ());
   Eigen::AngleAxisd imu_rotation_vector(imu_yaw, Vector3d::UnitZ());
-  Eigen::Matrix3d vision_rotation_matrix;
-  vision_rotation_matrix = vision_rotation_vector.matrix();
   Eigen::Matrix3d imu_rotation_matrix;
   imu_rotation_matrix = imu_rotation_vector.matrix();
 
-  Eigen::Matrix<double,3,1> after_compensate;
-  after_compensate = vision_rotation_matrix * imu_rotation_matrix.transpose() * vector;
-  return after_compensate;
+  Eigen::Matrix<double,3,1> acc_center;
+  acc_center = imu_rotation_matrix.transpose() * acc_origin;
+  return acc_center;
 }
 
 

@@ -58,6 +58,8 @@ void IOCommunication::IniIO()
 {
     while(!io.m_servo_inited && ros::ok())
        io.spinOnce();
+    if(!ros::ok())
+        return;
     PendulumWalk pen;
     pen.GiveAStep(0,0,0);
     m_joint_value = pen.GiveATick();
@@ -155,10 +157,17 @@ void IOCommunication::SetJointValue(const std_msgs::Float64MultiArray & msg)
      m_status = msg.layout.dim[0].label;
 
      int support = msg.layout.data_offset;
+
+     sm.right_support_flag_last = sm.right_support_flag;
      if (support == 1)
         sm.right_support_flag = true;
      else if (support == 0)
         sm.right_support_flag = false;
+
+    if(sm.right_support_flag_last == sm.right_support_flag)
+        sm.change_support = false;
+    else
+        sm.change_support = true;
      //PrintVector(m_joint_value);
    }
 }
@@ -223,7 +232,7 @@ void IOCommunication::SetHeadServoValue()
     else if(sm.pitch * 180 / M_PI >= 50)//front down
     {
         target_yaw = 0;
-        target_pitch = -30;
+        target_pitch = -50;
     }
     m_joint_value[16] = target_pitch;
     m_joint_value[17] = target_yaw;
@@ -239,14 +248,14 @@ void IOCommunication::Publisher()
       if(lower_board_success_flag > 5)
       {
         //stable & forward_or_backward
-        if(sm.m_stable_state == STABLE)
+        if(sm.m_stable_state == STABLE || sm.m_stable_state == UNSTABLE)
             m_motion_info.stable = true;
         else
         {
           m_motion_info.stable = false;
           if(sm.m_stable_state == FRONTDOWN)
              m_motion_info.forward_or_backward = true;
-          else
+          else if(sm.m_stable_state == BACKDOWN)
              m_motion_info.forward_or_backward = false;
         }
 
