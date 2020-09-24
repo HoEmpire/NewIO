@@ -1,8 +1,7 @@
 # NewIO
 New developing version of IO for ZJUDancer
 ## Pre-Requirement 
-+ ROS is a must for IOManager and the other part.**BUT** ist not necessary ServoIO, which means you can make some change of the files then use cmake instead to build files.
-+ but ROS is suggested 
++ ROS is a must for IOManager and the other part.**BUT** ist not necessary ServoIO.
 
 ## How to build 
 + This is a ROS workspace use the following code to build
